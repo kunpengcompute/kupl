@@ -178,8 +178,20 @@ function set_build_type()
     esac
 }
 
+function set_enable_mma_by_cputype()
+{
+    implementer=$(cat /proc/cpuinfo | grep "CPU implementer" | awk 'NR==1{printf $4}')
+    part=$(cat /proc/cpuinfo | grep "CPU part" | awk 'NR==1{printf $4}')
+    cputype="${implementer}-${part}"
+
+    if [[ "${cputype}" != "0x48-0xd22" ]]; then
+        ENABLE_KUPL_MMA="OFF"
+    fi
+}
+
 function parse_args()
 {
+    set_enable_mma_by_cputype
     for i in "$@"; do
         case "$i" in
             --cleanup=*)
