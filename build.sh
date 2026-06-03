@@ -224,6 +224,8 @@ function parse_args()
             --enable_mma=*)
                 if [[ "${i#*=}" == "off" ]]; then
                     ENABLE_KUPL_MMA="OFF"
+                elif [[ "${i#*=}" == "on" ]]; then
+                    ENABLE_KUPL_MMA="ON"
                 fi
                 ;;
             --build_kind=*)
