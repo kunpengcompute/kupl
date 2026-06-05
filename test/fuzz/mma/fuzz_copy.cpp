@@ -28,7 +28,7 @@ using namespace kupl::tensor;
 #endif
 
 test_kupl_za
-void copy_1x16_F64_CM2RM_kernel(double *dst, double *src) test_kupl_streaming
+void KP36_1x16_F64_TRANS_CM2RM_kernel(double *dst, double *src) test_kupl_streaming
 {
     constexpr int M = 512;
     constexpr int N = 16;
@@ -42,28 +42,28 @@ void copy_1x16_F64_CM2RM_kernel(double *dst, double *src) test_kupl_streaming
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<M / 1>{}, Int<1>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_1x16_F64_CM2RM>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_1x16_F64_TRANS_CM2RM>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
-void copy_1x16_F64_CM2RM_coverage()
+void KP36_1x16_F64_TRANS_CM2RM_coverage()
 {
     constexpr int M = 512;
     constexpr int N = 16;
     double *dst = static_cast<double *>(malloc(sizeof(double) * M * N));
     double *src = static_cast<double *>(malloc(sizeof(double) * M * N));
 
-    copy_1x16_F64_CM2RM_kernel(dst, src);
+    KP36_1x16_F64_TRANS_CM2RM_kernel(dst, src);
 
     free(src);
     free(dst);
 }
 
 test_kupl_za
-void copy_16x2_BF16_RM2ZZ_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
+void KP36_16x2_BF16_TRANS_RM2ZZ_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
 {
     constexpr int M = 16;
     constexpr int N = 576;
@@ -77,28 +77,28 @@ void copy_16x2_BF16_RM2ZZ_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_str
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<1>{}, Int<N / 2>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_16x2_BF16_RM2ZZ>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_16x2_BF16_TRANS_RM2ZZ>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
-void copy_16x2_BF16_RM2ZZ_coverage()
+void KP36_16x2_BF16_TRANS_RM2ZZ_coverage()
 {
     constexpr int M = 16;
     constexpr int N = 576;
     bfloat16_t *dst = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * N));
     bfloat16_t *src = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * N));
 
-    copy_16x2_BF16_RM2ZZ_kernel(dst, src);
+    KP36_16x2_BF16_TRANS_RM2ZZ_kernel(dst, src);
 
     free(src);
     free(dst);
 }
 
 test_kupl_za
-void copy_2x64_BF16_CM2NN_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
+void KP36_2x64_BF16_TRANS_CM2NN_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
 {
     constexpr int M = 576;
     constexpr int N = 64;
@@ -112,28 +112,28 @@ void copy_2x64_BF16_CM2NN_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_str
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<M / 2>{}, Int<1>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_2x64_BF16_CM2NN>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_2x64_BF16_TRANS_CM2NN>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
-void copy_2x64_BF16_CM2NN_coverage()
+void KP36_2x64_BF16_TRANS_CM2NN_coverage()
 {
     constexpr int M = 576;
     constexpr int N = 64;
     bfloat16_t *dst = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * N));
     bfloat16_t *src = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * N));
 
-    copy_2x64_BF16_CM2NN_kernel(dst, src);
+    KP36_2x64_BF16_TRANS_CM2NN_kernel(dst, src);
 
     free(src);
     free(dst);
 }
 
 test_kupl_za
-void copy_16x1_BF16_RM2CM_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
+void KP36_16x1_BF16_TRANS_RM2CM_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
 {
     constexpr int M = 16;
     constexpr int N = 576;
@@ -147,28 +147,28 @@ void copy_16x1_BF16_RM2CM_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_str
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<1>{}, Int<N>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_16x1_BF16_RM2CM>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_16x1_BF16_TRANS_RM2CM>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
-void copy_16x1_BF16_RM2CM_coverage()
+void KP36_16x1_BF16_TRANS_RM2CM_coverage()
 {
     constexpr int M = 16;
     constexpr int N = 576;
     bfloat16_t *dst = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * N));
     bfloat16_t *src = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * N));
 
-    copy_16x1_BF16_RM2CM_kernel(dst, src);
+    KP36_16x1_BF16_TRANS_RM2CM_kernel(dst, src);
 
     free(src);
     free(dst);
 }
 
 test_kupl_za
-void copy_1x64_BF16_CM2RM_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
+void KP36_1x64_BF16_TRANS_CM2RM_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
 {
     constexpr int M = 576;
     constexpr int N = 64;
@@ -182,28 +182,28 @@ void copy_1x64_BF16_CM2RM_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_str
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<M>{}, Int<1>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_1x64_BF16_CM2RM>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_1x64_BF16_TRANS_CM2RM>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
-void copy_1x64_BF16_CM2RM_coverage()
+void KP36_1x64_BF16_TRANS_CM2RM_coverage()
 {
     constexpr int M = 576;
     constexpr int N = 64;
     bfloat16_t *dst = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * N));
     bfloat16_t *src = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * N));
 
-    copy_1x64_BF16_CM2RM_kernel(dst, src);
+    KP36_1x64_BF16_TRANS_CM2RM_kernel(dst, src);
 
     free(src);
     free(dst);
 }
 
 test_kupl_za
-void copy_16x4_INT8_RM2ZZ_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
+void KP36_16x4_INT8_TRANS_RM2ZZ_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
 {
     constexpr int M = 16;
     constexpr int N = 576;
@@ -217,28 +217,28 @@ void copy_16x4_INT8_RM2ZZ_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<1>{}, Int<N / 4>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_16x4_INT8_RM2ZZ>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_16x4_INT8_TRANS_RM2ZZ>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
-void copy_16x4_INT8_RM2ZZ_coverage()
+void KP36_16x4_INT8_TRANS_RM2ZZ_coverage()
 {
     constexpr int M = 16;
     constexpr int N = 576;
     int8_t *dst = static_cast<int8_t *>(malloc(sizeof(int8_t) * M * N));
     int8_t *src = static_cast<int8_t *>(malloc(sizeof(int8_t) * M * N));
 
-    copy_16x4_INT8_RM2ZZ_kernel(dst, src);
+    KP36_16x4_INT8_TRANS_RM2ZZ_kernel(dst, src);
 
     free(src);
     free(dst);
 }
 
 test_kupl_za
-void copy_4x64_INT8_CM2NN_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
+void KP36_4x64_INT8_TRANS_CM2NN_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
 {
     constexpr int M = 576;
     constexpr int N = 64;
@@ -253,28 +253,28 @@ void copy_4x64_INT8_CM2NN_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<M / 4>{}, Int<1>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_4x64_INT8_CM2NN>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_4x64_INT8_TRANS_CM2NN>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
-void copy_4x64_INT8_CM2NN_coverage()
+void KP36_4x64_INT8_TRANS_CM2NN_coverage()
 {
     constexpr int M = 576;
     constexpr int N = 64;
     int8_t *dst = static_cast<int8_t *>(malloc(sizeof(int8_t) * M * N));
     int8_t *src = static_cast<int8_t *>(malloc(sizeof(int8_t) * M * N));
 
-    copy_4x64_INT8_CM2NN_kernel(dst, src);
+    KP36_4x64_INT8_TRANS_CM2NN_kernel(dst, src);
 
     free(src);
     free(dst);
 }
 
 test_kupl_za
-void copy_32x4_INT8_RM2ZZ_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
+void KP36_32x4_INT8_TRANS_RM2ZZ_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
 {
     constexpr int M = 32;
     constexpr int N = 576;
@@ -288,28 +288,28 @@ void copy_32x4_INT8_RM2ZZ_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<1>{}, Int<N / 4>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_32x4_INT8_RM2ZZ>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_32x4_INT8_TRANS_RM2ZZ>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
-void copy_32x4_INT8_RM2ZZ_coverage()
+void KP36_32x4_INT8_TRANS_RM2ZZ_coverage()
 {
     constexpr int M = 32;
     constexpr int N = 576;
     int8_t *dst = static_cast<int8_t *>(malloc(sizeof(int8_t) * M * N));
     int8_t *src = static_cast<int8_t *>(malloc(sizeof(int8_t) * M * N));
 
-    copy_32x4_INT8_RM2ZZ_kernel(dst, src);
+    KP36_32x4_INT8_TRANS_RM2ZZ_kernel(dst, src);
 
     free(src);
     free(dst);
 }
 
 test_kupl_za
-void copy_4x32_INT8_CM2NN_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
+void KP36_4x32_INT8_TRANS_CM2NN_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
 {
     constexpr int M = 576;
     constexpr int N = 32;
@@ -323,21 +323,21 @@ void copy_4x32_INT8_CM2NN_kernel(int8_t *dst, int8_t *src) test_kupl_streaming
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<M / 4>{}, Int<1>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_4x32_INT8_CM2NN>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_4x32_INT8_TRANS_CM2NN>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
-void copy_4x32_INT8_CM2NN_coverage()
+void KP36_4x32_INT8_TRANS_CM2NN_coverage()
 {
     constexpr int M = 576;
     constexpr int N = 32;
     int8_t *dst = static_cast<int8_t *>(malloc(sizeof(int8_t) * M * N));
     int8_t *src = static_cast<int8_t *>(malloc(sizeof(int8_t) * M * N));
 
-    copy_4x32_INT8_CM2NN_kernel(dst, src);
+    KP36_4x32_INT8_TRANS_CM2NN_kernel(dst, src);
 
     free(src);
     free(dst);
@@ -345,19 +345,19 @@ void copy_4x32_INT8_CM2NN_coverage()
 
 void copy_coverage()
 {
-    copy_1x16_F64_CM2RM_coverage();
-    copy_16x2_BF16_RM2ZZ_coverage();
-    copy_2x64_BF16_CM2NN_coverage();
-    copy_16x1_BF16_RM2CM_coverage();
-    copy_1x64_BF16_CM2RM_coverage();
-    copy_16x4_INT8_RM2ZZ_coverage();
-    copy_4x64_INT8_CM2NN_coverage();
-    copy_32x4_INT8_RM2ZZ_coverage();
-    copy_4x32_INT8_CM2NN_coverage();
+    KP36_1x16_F64_TRANS_CM2RM_coverage();
+    KP36_16x2_BF16_TRANS_RM2ZZ_coverage();
+    KP36_2x64_BF16_TRANS_CM2NN_coverage();
+    KP36_16x1_BF16_TRANS_RM2CM_coverage();
+    KP36_1x64_BF16_TRANS_CM2RM_coverage();
+    KP36_16x4_INT8_TRANS_RM2ZZ_coverage();
+    KP36_4x64_INT8_TRANS_CM2NN_coverage();
+    KP36_32x4_INT8_TRANS_RM2ZZ_coverage();
+    KP36_4x32_INT8_TRANS_CM2NN_coverage();
 }
 
 test_kupl_za
-void copy_32x1_F64_RM2CM_kernel(double *dst, double *src) test_kupl_streaming
+void KP36_32x1_F64_TRANS_RM2CM_kernel(double *dst, double *src) test_kupl_streaming
 {
     constexpr int M = 32;
     constexpr int N = 512;
@@ -371,11 +371,11 @@ void copy_32x1_F64_RM2CM_kernel(double *dst, double *src) test_kupl_streaming
     auto layout_s = make_layout(shape_s, stride_s);
 
     auto atom_copy_shape = make_shape(Int<1>{}, Int<N / 1>{});
-    auto tiled_copy = make_tiled_copy(Ops<COPY_32x1_F64_RM2CM>{}, atom_copy_shape);
+    auto tiled_copy = make_tiled_copy(Ops<KP36_32x1_F64_TRANS_RM2CM>{}, atom_copy_shape);
 
     auto tensor_d = make_tensor(dst, layout_d);
     auto tensor_s = make_tensor(src, layout_s);
-    tensor_tiled_copy(tiled_copy, tensor_d, tensor_s);
+    copy(tiled_copy, tensor_d, tensor_s);
 }
 
 void copy_base_example(int test_count)
@@ -402,7 +402,7 @@ void copy_base_example(int test_count)
         double *src = (double*)DT_SetGetFixBlob(&g_Element[cnt++], sizeof(double) * M * N,
                                                 sizeof(double) * M * N, (char*)src_bak);
 
-        copy_32x1_F64_RM2CM_kernel(dst, src);
+        KP36_32x1_F64_TRANS_RM2CM_kernel(dst, src);
     }
     DT_FUZZ_END();
     printf("end -- %s\n", __func__);

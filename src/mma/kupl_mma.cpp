@@ -535,7 +535,7 @@ static constexpr int F64_TILE_8X2 = 16;
 static constexpr int F64_TILE_8X3 = 24;
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_32x1_F64_RM2CM>, double, double>(double *data_dst,
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_32x1_F64_TRANS_RM2CM>, double, double>(double *data_dst,
                                                                                                   double *data_src,
                                                                                                   int size_m,
                                                                                                   int size_n) MMA_IN
@@ -545,7 +545,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_32x1_F64_RM2CM>
     }
     if (kupl_unlikely(size_n %
                       F64_TILE_8)) { // 向量寄存器的宽度为512，对于F64精度数据而言一个向量寄存器可以存放8个F64数据
-        kupl_error("The KUPL copy atom COPY_32x1_F64_RM2CM now can "
+        kupl_error("The KUPL copy atom KP36_32x1_F64_TRANS_RM2CM now can "
                    "only support scenarios where n is a multiple of 8");
         return;
     }
@@ -590,7 +590,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_32x1_F64_RM2CM>
 }
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_1x16_F64_CM2RM>, double, double>(double *data_dst,
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_1x16_F64_TRANS_CM2RM>, double, double>(double *data_dst,
                                                                                                   double *data_src,
                                                                                                   int size_m,
                                                                                                   int size_n) MMA_IN
@@ -600,7 +600,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_1x16_F64_CM2RM>
     }
     if (kupl_unlikely(size_m %
                       F64_TILE_8)) { // 向量寄存器的宽度为512，对于F64精度数据而言一个向量寄存器可以存放8个F64数据
-        kupl_error("The KUPL copy atom COPY_1x16_F64_CM2RM now can "
+        kupl_error("The KUPL copy atom KP36_1x16_F64_TRANS_CM2RM now can "
                    "only support scenarios where m is a multiple of 8");
         return;
     }
@@ -640,7 +640,7 @@ static constexpr int F32_TILE_16X2 = 32;
 static constexpr int F32_TILE_16X3 = 48;
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_16x2_BF16_RM2ZZ>, bfloat16_t, bfloat16_t>(
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_16x2_BF16_TRANS_RM2ZZ>, bfloat16_t, bfloat16_t>(
     bfloat16_t *data_dst, bfloat16_t *data_src, int size_m, int size_n) MMA_IN
 {
     if (kupl_unlikely(copy_check(data_dst, data_src, size_m, size_n) == false)) {
@@ -649,7 +649,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_16x2_BF16_RM2ZZ
     if (kupl_unlikely(
             size_n %
             BF16_TILE_32)) { // 向量寄存器的宽度为512，对于bfloat16精度数据而言一个向量寄存器可以存放32个bfloat16数据
-        kupl_error("The KUPL copy atom COPY_16x2_BF16_RM2ZZ now can "
+        kupl_error("The KUPL copy atom KP36_16x2_BF16_TRANS_RM2ZZ now can "
                    "only support scenarios where n is a multiple of 32");
         return;
     }
@@ -676,7 +676,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_16x2_BF16_RM2ZZ
 }
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_2x64_BF16_CM2NN>, bfloat16_t, bfloat16_t>(
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_2x64_BF16_TRANS_CM2NN>, bfloat16_t, bfloat16_t>(
     bfloat16_t *data_dst, bfloat16_t *data_src, int size_m, int size_n) MMA_IN
 {
     if (kupl_unlikely(copy_check(data_dst, data_src, size_m, size_n) == false)) {
@@ -685,7 +685,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_2x64_BF16_CM2NN
     if (kupl_unlikely(
             size_m %
             BF16_TILE_32)) { // 向量寄存器的宽度为512，对于bfloat16精度数据而言一个向量寄存器可以存放32个bfloat16数据
-        kupl_error("The KUPL copy atom COPY_2x64_BF16_CM2NN now can "
+        kupl_error("The KUPL copy atom KP36_2x64_BF16_TRANS_CM2NN now can "
                    "only support scenarios where m is a multiple of 32");
         return;
     }
@@ -730,7 +730,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_2x64_BF16_CM2NN
 }
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_16x1_BF16_RM2CM>, bfloat16_t, bfloat16_t>(
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_16x1_BF16_TRANS_RM2CM>, bfloat16_t, bfloat16_t>(
     bfloat16_t *data_dst, bfloat16_t *data_src, int size_m, int size_n)
 {
     if (kupl_unlikely(copy_check(data_dst, data_src, size_m, size_n) == false)) {
@@ -747,7 +747,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_16x1_BF16_RM2CM
 }
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_1x64_BF16_CM2RM>, bfloat16_t, bfloat16_t>(
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_1x64_BF16_TRANS_CM2RM>, bfloat16_t, bfloat16_t>(
     bfloat16_t *data_dst, bfloat16_t *data_src, int size_m, int size_n)
 {
     if (kupl_unlikely(copy_check(data_dst, data_src, size_m, size_n) == false)) {
@@ -771,7 +771,7 @@ static constexpr int INT32_TILE_16X2 = 32;
 static constexpr int INT32_TILE_16X3 = 48;
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_16x4_INT8_RM2ZZ>, int8_t, int8_t>(int8_t *data_dst,
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_16x4_INT8_TRANS_RM2ZZ>, int8_t, int8_t>(int8_t *data_dst,
                                                                                                    int8_t *data_src,
                                                                                                    int size_m,
                                                                                                    int size_n) MMA_IN
@@ -782,7 +782,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_16x4_INT8_RM2ZZ
     if (kupl_unlikely(
             size_n %
             INT8_TILE_64)) { // 向量寄存器的宽度为512，对于int8_t精度数据而言一个向量寄存器可以存放64个int8_t数据
-        kupl_error("The KUPL copy atom COPY_16x4_INT8_RM2ZZ now can "
+        kupl_error("The KUPL copy atom KP36_16x4_INT8_TRANS_RM2ZZ now can "
                    "only support scenarios where n is a multiple of 64");
         return;
     }
@@ -809,7 +809,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_16x4_INT8_RM2ZZ
 }
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_4x64_INT8_CM2NN>, int8_t, int8_t>(int8_t *data_dst,
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_4x64_INT8_TRANS_CM2NN>, int8_t, int8_t>(int8_t *data_dst,
                                                                                                    int8_t *data_src,
                                                                                                    int size_m,
                                                                                                    int size_n) MMA_IN
@@ -820,7 +820,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_4x64_INT8_CM2NN
     if (kupl_unlikely(
             size_m %
             INT8_TILE_64)) { // 向量寄存器的宽度为512，对于int8_t精度数据而言一个向量寄存器可以存放64个int8_t数据
-        kupl_error("The KUPL copy atom COPY_4x64_INT8_CM2NN now can "
+        kupl_error("The KUPL copy atom KP36_4x64_INT8_TRANS_CM2NN now can "
                    "only support scenarios where m is a multiple of 32");
         return;
     }
@@ -865,7 +865,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_4x64_INT8_CM2NN
 }
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_32x4_INT8_RM2ZZ>, int8_t, int8_t>(int8_t *data_dst,
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_32x4_INT8_TRANS_RM2ZZ>, int8_t, int8_t>(int8_t *data_dst,
                                                                                                    int8_t *data_src,
                                                                                                    int size_m,
                                                                                                    int size_n) MMA_IN
@@ -876,7 +876,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_32x4_INT8_RM2ZZ
     if (kupl_unlikely(
             size_n %
             INT8_TILE_64)) { // 向量寄存器的宽度为512，对于int8_t精度数据而言一个向量寄存器可以存放64个int8_t数据
-        kupl_error("The KUPL copy atom COPY_32x4_INT8_RM2ZZ now can "
+        kupl_error("The KUPL copy atom KP36_32x4_INT8_TRANS_RM2ZZ now can "
                    "only support scenarios where n is a multiple of 64");
         return;
     }
@@ -909,7 +909,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_32x4_INT8_RM2ZZ
 }
 
 template <>
-kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_4x32_INT8_CM2NN>, int8_t, int8_t>(int8_t *data_dst,
+kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<KP36_4x32_INT8_TRANS_CM2NN>, int8_t, int8_t>(int8_t *data_dst,
                                                                                                    int8_t *data_src,
                                                                                                    int size_m,
                                                                                                    int size_n) MMA_IN
@@ -920,7 +920,7 @@ kupl_export void kupl::tensor::TiledCallFunc::call_copy<Ops<COPY_4x32_INT8_CM2NN
     if (kupl_unlikely(
             size_m %
             INT8_TILE_64)) { // 向量寄存器的宽度为512，对于int8_t精度数据而言一个向量寄存器可以存放64个int8_t数据
-        kupl_error("The KUPL copy atom COPY_4x32_INT8_CM2NN now can "
+        kupl_error("The KUPL copy atom KP36_4x32_INT8_TRANS_CM2NN now can "
                    "only support scenarios where m is a multiple of 32");
         return;
     }
