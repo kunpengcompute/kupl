@@ -83,13 +83,13 @@ static int outputstream_open()
         filepath[eid] = (char *)malloc(sizeof(char) * MAX_LENGTH_FILENAME); // allocte filepath memory one by one
         if (filepath[eid] == nullptr) {
             outputstream_close();
-            kupl_log_error_return(ERROR, "error in filepath malloc");
+            return kupl_log_error_return(ERROR, "error in filepath malloc");
         }
         sprintf(filepath[eid], "%sp_%d_e_%d", ptrace_path, getpid(), eid); // assign filepath name
         executor_outputstream[eid] = fopen(filepath[eid], "w+"); // open file in w+ mode(create, write and read)
         if (executor_outputstream[eid] == nullptr) {
             outputstream_close();
-            kupl_log_error_return(ERROR, "fail to open file: %s", filepath[eid]);
+            return kupl_log_error_return(ERROR, "fail to open file: %s", filepath[eid]);
         }
     }
     return KUPL_OK;
@@ -151,12 +151,12 @@ static int flush_buffer(int eid, int size)
         if (fprintf(executor_outputstream[eid], format, (long double)(trace_event[eid][n].duration / 1000),
                     trace_event[eid][n].name, trace_event[eid][n].pid, trace_event[eid][n].tid,
                     (long double)trace_event[eid][n].start / 1000) < 0) {
-            kupl_log_error_return(ERROR, "Fail to write into file!");
+            return kupl_log_error_return(ERROR, "Fail to write into file!");
         }
     }
     // flush buffer outside the loop to reduce io times
     if (fflush(executor_outputstream[eid]) == EOF) {
-        kupl_log_error_return(ERROR, "Fail to write into file!");
+        return kupl_log_error_return(ERROR, "Fail to write into file!");
     }
     return KUPL_OK;
 }
@@ -220,7 +220,7 @@ static int create_executor_buffer()
 {
     trace_event = (profile_trace_event **)malloc((size_t)ptrace_executor_count * sizeof(profile_trace_event *));
     if (trace_event == nullptr) {
-        kupl_log_error_return(ERROR, "There is no memory for trace event");
+        return kupl_log_error_return(ERROR, "There is no memory for trace event");
     }
 
     for (int eid = 0; eid < ptrace_executor_count; eid++) {
@@ -228,7 +228,7 @@ static int create_executor_buffer()
             (profile_trace_event *)malloc((size_t)ptrace_executor_buffersize * sizeof(profile_trace_event));
         if (trace_event[eid] == nullptr) {
             destroy_executor_buffer();
-            kupl_log_error_return(ERROR, "There is no memory for trace event");
+            return kupl_log_error_return(ERROR, "There is no memory for trace event");
         }
     }
     return KUPL_OK;
@@ -257,7 +257,7 @@ int kupl_ptrace_init()
         return KUPL_OK;
     }
     if (strlen(kupl_config_get_value_str(KUPL_PTRACE_PATH)) >= PTRACE_PATH_SIZE - 1) {
-        kupl_log_error_return(ERROR, "trace path is too long");
+        return kupl_log_error_return(ERROR, "trace path is too long");
     }
     strcpy(ptrace_path, kupl_config_get_value_str(KUPL_PTRACE_PATH));
     ptrace_executor_buffersize = kupl_config_get_value(KUPL_PTRACE_THREAD_BUFFER_SIZE);
@@ -266,11 +266,11 @@ int kupl_ptrace_init()
     const kupl_host_info_t *host_info = kupl_get_host_info();
     ptrace_executor_count = host_info->avail_pu_cnt;
     if (ptrace_executor_count == 0) {
-        kupl_log_error_return(ERROR, "ptrace executor count is 0");
+        return kupl_log_error_return(ERROR, "ptrace executor count is 0");
     }
     executor_event_num = (int *)calloc((size_t)ptrace_executor_count, sizeof(int));
     if (executor_event_num == nullptr) {
-        kupl_log_error_return(ERROR, "There is no memory for executor_event_num");
+        return kupl_log_error_return(ERROR, "There is no memory for executor_event_num");
     }
     // if fail to open outputstream, it will free itself in function
     if (outputstream_open() == KUPL_ERROR) {
