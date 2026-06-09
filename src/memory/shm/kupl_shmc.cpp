@@ -414,7 +414,7 @@ int kupl_shm_request_start(kupl_shm_request_h request)
         g_is_abnormal_exit = true;
         kupl_fatal("request start failed...");
     }
-    return KUPL_OK;
+    return ret;
 }
 
 int kupl_shm_request_wait(kupl_shm_request_h request)
