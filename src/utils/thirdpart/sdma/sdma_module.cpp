@@ -171,8 +171,11 @@ int kupl_sdma_module_init()
         int ret = kupl_sdma_dev_init();
         if (ret == KUPL_ERROR) {
             kupl_sdma_dev_fini();
+            kupl_sdma_func_fini();
             g_sdma_func_init = false;
         }
+    } else {
+        kupl_sdma_func_fini();
     }
     return KUPL_OK;
 }
