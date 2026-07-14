@@ -1,11 +1,12 @@
 # KUPL
 
 ## 🔥Release Notes
+- [2026/06] KUPL 众核并行模块新增多线程规约功能、并行区域逻辑判断及动态图依赖接口，数据管理模块新增不同内存层级间数据换入换出功能，矩阵编程模块新增基于Tensor对象的下标访问、相加及标量乘操作功能。同时 KUPL 实现北向对接 OpenACC 编程框架，需配合HPCKit 26.1.RC1及以后版本毕昇编译器使用。
 - [2026/03] KUPL 项目首次上线，支持众核并行、数据管理和矩阵编程能力。
 
 ## 🚀概述
 
-鲲鹏统一并行加速库（Kunpeng Unified Parallel Library，以下简称KUPL）提供了基于鲲鹏平台优化的并行加速基础库函数，所有接口用C/C++、汇编语言实现。本加速库提供包括底层线程管理、任务调度、线程同步、内存申请、共享内存申请、共享内存通信、矩阵编程计算等在内的基础功能，充分发挥鲲鹏处理器的硬件特性，提供高性能的基础接口。
+鲲鹏统一并行加速库（Kunpeng Unified Parallel Library，以下简称 KUPL）提供了基于鲲鹏平台优化的并行加速基础库函数，所有接口用C/C++、汇编语言实现。本加速库提供包括底层线程管理、任务调度、线程同步、内存申请、共享内存申请、共享内存通信、矩阵编程计算等在内的基础功能，充分发挥鲲鹏处理器的硬件特性，提供高性能的基础接口。
 
 ## 📝版本配套
 
@@ -31,17 +32,17 @@
 ### 1. [获取 HPCKit 软件包](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_007.html)
 #### 下载 HPCKit 软件包（HPCKit 版本号根据实际情况调整）
 ```
-wget https://mirrors.huaweicloud.com/kunpeng/archive/HPC/HPCKit/HPCKit_26.0.RC1_Linux-aarch64.tar.gz
+wget https://mirrors.huaweicloud.com/kunpeng/archive/HPC/HPCKit/HPCKit_26.1.RC1_Linux-aarch64.tar.gz
 ```
 
 ### 2. [安装 HPCKit](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_012.html)
 #### 解压 HPCKit 软件包（HPCKit 版本号根据实际情况调整）
 ```
-tar xvf HPCKit_26.0.RC1_Linux-aarch64.tar.gz
+tar xvf HPCKit_26.1.RC1_Linux-aarch64.tar.gz
 ```
 #### 安装 HPCKit
 ```
-sh HPCKit_26.0.RC1_Linux-aarch64/install.sh -y --prefix=[HPCKit安装目录]
+sh HPCKit_26.1.RC1_Linux-aarch64/install.sh -y --prefix=[HPCKit安装目录]
 ```
 ### 3. [设置环境变量](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_014.html)
 #### 前置条件
@@ -106,9 +107,9 @@ sh build.sh --help
 ```
 #### 编译运行测试程序(GCC)
 ```
-module unload bisheng/hmpi26.0.RC1/release
+module unload bisheng/hmpi26.1.RC1/release
 
-module load gcc/hmpi26.0.RC1/release
+module load gcc/hmpi26.1.RC1/release
 
 sh build.sh --build_kind=test
 
@@ -133,9 +134,9 @@ export LD_LIBRARY_PATH=[googletest安装目录]/lib64:$LD_LIBRARY_PATH
 编译运行测试程序
 
 ```
-module unload gcc/hmpi26.0.RC1/release
+module unload gcc/hmpi26.1.RC1/release
 
-module load bisheng/hmpi26.0.RC1/release
+module load bisheng/hmpi26.1.RC1/release
 
 sh build.sh --build_kind=test --compiler=clang
 
@@ -143,7 +144,7 @@ sh run_lcov.sh test clang
 ```
 ## 📖学习教程
 
-若您已学习编译安装，对本项目有一定认知，并希望深入了解和体验项目，请访问下述详细教程。
+若您已学习编译安装，对本项目有一定了解，并希望深入了解和体验项目，请访问下述详细教程。
 
 ### 众核并行
 [executor相关函数](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_020.html): 介绍了 KUPL 中执行器相关接口，包括获取当前执行器编号、执行器总数以及细粒度控制多线程并发行为等能力。
@@ -172,7 +173,7 @@ sh run_lcov.sh test clang
 │   ├── executor                       # 执行器模块
 │   ├── memory                         # 内存模块
 │   ├── mma                            # 矩阵编程模块
-│   ├── mt                             # 众合编程模块
+│   ├── mt                             # 众核编程模块
 │   ├── tools                          # 工具模块
 │   ├── utils                          # 公共基础类库
 │   ├── CMakeLists.txt                 # 源码编译配置文件
