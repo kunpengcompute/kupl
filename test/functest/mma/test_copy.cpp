@@ -9,7 +9,6 @@
  * INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
  * See the Mulan PSL v2 for more details.
  */
-#if defined(ENABLE_KUPL_MMA)
 
 #include <arm_bf16.h>
 #include <cstdint>
@@ -617,5 +616,3 @@ TEST(test_copy, KP36_PREFETCH_L2)
     copy(tiled_prefetch_L2, tensor_is);
     free(buf_is);
 }
-
-#endif
