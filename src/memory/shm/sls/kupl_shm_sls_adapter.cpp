@@ -102,11 +102,9 @@ int kupl_shm_sls_zcopy_all(int fd, void *src_addr, void **dst_addr, int src_pid,
     }
 
     const int max_retry = 100;
-    void *prev_addr = nullptr;
     std::vector<void *> failed_bufs;
     for (int retry = 0; retry < max_retry; retry++) {
         *dst_addr = aligned_alloc(SLS_ALIGN_SIZE, aligned_size);
-        prev_addr = *dst_addr;
 
         ret = kupl_shm_sls_zcopy(fd, (void *)aligned_addr, *dst_addr, src_pid, dst_pid, aligned_size, res);
 
