@@ -562,6 +562,8 @@ kupl_export void kupl_set_kernel_concurrency(int num);
  */
 kupl_export int kupl_get_kernel_concurrency(void);
 
+kupl_export int kupl_get_max_concurrency(void);
+
 /**
  * @brief set the number of threads used by current thread，such as memcpy
  *        specifies the concurrency of the current thread.

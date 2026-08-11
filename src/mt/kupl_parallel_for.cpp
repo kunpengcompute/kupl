@@ -892,9 +892,6 @@ int kupl_parallel_for_reduce(kupl_parallel_for_desc_t *desc, kupl_pf_reduce_func
 
 bool kupl_in_parallel()
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return false;
-    }
     return call_cnt != 0;
 }
 
