@@ -706,6 +706,18 @@ static kupl_always_inline int kupl_parallel_for_num_threads(kupl_parallel_for_de
     return num_threads;
 }
 
+int kupl_get_thread_num()
+{
+    if (kupl_in_parallel()) {
+        int geid = kupl_get_executor_num();
+        int master_eid = g_pf[geid].master_eid;
+        auto &pf = g_pf[master_eid];
+        int tid = static_cast<int>(pf.egroup->cur.eid2lid[geid]);
+        return tid;
+    }
+    return 0;
+}
+
 int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void *args)
 {
     if (!g_core_inited && kupl_init() == KUPL_ERROR) {
