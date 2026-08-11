@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <vector>
 #include "kupl.h"
 #include "utils/debug/kupl_log.h"
 #include "utils/sys/kupl_compiler.h"
@@ -100,15 +101,26 @@ int kupl_shm_sls_zcopy_all(int fd, void *src_addr, void **dst_addr, int src_pid,
         return ret;
     }
 
-    *dst_addr = aligned_alloc(SLS_ALIGN_SIZE, aligned_size);
-    if (*dst_addr == nullptr) {
-        return ret;
+    const int max_retry = 100;
+    std::vector<void *> failed_bufs;
+    for (int retry = 0; retry < max_retry; retry++) {
+        *dst_addr = aligned_alloc(SLS_ALIGN_SIZE, aligned_size);
+
+        ret = kupl_shm_sls_zcopy(fd, (void *)aligned_addr, *dst_addr, src_pid, dst_pid, aligned_size, res);
+
+        if (ret != KUPL_ERROR) {
+            break;
+        }
+
+        failed_bufs.push_back(*dst_addr);
+        *dst_addr = nullptr;
     }
 
-    ret = kupl_shm_sls_zcopy(fd, (void *)aligned_addr, *dst_addr, src_pid, dst_pid, aligned_size, res);
+    for (void *b : failed_bufs) {
+        free(b);
+    }
+
     if (ret == KUPL_ERROR) {
-        free(*dst_addr);
-        *dst_addr = nullptr;
         return ret;
     }
 
