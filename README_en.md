@@ -29,11 +29,11 @@ KUPL provides foundational parallel acceleration functions optimized for the Kun
 
 ## Build and Installation
 
-### 1. [Obtain the HPCKit software package](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_007.html).
+### 1. [Obtain the HPCKit software package](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_007.html).
 
 > https://www.hikunpeng.com/developer/hpc/hpckit-download
 
-### 2. [Install HPCKit](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_012.html).
+### 2. [Install HPCKit](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_012.html).
 
 #### Extract the HPCKit software package (replace the version number in the example with your actual version).
 
@@ -47,7 +47,7 @@ tar xvf HPCKit_26.0.RC1_Linux-aarch64.tar.gz
 sh HPCKit_26.0.RC1_Linux-aarch64/install.sh -y --prefix=[HPCKit_installation_directory]
 ```
 
-### 3. [Set environment variables](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_014.html).
+### 3. [Set environment variables](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/instg/KunpengHPCKit_install_014.html).
 
 #### Load the module.
 
@@ -133,23 +133,23 @@ If you are familiar with the build and installation process and would like to ga
 
 ### Many-core Parallelism
 
-[Executor-related functions](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_020.html): Learn about KUPL's executor APIs, covering features like obtaining the current executor ID and total executor count, as well as fine-grained control over multi-threading.
+[Executor-related functions](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_020.html): Learn about KUPL's executor APIs, covering features like obtaining the current executor ID and total executor count, as well as fine-grained control over multi-threading.
 
-[Multi-threaded programming functions](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_031.html): Learn about KUPL's multi-threaded programming capabilities, which enable concurrent threads within a single process to execute different tasks in parallel, thereby boosting performance.
+[Multi-threaded programming functions](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_031.html): Learn about KUPL's multi-threaded programming capabilities, which enable concurrent threads within a single process to execute different tasks in parallel, thereby boosting performance.
 
-[Computational graph programming functions](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_035.html): Learn about the dynamic and static graph programming models within KUPL.
+[Computational graph programming functions](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_035.html): Learn about the dynamic and static graph programming models within KUPL.
 
-[Multi-queue and multi-stream programming functions](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_048.html): Learn about KUPL's multi-queue and multi-stream programming models, as well as core concepts regarding queues and events.
+[Multi-queue and multi-stream programming functions](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_048.html): Learn about KUPL's multi-queue and multi-stream programming models, as well as core concepts regarding queues and events.
 
 ### Data Management
 
-[Memory management functions](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_064.html): Learn about KUPL's memory operation APIs, including capabilities for memory allocation, copying, and locking.
+[Memory management functions](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_064.html): Learn about KUPL's memory operation APIs, including capabilities for memory allocation, copying, and locking.
 
-[Shared Memory Communication Functions](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_085.html): Learn about KUPL's low-level shared memory communication APIs and the implementation of collective communication functions based on these APIs.
+[Shared Memory Communication Functions](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_085.html): Learn about KUPL's low-level shared memory communication APIs and the implementation of collective communication functions based on these APIs.
 
 ### Matrix Programming
 
-[Matrix Programming API Functions](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_104.html): Learn about KUPL's matrix programming APIs, including capabilities for accelerating matrix multiplication and copying.
+[Matrix Programming API Functions](https://www.hikunpeng.com/document/detail/en/kunpenghpcs/hpckit/devg/KunpengHPCKit_developer_104.html): Learn about KUPL's matrix programming APIs, including capabilities for accelerating matrix multiplication and copying.
 
 ## Directory Structure
 
