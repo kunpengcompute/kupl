@@ -381,6 +381,14 @@ int kupl_get_kernel_concurrency_inner(void)
     return kupl_get_num_executors();
 }
 
+int kupl_get_max_concurrency(void)
+{
+    if (kupl_in_parallel()) {
+        return 1;
+    }
+    return kupl_get_kernel_concurrency_inner();
+}
+
 void kupl_set_kernel_concurrency_local(int num)
 {
     if (!g_core_inited && kupl_init() == KUPL_ERROR) {
