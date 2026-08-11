@@ -39,4 +39,7 @@ set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 
 add_subdirectory(omp)
 add_subdirectory(shm)
-add_subdirectory(mma)
+if(ENABLE_KUPL_MMA)
+    message("-- Fuzz enable kupl mma")
+    add_subdirectory(mma)
+endif()
