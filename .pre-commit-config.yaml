@@ -1,5 +1,5 @@
 minimum_pre_commit_version: 4.0.0
-exclude: ^LICENSES/|\.(html|csv|svg|md)$
+exclude: ^LICENSES/|\.(html|csv|svg|md|yaml)$
 
 default_stages: [pre-commit]
 ci:
@@ -8,7 +8,7 @@ ci:
 
 repos:
   # pre-commit 基础检查
-  - repo: https://github.com/pre-commit/pre-commit-hooks
+  - repo: https://gitcode.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
