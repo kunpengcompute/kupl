@@ -1,0 +1,210 @@
+name: PR-pipeline_kupl
+
+concurrency:
+  max: 5
+  enable: true
+  preemption:
+    enable: true
+    events:
+    - mr_id
+  exceed-action: IGNORE
+
+on:
+  pull_request:
+    branches: [ "main" ]
+    paths: []
+    types: [ "open", "reopen", "update" ]
+    branches-ignore: []
+    paths-ignore: []
+    code-update: true
+  pull_request_comment:
+    types: [created]
+    branches: [ '*' ]
+    comments: [ '^(?:\/)?compile*' ]
+
+env:
+  repo: ${{ atomgit.event.repository.name }}
+  pr_id: ${{ atomgit.event.pull_request.number }}
+
+inputs:
+  access:
+    type: string
+    description: ""
+    default: "${{ vars.access }}"
+    manual_override: true
+  repo:
+    type: string
+    description: ""
+    default: "${{ atomgit.event.repository.name }}"
+    manual_override: true
+  pr_id:
+    type: string
+    description: ""
+    default: "${{ atomgit.event.pull_request.number }}"
+    manual_override: true
+  appId_task:
+    type: string
+    description: ""
+    default: "${{ secrets.appId_task }}"
+    manual_override: true
+  secretKey_task:
+    type: string
+    description: ""
+    default: "${{ secrets.secretKey_task }}"
+    manual_override: true
+  appId_status:
+    type: string
+    description: ""
+    default: "${{ secrets.appId_status }}"
+    manual_override: true
+  secretKey_status:
+    type: string
+    description: ""
+    default: "${{ secrets.secretKey_status }}"
+    manual_override: true
+  org_name:
+    type: string
+    description: ""
+    default: "${{ vars.org_name }}"
+    manual_override: true
+  project_name:
+    type: string
+    description: ""
+    default: "${{ vars.project_name }}"
+    manual_override: true
+  branch:
+    type: string
+    description: ""
+    default: "${{ atomgit.event.pull_request.base.ref }}"
+    manual_override: true
+
+stages:
+  stage1:
+    name: Build
+    select: selected_by_default
+    jobs:
+      # SCA:
+      #   name: SCA
+      #   runs-on: [ dedicate-hosted, x64, 2xlarge ]
+      #   container:
+      #     image: swr.cn-north-4.myhuaweicloud.com/mindspore/mindspore_python3.11:v0.1
+      #   steps:
+      #     - name: checkout
+      #       uses: checkout
+      #       with:
+      #         repository: ${{ atomgit.repositoryurl }}
+      #         ref: refs/merge-requests/${{ atomgit.event.number }}/merge
+      #     - name: echo
+      #       run: |
+      #         set -ex
+      #         echo 123123
+      #         echo ${{ secret.SCAN_ACCESS_KEY }}
+      #         echo ${{ secret.SCAN_SECRET_KEY }}
+      #         echo ${{ vars.PROJECT_NAME }}
+      #     - name: Run SCA PR Scan
+      #       id: sca-pr-scan
+      #       uses: sca-pr-scan
+      #       with:
+      #         scan-access-key: ${{ secret.SCAN_ACCESS_KEY }}
+      #         scan-secret-key: ${{ secret.SCAN_SECRET_KEY }}
+      #         repository-name: ${{ atomgit.repository }}
+      #         pr-id: ${{ env.pr_id }}
+      #         project-name: ${{ vars.PROJECT_NAME }}
+
+      # Antipoison:
+      #   name: Antipoison
+      #   runs-on: [ubuntu-latest, x64, small]
+      #   # container:
+      #   #   image: swr.cn-north-4.myhuaweicloud.com/cloud-hpckit/hpckit_openeuler_22.03_lts_sp2_arm:v1.1_python_3.13.4
+      #   steps:
+      #     # - name: Checkout repository with pre merge
+      #     #   uses: checkout
+      #     #   with:
+      #     #     repository: ${{atomgit.repositoryurl}}
+      #     #     ref: refs/merge-requests/${{ env.pr_id }}/merge
+      #           # token: ${{ secrets.WB_TOKEN }}
+      #     - name: Antipoison
+      #       run: |
+      #           set -e
+
+      pre-commit:
+        name: pre-commit
+        runs-on: [ dedicate-hosted, x64, 2xlarge ]
+        container:
+          image: swr.cn-north-4.myhuaweicloud.com/mindspore/mindspore_python3.11:v0.1
+        steps:
+          - name: checkout
+            uses: checkout
+            with:
+              repository: ${{atomgit.repositoryurl}}
+              ref: refs/merge-requests/${{ env.pr_id }}/merge
+          - name: pre-commit
+            uses: openlibing-pre-commit-action
+
+      build_gcc:
+        name: build_gcc
+        runs-on: [ dedicate-hosted, arm64, 2xlarge ]
+        container:
+          image: swr.cn-north-4.myhuaweicloud.com/cloud-hpckit/hpckit_openeuler_22.03_lts_sp2_arm:v1.0
+        steps:
+          - name: checkout
+            uses: checkout
+            with:
+              repository: ${{atomgit.repositoryurl}}
+              ref: refs/merge-requests/${{ env.pr_id }}/merge
+          - name: compile
+            run: |
+              set -ex
+              export PATH=/opt/buildtools/gcc-12.3.1-2025.06-aarch64-linux/bin:/opt/buildtools/cmake_3.20.6/bin:$PATH
+              export INCLUDE=/opt/buildtools/gcc-12.3.1-2025.06-aarch64-linux/include:$INCLUDE
+              export LD_LIBRARY_PATH=/opt/buildtools/gcc-12.3.1-2025.06-aarch64-linux/lib64:$LD_LIBRARY_PATH
+              sh build.sh --compiler=gcc --enable_mma=on
+
+      build_bisheng:
+        name: build_bisheng
+        runs-on: [ dedicate-hosted, arm64, 2xlarge ]
+        container:
+          image: swr.cn-north-4.myhuaweicloud.com/cloud-hpckit/hpckit_openeuler_22.03_lts_sp2_arm:v1.0
+        steps:
+          - name: checkout
+            uses: checkout
+            with:
+              repository: ${{atomgit.repositoryurl}}
+              ref: refs/merge-requests/${{ env.pr_id }}/merge
+          - name: compile
+            run: |
+              set -ex
+              BISHENG_PATH=/opt/buildtools/BiShengCompiler-5.1.0.2-aarch64-linux-mini-hpc
+              export PATH=$BISHENG_PATH/bin:/opt/buildtools/cmake_3.20.6/bin:$PATH
+              export LD_LIBRARY_PATH=$BISHENG_PATH/lib:$BISHENG_PATH//lib/aarch64-unknown-linux-gnu:$LD_LIBRARY_PATH
+              sh build.sh --compiler=clang --enable_mma=on
+
+      ut_gcc:
+        name: ut_gcc
+        runs-on: [ dedicate-hosted, arm64, 2xlarge ]
+        container:
+          image: swr.cn-north-4.myhuaweicloud.com/cloud-hpckit/hpckit_openeuler_22.03_lts_sp2_arm:v1.0
+        steps:
+          - name: checkout
+            uses: checkout
+            with:
+              repository: ${{atomgit.repositoryurl}}
+              ref: refs/merge-requests/${{ env.pr_id }}/merge
+          - name: compile
+            run: |
+              set -ex
+              # set modules env
+              if [ -f /etc/profile.d/modules.sh ]; then source /etc/profile.d/modules.sh;
+              elif [ -f /etc/profile.d/lmod.sh ]; then source /etc/profile.d/lmod.sh;
+              elif [ -f /usr/share/Modules/init/bash ]; then source /usr/share/Modules/init/bash;
+              else echo "未找到 module 初始化脚本，可能未安装。"; fi
+              # compile ut
+              GCC_PATH=/opt/buildtools/gcc-12.3.1-2025.06-aarch64-linux
+              export PATH=$GCC_PATH/bin:/opt/buildtools/cmake_3.20.6/bin:$PATH
+              export INCLUDE=$GCC_PATH/include:$INCLUDE
+              export LD_LIBRARY_PATH=$GCC_PATH/lib64:$LD_LIBRARY_PATH
+              export PATH=/usr1/lcov/bin:$PATH
+              module use /usr1/HPCKit/latest/modulefiles
+              module load gcc/hmpi26.0.RC1/release
+              sh build.sh --build_kind=test --enable_mma=off
+              sh run_lcov.sh
