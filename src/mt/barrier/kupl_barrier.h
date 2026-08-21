@@ -45,6 +45,8 @@ extern "C" {
 
 #define KUPL_SHM_BARRIER_FLAG_WIN_SIZE (3)
 
+#define KUPL_BARRIER_MAX_LEVELS 2
+
 /** @brief barrier algo to select the barrier algorithm */
 enum kupl_barrier_algo_t {
     /**
@@ -176,10 +178,10 @@ public:
     FlagBarrier(const FlagBarrier &) = delete;
     FlagBarrier &operator=(const FlagBarrier &) = delete;
 
-    static FlagBarrier &getInstance()
+    static FlagBarrier &getInstance(int idx)
     {
-        static FlagBarrier instance;
-        return instance;
+        static FlagBarrier instance[KUPL_BARRIER_MAX_LEVELS];
+        return instance[idx];
     }
 
     void notify(kupl_egroup_h egroup, int num_threads);

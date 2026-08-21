@@ -270,7 +270,7 @@ TEST(test_sched_inner, hybrid_plugin_get_outer_tb)
 
     int exe[1] = {0};
     auto egroup = kupl_egroup_create(exe, 1);
-    auto &barrier = kupl::FlagBarrier::getInstance();
+    auto &barrier = kupl::FlagBarrier::getInstance(0);
     barrier.notify(egroup, 1);
     ret_tb = g_plugin_api->get_tb(g_sched, cp);
     ASSERT_TRUE(ret_tb == &g_ult->tb);
@@ -340,7 +340,7 @@ TEST(test_sched_inner, sspe_plugin_get_tb)
 
     int exe[1] = {0};
     auto egroup = kupl_egroup_create(exe, 1);
-    auto &barrier = kupl::FlagBarrier::getInstance();
+    auto &barrier = kupl::FlagBarrier::getInstance(0);
     barrier.notify(egroup, 1);
     ret_tb = g_plugin_api->get_tb(g_sched, cp);
     ASSERT_TRUE(ret_tb == &g_ult->tb);

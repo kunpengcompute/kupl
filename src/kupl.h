@@ -549,6 +549,13 @@ kupl_export int kupl_parallel_for_reduce(kupl_parallel_for_desc_t *desc, kupl_pf
 kupl_export bool kupl_in_parallel(void);
 
 /**
+ * @brief Get the current thread num in parallel
+ *
+ * @return the thread num in parallel, 0 when not in parallel
+ */
+kupl_export int kupl_get_thread_num(void);
+
+/**
  * @brief set the number of threads used by kupl kernel，such as memcpy
  *
  * @param [in] num  the number of threads

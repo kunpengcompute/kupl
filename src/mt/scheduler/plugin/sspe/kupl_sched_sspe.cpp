@@ -16,6 +16,7 @@
 #include "memory/mpool/kupl_mpool.h"
 #include "utils/arch/kupl_cache.h"
 #include "mt/barrier/kupl_barrier.h"
+#include "mt/kupl_parallel_for.h"
 
 #define KUPL_SLOT_ALIGN KUPL_ALIGN(128)
 
@@ -88,7 +89,7 @@ static kupl_taskbase_t *sched_get_tb(void *_sched, kupl_compute_place_t cp)
         return nullptr;
     }
 
-    static kupl::FlagBarrier &barrier = kupl::FlagBarrier::getInstance();
+    kupl::FlagBarrier &barrier = kupl::FlagBarrier::getInstance(active_levels);
     if (barrier.arrive(own_eid)) {
         return sched->slot[own_eid].tb;
     }

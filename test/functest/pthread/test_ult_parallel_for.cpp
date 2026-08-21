@@ -1025,6 +1025,83 @@ TEST(test_ult_pf_3d, kupl_parallel_for)
     kupl_egroup_destroy(eg8);
 }
 
+static kupl_egroup_h g_egroup;
+static kupl_egroup_h egroup_a;
+static kupl_egroup_h egroup_b;
+
+kupl_parallel_for_desc_t desc1,desc2;
+
+static inline void loop_func(kupl_nd_range_t *nd_range, void *args, int tid, int tnum)
+{
+    if (kupl_get_kernel_concurrency() == 8) {
+        EXPECT_EQ(kupl_get_thread_num(), tid);
+    }
+    auto &range = nd_range->nd_range[0];
+    for (int i = range.lower; i < range.upper; i += range.step) {
+        usleep(1000);
+    }
+}
+
+kupl_egroup_h egroup_create(int start_eid, int executors_num)
+{
+    int exe[executors_num];
+    for (int i = 0; i < executors_num; i++) {
+        exe[i] = start_eid + i;
+    }
+    return kupl_egroup_create(exe, executors_num);
+}
+
+static void task_pf_in_parallel(kupl_nd_range_t *nd_range, void *args, int tid, int tnum)
+{
+    if (tid == 0) {
+        kupl_parallel_for(&desc1, loop_func, nullptr);
+    } else if (tid == 8) {
+        kupl_parallel_for(&desc2, loop_func, nullptr);
+    }
+    if (tid < 8) {
+        kupl_egroup_barrier(egroup_a);
+    } else {
+        kupl_egroup_barrier(egroup_b);
+    }
+}
+
+TEST(test_ult_pf, kupl_pf_in_parallel)
+{
+    g_egroup = egroup_create(0, 16);
+    egroup_a = egroup_create(0, 8);
+    egroup_b = egroup_create(8, 8);
+
+    kupl_parallel_for_desc_t desc = {
+        .field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
+        .range = nullptr,
+        .egroup = g_egroup,
+        .concurrency = 16,
+        .policy = KUPL_LOOP_POLICY_STATIC
+    };
+    kupl_nd_range_t range;
+    KUPL_1D_RANGE_INIT(range, 0, 100);
+    desc1 = {
+        .field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
+        .range = &range,
+        .egroup = egroup_a,
+        .concurrency = 8,
+        .policy = KUPL_LOOP_POLICY_STATIC
+    };
+    desc2 = {
+        .field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
+        .range = &range,
+        .egroup = egroup_b,
+        .concurrency = 8,
+        .policy = KUPL_LOOP_POLICY_STATIC
+    };
+
+    kupl_parallel_for(&desc, task_pf_in_parallel, nullptr);
+
+    kupl_egroup_destroy(g_egroup);
+    kupl_egroup_destroy(egroup_a);
+    kupl_egroup_destroy(egroup_b);
+}
+
 TEST(test_ult_pf, kupl_parallel_for_err)
 {
     std::atomic<int> count = {0};
@@ -1089,13 +1166,20 @@ TEST(test_ult_pf, kupl_parallel_for_err)
 
 static void task_int_parallel(kupl_nd_range_t *nd_range, void *args, int tid, int tnum)
 {
-    kupl_get_kernel_concurrency();
+    int concurrency = kupl_get_kernel_concurrency();
+    EXPECT_EQ(concurrency, 4);
+    int thread_num = kupl_get_thread_num();
+    EXPECT_EQ(thread_num, tid);
     bool in_parallel = kupl_in_parallel();
     EXPECT_EQ(in_parallel, true);
 }
 
 TEST(test_ult_pf, kupl_parallel_for_in_parallel)
 {
+    int concurrency = kupl_get_kernel_concurrency();
+    EXPECT_EQ(concurrency, 1);
+    int thread_num = kupl_get_thread_num();
+    EXPECT_EQ(thread_num, 0);
     bool in_parallel = kupl_in_parallel();
     EXPECT_EQ(in_parallel, false);
     kupl_parallel_for_desc_t desc = {

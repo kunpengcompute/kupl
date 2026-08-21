@@ -25,11 +25,13 @@
 #include "tools/profile/kupl_profile.h"
 #include "tools/profile/kupl_profile_trace.h"
 
-static thread_local int call_cnt = 0;
+thread_local int active_levels = 0;
 static int g_concurrency_default = 0;
 static kupl_egroup_h g_egroup = nullptr;
 static kupl_pf_t *g_pf = nullptr;
 static kupl_ult_t *g_ult = nullptr;
+static int max_active_levels;
+static int pf_num_thread;
 constexpr int KUPL_RD_NUM_MAX = 128;
 
 static kupl_always_inline kupl_graph_h kupl_pf_graph_get()
@@ -147,7 +149,7 @@ typedef struct kupl_task_args {
 
 static void task_policy_loop_func(void *args)
 {
-    call_cnt++;
+    active_levels++;
     auto task_args = (kupl_task_args_t *)args;
     if (args == nullptr) {
         kupl_warn("task_policy_loop_func input nullptr");
@@ -181,7 +183,7 @@ static void task_policy_loop_func(void *args)
         pf.func(&task_range, pf.args, tid, tnum);
     }
 
-    call_cnt--;
+    active_levels--;
 }
 
 int kupl_invoke_parallel(kupl_parallel_func_t func, void *args, int num_threads)
@@ -516,24 +518,25 @@ static int kupl_reduce_task_policy_func(kupl_pf_t &pf)
 static void kupl_loop_func(void *args)
 {
     (void)args;
+    int current_active_levels = active_levels;
     static thread_local kupl_nd_range_t range;
-    call_cnt++;
+    active_levels++;
     static thread_local int geid = kupl_get_executor_num();
-    int master_eid = g_pf[geid].master_eid;
-    auto &pf = g_pf[master_eid];
+    int master_eid = g_pf[current_active_levels * pf_num_thread + geid].master_eid;
+    auto &pf = g_pf[current_active_levels * pf_num_thread + master_eid];
     g_ult[geid].tb.egroup = pf.egroup;
 
     int tid = static_cast<int>(pf.egroup->cur.eid2lid[geid]);
     pf.policy_func(range, pf, tid, pf.num_threads);
 
     g_ult[geid].tb.egroup = nullptr;
-    auto &barrier = kupl::FlagBarrier::getInstance();
+    auto &barrier = kupl::FlagBarrier::getInstance(current_active_levels);
     barrier.leave(pf.egroup, pf.num_threads, master_eid);
     if (pf.post_func) {
         pf.post_func(pf, tid, pf.num_threads);
     }
 
-    call_cnt--;
+    active_levels--;
 }
 
 static kupl_always_inline void kupl_static_policy_prepare(kupl_pf_t &pf)
@@ -616,12 +619,12 @@ static int kupl_omp_parallel(kupl_pf_t &pf)
 
 #pragma omp parallel for num_threads(pf.num_threads) private(local_range)
     for (int i = 0; i < pf.num_threads; ++i) {
-        call_cnt++;
+        active_levels++;
         int geid = kupl_get_executor_num();
         g_ult[geid].tb.egroup = pf.egroup;
         pf.policy_func(local_range, pf, i, pf.num_threads);
         g_ult[geid].tb.egroup = nullptr;
-        call_cnt--;
+        active_levels--;
     }
 
     if (pf.post_func) {
@@ -716,7 +719,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
     }
     auto egroup = desc->egroup;
     int num_threads = kupl_parallel_for_num_threads(desc, egroup);
-    if (kupl_unlikely(call_cnt >= 1 || num_threads == 1 || kupl_is_expand_executor())) {
+    if (kupl_unlikely(active_levels >= max_active_levels || num_threads == 1 || kupl_is_expand_executor())) {
         auto ult = kupl_executor_get_pf_ult();
         ult->tb.egroup = egroup;
         func(desc->range, args, 0, 1);
@@ -730,7 +733,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
     } else {
         master_eid = (int)egroup->cur.min_eid;
     }
-    kupl_pf_t &pf = g_pf[master_eid];
+    kupl_pf_t &pf = g_pf[active_levels * pf_num_thread + master_eid];
     // 1. set pf value
     pf.func = func;
     pf.args = args;
@@ -762,12 +765,13 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
         return kupl_omp_parallel(pf);
     }
 
-    auto &barrier = kupl::FlagBarrier::getInstance();
+    auto &barrier = kupl::FlagBarrier::getInstance(active_levels);
     if (kupl_executor_get_current_tb() != nullptr) {
         barrier.wait(pf.egroup, pf.num_threads);
     }
 
-    KUPL_FOR_EACH_LIMIT_EGROUP(pf.egroup, pf.num_threads, eid, eidx, { g_pf[eid].master_eid = master_eid; });
+    KUPL_FOR_EACH_LIMIT_EGROUP(pf.egroup, pf.num_threads, eid, eidx,
+                               { g_pf[(size_t)(active_levels * pf_num_thread) + eid].master_eid = master_eid; });
 
     // 2. notify target threads to execute ult
     barrier.notify(pf.egroup, pf.num_threads);
@@ -831,7 +835,7 @@ int kupl_parallel_for_reduce(kupl_parallel_for_desc_t *desc, kupl_pf_reduce_func
     static thread_local int geid = kupl_get_executor_num();
 
     // quick path
-    if (kupl_unlikely(call_cnt >= 1 || num_threads == 1)) {
+    if (kupl_unlikely(active_levels >= 1 || num_threads == 1)) {
         // prepare
         auto private_args = kupl_reduce_args_dup(rd_args);
         if (kupl_unlikely(private_args == nullptr)) {
@@ -877,7 +881,7 @@ int kupl_parallel_for_reduce(kupl_parallel_for_desc_t *desc, kupl_pf_reduce_func
     KUPL_FOR_EACH_LIMIT_EGROUP(pf.egroup, pf.num_threads, eid, eidx, { g_pf[eid].master_eid = master_eid; });
 
     // 2. notify target threads to execute ult
-    auto &barrier = kupl::FlagBarrier::getInstance();
+    auto &barrier = kupl::FlagBarrier::getInstance(active_levels);
     barrier.notify(pf.egroup, pf.num_threads);
 
     if (master_eid == geid) {
@@ -895,7 +899,23 @@ bool kupl_in_parallel()
     if (!g_core_inited && kupl_init() == KUPL_ERROR) {
         return false;
     }
-    return call_cnt != 0;
+    return active_levels != 0;
+}
+
+int kupl_get_thread_num()
+{
+    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
+        return 0;
+    }
+    if (active_levels != 0) {
+        int geid = kupl_get_executor_num();
+        int master_eid = g_pf[(active_levels - 1) * pf_num_thread + geid].master_eid;
+        auto &pf = g_pf[(active_levels - 1) * pf_num_thread + master_eid];
+        int tid = static_cast<int>(pf.egroup->cur.eid2lid[geid]);
+        return tid;
+    } else {
+        return 0;
+    }
 }
 
 int kupl_get_kernel_concurrency()
@@ -903,10 +923,10 @@ int kupl_get_kernel_concurrency()
     if (!g_core_inited && kupl_init() == KUPL_ERROR) {
         return 1;
     }
-    if (call_cnt == 1) {
+    if (active_levels != 0) {
         static thread_local int geid = kupl_get_executor_num();
-        int master_eid = g_pf[geid].master_eid;
-        auto &pf = g_pf[master_eid];
+        int master_eid = g_pf[(active_levels - 1) * pf_num_thread + geid].master_eid;
+        auto &pf = g_pf[(active_levels - 1) * pf_num_thread + master_eid];
         return pf.num_threads;
     } else {
         return 1;
@@ -987,23 +1007,30 @@ err:
 int kupl_pf_init()
 {
     auto host_info = kupl_get_host_info();
-    int num_threads = host_info->avail_pu_cnt;
-    g_concurrency_default = num_threads;
-    g_pf = (kupl_pf_t *)kupl_calloc(sizeof(kupl_pf_t), (size_t)num_threads);
+    pf_num_thread = host_info->avail_pu_cnt;
+    g_concurrency_default = pf_num_thread;
+    max_active_levels = kupl_config_get_value(KUPL_MAX_ACTIVE_LEVELS);
+    if (max_active_levels <= 0 || max_active_levels > KUPL_PARALLEL_MAX_ACTIVE_LEVEL) {
+        return kupl_log_error_return(WARN, "get incorrect max_active_levels value");
+    }
+    g_pf = (kupl_pf_t *)kupl_calloc(sizeof(kupl_pf_t), (size_t)(pf_num_thread * max_active_levels));
     if (kupl_unlikely(g_pf == nullptr)) {
         goto err;
     }
-    for (int i = 0; i < num_threads; i++) {
-        g_pf[i].chunk_index =
-            (kupl_pf::aligned_index *)kupl_calloc(sizeof(kupl_pf::aligned_index), (size_t)num_threads);
-        if (kupl_unlikely(g_pf[i].chunk_index == nullptr)) {
-            goto err;
+
+    for (int j = 0; j < max_active_levels; j++) {
+        for (int i = 0; i < pf_num_thread; i++) {
+            g_pf[j * pf_num_thread + i].chunk_index =
+                (kupl_pf::aligned_index *)kupl_calloc(sizeof(kupl_pf::aligned_index), (size_t)pf_num_thread);
+            if (kupl_unlikely(g_pf[j * pf_num_thread + i].chunk_index == nullptr)) {
+                goto err;
+            }
         }
     }
-    if (kupl_unlikely(kupl_global_ult_init(num_threads) != KUPL_OK)) {
+    if (kupl_unlikely(kupl_global_ult_init(pf_num_thread) != KUPL_OK)) {
         goto err;
     }
-    if (kupl_unlikely(kupl_global_egroup_create(num_threads) != KUPL_OK)) {
+    if (kupl_unlikely(kupl_global_egroup_create(pf_num_thread) != KUPL_OK)) {
         goto err;
     }
     return KUPL_OK;
@@ -1017,15 +1044,17 @@ void kupl_pf_fini()
     kupl_global_egroup_destroy();
     kupl_global_ult_fini();
     if (g_pf != nullptr) {
-        for (int i = 0; i < g_concurrency_default; i++) {
-            if (g_pf[i].chunk_index != nullptr) {
-                kupl_free_inner(g_pf[i].chunk_index);
-            }
-            if (g_pf[i].rd_item != nullptr) {
-                kupl_memory_free(g_pf[i].rd_item, i);
-            }
-            if (g_pf[i].rd_data != nullptr) {
-                kupl_memory_free(g_pf[i].rd_data, i);
+        for (int j = 0; j < max_active_levels; j++) {
+            for (int i = 0; i < g_concurrency_default; i++) {
+                if (g_pf[j * pf_num_thread + i].chunk_index != nullptr) {
+                    kupl_free_inner(g_pf[j * pf_num_thread + i].chunk_index);
+                }
+                if (g_pf[j * pf_num_thread + i].rd_item != nullptr) {
+                    kupl_memory_free(g_pf[j * pf_num_thread + i].rd_item, i);
+                }
+                if (g_pf[j * pf_num_thread + i].rd_data != nullptr) {
+                    kupl_memory_free(g_pf[j * pf_num_thread + i].rd_data, i);
+                }
             }
         }
         kupl_free_inner(g_pf);

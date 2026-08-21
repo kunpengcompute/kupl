@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+#define KUPL_PARALLEL_MAX_ACTIVE_LEVEL 2
+extern thread_local int active_levels;
+
 using kupl_pf_t = struct kupl_pf;
 
 using kupl_pf_policy_func_t = void(kupl_nd_range_t &range, kupl_pf_t &pf, int tid, int tnum);
