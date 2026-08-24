@@ -36,6 +36,7 @@ static inline void task_int_loop_no_range(kupl_nd_range_t *nd_range, void *args,
 
 static void task_int_parallel(kupl_nd_range_t *nd_range, void *args, int tid, int tnum)
 {
+    kupl_get_thread_num();
     kupl_get_kernel_concurrency();
     kupl_in_parallel();
 }

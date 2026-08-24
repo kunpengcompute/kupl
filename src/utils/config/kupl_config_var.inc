@@ -59,6 +59,8 @@ KUPL_CONFIG_INT(KUPL_CORES_PER_SDMA, 152, 1, 200,
                 "the number of the cores for each SDMA device")
 KUPL_CONFIG_INT(KUPL_KERNEL_CONCURRENCY, 1, 1, 1024,
                 "the number of threads used by memcpy")
+KUPL_CONFIG_INT(KUPL_MAX_ACTIVE_LEVELS, 1, 1, 2,
+                "the max number of levels of parallel nesting")
 KUPL_CONFIG_INT(KUPL_BCAST_TOPO_SPLIT, 16, 1, 512,
                 "the split number of bcast algorithm topo_aware_linear")
 KUPL_CONFIG_INT(KUPL_PTRACE_THREAD_BUFFER_SIZE, 3355443, 1, 10000000,

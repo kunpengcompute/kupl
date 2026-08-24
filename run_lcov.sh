@@ -63,6 +63,7 @@ if [[ "${BUILD_KIND}" == "test" ]]; then
   KUPL_EXECUTOR_COUNT=1 KUPL_ENABLE_PRIORITY=1 KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=test_queue_priority.*
 
   KUPL_ENABLE_HUGEPAGES=1 KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=mq numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=*kupl_malloc*
+  KUPL_MAX_ACTIVE_LEVELS=2 KUPL_EXECUTOR_BACKEND=pthread numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=test_ult_pf.kupl_pf_in_parallel
 
   if [ $hbw_detected -eq 1 ]; then
     KUPL_EXECUTOR_BACKEND=omp KUPL_SCHED_POLICY=static_mq numactl -N 0 $INSTALL_PATH/bin/test_omp_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_detail.xml
