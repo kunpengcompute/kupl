@@ -15,6 +15,7 @@
 #include <condition_variable>
 #include "kupl.h"
 #include "core/kupl_core.h"
+#include "utils/kupl_utils.h"
 #include "backend/kupl_executor_backend.h"
 #include "tools/profile/kupl_profile.h"
 
@@ -385,6 +386,20 @@ int kupl_get_max_concurrency(void)
 {
     if (kupl_in_parallel()) {
         return 1;
+    }
+    if (!g_core_inited) {
+        if (!g_utils_inited && kupl_utils_init() == KUPL_ERROR) {
+            return 1;
+        }
+        const kupl_host_info_t *info = kupl_get_host_info();
+        int config_count = kupl_config_get_value(KUPL_EXECUTOR_COUNT);
+        int count = 0;
+        for (int i = 0; i < info->pu_conf && count < config_count; ++i) {
+            if (CPU_ISSET(i, &info->avail_set)) {
+                count++;
+            }
+        }
+        return count > 0 ? count : 1;
     }
     return kupl_get_kernel_concurrency_inner();
 }
