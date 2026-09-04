@@ -17,17 +17,16 @@
 #include "core/kupl_core.h"
 #include "backend/kupl_executor_backend.h"
 #include "tools/profile/kupl_profile.h"
+#include "executor/kupl_places.h"
 
-static int g_cpu_count = 0;
 static kupl_executor_t *g_executors = nullptr;
+int g_real_executor_count = 0;
 static int g_executor_count = 0;
-static int g_real_executor_count = 0;
-static int g_executor_master_core_id = 0;
 static bool g_executor_need_wait = true;
 static int g_executor_count_initial = CPU_SETSIZE;
 static cpu_set_t g_executor_set;
 static cpu_set_t g_executor_set_expand;
-static kupl_lock_t *g_executor_lock = nullptr;
+kupl_lock_t *g_executor_lock = nullptr;
 static int g_kernel_concurrency = -1;
 static thread_local int g_kernel_concurrency_local = -1;
 
@@ -62,11 +61,6 @@ typedef struct kupl_cv_mutex {
 } kupl_cv_mutex_t;
 
 static kupl_cv_mutex_t *g_executor_cv = nullptr;
-
-int kupl_executor_get_master_core_id()
-{
-    return g_executor_master_core_id;
-}
 
 kupl_executor_t *kupl_executor_get_current_executor()
 {
@@ -112,6 +106,26 @@ kupl_ult_h kupl_executor_get_pf_ult()
     return g_executors[eid].exe.ult;
 }
 
+void kupl_executor_set_place_id(int place_id, int geid)
+{
+    if (kupl_unlikely(geid == KUPL_EXECUTOR_DEFAULT || geid >= g_executor_count)) {
+        return;
+    }
+    if (kupl_unlikely(place_id >= g_num_places)) {
+        g_executors[geid].exe.place_id = KUPL_PLACES_DEFAULT;
+        return;
+    }
+    g_executors[geid].exe.place_id = place_id;
+}
+
+int kupl_executor_get_place_id(int geid)
+{
+    if (kupl_unlikely(geid == KUPL_EXECUTOR_DEFAULT || geid >= g_executor_count)) {
+        return KUPL_PLACES_DEFAULT;
+    }
+    return g_executors[geid].exe.place_id;
+}
+
 int kupl_get_num_executors()
 {
     if (!g_core_inited && kupl_init() == KUPL_ERROR) {
@@ -122,7 +136,7 @@ int kupl_get_num_executors()
 
 int kupl_executor_expand()
 {
-    if (kupl_unlikely(g_executor_count >= g_cpu_count)) {
+    if (kupl_unlikely(g_executor_count >= CPU_SETSIZE)) {
         return KUPL_ERROR;
     }
     kupl_executor_base_t *executor = nullptr;
@@ -132,7 +146,7 @@ int kupl_executor_expand()
         return KUPL_ERROR;
     }
     executor->executor_id = g_executor_count;
-    executor->core_id = kupl_get_self_affinity();
+    executor->place_id = KUPL_PLACES_DEFAULT;
     executor->stop = true;
     executor->current_tb = nullptr;
     executor->is_master_executor = true;
@@ -206,14 +220,25 @@ int kupl_get_local_executor_num(int eid)
     return eid;
 }
 
+void kupl_executor_count_init()
+{
+    g_real_executor_count = kupl_config_get_value(KUPL_EXECUTOR_COUNT);
+    if (g_real_executor_count == 0) {
+        g_real_executor_count = g_num_places;
+    }
+}
+
 int kupl_executor_init()
 {
     kupl_backend_type_select();
-    const kupl_host_info_t *info = kupl_get_host_info();
+    int kernel_concurreny = kupl_config_get_value(KUPL_KERNEL_CONCURRENCY);
+    if (kernel_concurreny != 0) {
+        g_kernel_concurrency = kernel_concurreny;
+    }
 
-    g_cpu_count = info->pu_cnt;
-    g_executor_count = info->avail_pu_cnt;
-    g_executors = (kupl_executor_t *)kupl_calloc(static_cast<size_t>(g_cpu_count), sizeof(kupl_executor_t));
+    g_executor_count = g_real_executor_count;
+
+    g_executors = (kupl_executor_t *)kupl_calloc(static_cast<size_t>(CPU_SETSIZE), sizeof(kupl_executor_t));
     if (kupl_unlikely(g_executors == nullptr)) {
         return KUPL_ERROR;
     }
@@ -222,7 +247,7 @@ int kupl_executor_init()
     /* get executor wait policy */
     std::string wait_policy = kupl_config_get_value_str(KUPL_EXECUTOR_WAIT_POLICY);
     g_executor_need_wait = (wait_policy == "passive");
-    g_executor_cv = new (std::nothrow) kupl_cv_mutex[static_cast<size_t>(g_cpu_count)];
+    g_executor_cv = new (std::nothrow) kupl_cv_mutex[static_cast<size_t>(CPU_SETSIZE)];
     if (kupl_unlikely(g_executor_cv == nullptr)) {
         goto err;
     }
@@ -235,7 +260,7 @@ int kupl_executor_init()
             goto err;
         }
         executor->executor_id = i;
-        executor->core_id = KUPL_EXECUTOR_DEFAULT;
+        executor->place_id = KUPL_EXECUTOR_DEFAULT;
         executor->stop = true;
         executor->current_tb = nullptr;
         executor->is_master_executor = false;
@@ -246,6 +271,8 @@ int kupl_executor_init()
     if (g_executor_lock == nullptr) {
         goto err;
     }
+
+    kupl_set_proc_bind(g_proc_bind);
 
     return KUPL_OK;
 
@@ -279,42 +306,29 @@ void kupl_executor_fini()
 
 int kupl_executor_start()
 {
-    int kupl_executor_count = kupl_config_get_value(KUPL_EXECUTOR_COUNT);
-
     int ret = kupl_set_executor_core_mapping();
     if (kupl_unlikely(ret != KUPL_OK)) {
         return kupl_log_error_return(ERROR, "failed to start executor: kupl_set_executor_core_mapping failed");
     }
 
-    const kupl_host_info_t *info = kupl_get_host_info();
-
-    int executor_count = 0;
-    for (int i = 0; i < info->pu_conf && executor_count < kupl_executor_count; ++i) {
-        if (!CPU_ISSET(i, &info->avail_set)) {
-            continue;
-        }
-
-        kupl_executor_base_t *executor = &g_executors[executor_count].exe;
-        executor->core_id = i;
-        executor->executor_id = executor_count;
+    for (int i = 0; i < g_executor_count; ++i) {
+        kupl_executor_base_t *executor = &g_executors[i].exe;
+        executor->executor_id = i;
         kupl_executor_enable(executor->executor_id);
-        if (executor_count == 0) {
+        if (i == 0) {
             executor->is_master_executor = true;
-            g_executor_master_core_id = executor->core_id;
             kupl_set_global_executor_id(executor->executor_id);
-            kupl_set_affinity(executor->core_id);
+            kupl_set_affinity(executor->place_id);
         } else {
             if (kupl_unlikely(kupl_backend_init(executor) != 0)) {
                 kupl_executor_stop();
                 return KUPL_ERROR;
             }
         }
-        executor_count++;
     }
-    g_real_executor_count = executor_count;
 
     CPU_ZERO(&g_executor_set);
-    for (int j = 0; j < g_real_executor_count; ++j) {
+    for (int j = 0; j < g_executor_count; ++j) {
         CPU_SET(j, &g_executor_set);
     }
     CPU_ZERO(&g_executor_set_expand);

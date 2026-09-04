@@ -90,12 +90,12 @@ int kupl_get_global_core_id()
     return current_cpu;
 }
 
-int kupl_set_affinity(int core_id)
+int kupl_set_affinity(int place_id)
 {
     if (kupl_unlikely(g_kupl_executor_ops.set_affinity == nullptr)) {
         return KUPL_ERROR;
     }
-    return g_kupl_executor_ops.set_affinity(core_id);
+    return g_kupl_executor_ops.set_affinity(place_id);
 }
 
 int kupl_backend_init(void *exec)

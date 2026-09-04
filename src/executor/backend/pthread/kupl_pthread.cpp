@@ -21,6 +21,7 @@
 #include "tools/profile/kupl_profile.h"
 #include "utils/sys/kupl_hardware.h"
 #include "utils/sys/kupl_glibc_version.h"
+#include "executor/kupl_places.h"
 
 static const size_t KUPL_PTHREAD_EXE_DEFAULD_STACK_SIZE = (8 * 1024 * 1024);
 static thread_local int g_eid = KUPL_EIDCID_INIT;
@@ -36,17 +37,52 @@ static int kupl_pt_get_global_executor_id()
     return g_eid;
 }
 
-static int executor_setaffinity(int core_id)
+void kupl_display_cpuset(cpu_set_t *cpuset)
 {
-    if (kupl_unlikely((core_id < 0) || (core_id >= CPU_SETSIZE))) {
-        return kupl_log_error_return(WARN, "KUPL pthread set affinity to core %d failed", core_id);
+    g_executor_lock->lock(g_executor_lock);
+    printf("executor %d bound to OS proc set {", kupl_pt_get_global_executor_id());
+    int first = 1;
+    int range_start = -1;
+    for (int i = 0; i < CPU_SETSIZE; i++) {
+        if (CPU_ISSET(i, cpuset)) {
+            if (range_start == -1) {
+                range_start = i;
+                if (first) {
+                    printf("%d", i);
+                    first = 0;
+                } else {
+                    printf(",%d", i);
+                }
+            }
+        } else {
+            if (range_start != -1) {
+                if (i != range_start + 1) {
+                    printf("-%d", i - 1);
+                }
+                range_start = -1;
+            }
+        }
     }
-    cpu_set_t cpuset;
-    CPU_ZERO(&cpuset);
-    CPU_SET(core_id, &cpuset);
+    printf("}\n");
+    g_executor_lock->unlock(g_executor_lock);
+}
 
-    if (kupl_unlikely(pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset) != 0)) {
-        return kupl_log_error_return(WARN, "KUPL pthread set affinity to core %d failed", core_id);
+static int executor_setaffinity(int place_id)
+{
+    cpu_set_t cpuset;
+    if (place_id == KUPL_PLACES_DEFAULT) {
+        cpuset = full_mask;
+    } else if (kupl_unlikely((place_id < 0) || (place_id >= g_num_places))) {
+        return kupl_log_error_return(WARN, "KUPL pthread set affinity to place %d failed", place_id);
+    } else {
+        cpuset = g_places[place_id];
+        if (kupl_unlikely(pthread_setaffinity_np(pthread_self(), sizeof(cpuset), &cpuset) != 0)) {
+            return kupl_log_error_return(WARN, "KUPL pthread set affinity to place %d failed", place_id);
+        }
+    }
+
+    if (kupl_enable_display_affinity) {
+        kupl_display_cpuset(&cpuset);
     }
     return KUPL_OK;
 }
@@ -54,8 +90,8 @@ static int executor_setaffinity(int core_id)
 static void *executor_body(void *args)
 {
     kupl_executor_base_t *exec = (kupl_executor_base_t *)args;
-    executor_setaffinity(exec->core_id);
     kupl_set_global_executor_id(exec->executor_id);
+    executor_setaffinity(exec->place_id);
 
     while (!KUPL_ATOMIC_LD_RLX(&exec->stop)) {
         kupl_sched_execute_tb(exec->sched);

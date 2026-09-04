@@ -30,9 +30,12 @@ static const int KUPL_EXECUTOR_MAX_QUERY_COUNT = 100;
 bool kupl_is_expand_executor(void);
 int kupl_get_local_executor_num(int eid);
 
+extern kupl_lock_t *g_executor_lock;
+extern int g_real_executor_count;
+
 typedef struct kupl_executor_base {
     int executor_id;
-    int core_id;
+    int place_id;
     KUPL_ATOMIC_BOOL stop;
     pthread_t thread_id;
 
@@ -70,9 +73,13 @@ void kupl_executor_set_current_tb(kupl_taskbase_t *tb);
  */
 kupl_taskbase_t *kupl_executor_get_current_tb(void);
 
-int kupl_executor_get_master_core_id(void);
-
 cpu_set_t *kupl_get_global_executor_set(void);
+
+void kupl_executor_set_place_id(int place_id, int geid);
+
+int kupl_executor_get_place_id(int geid);
+
+void kupl_executor_count_init();
 
 /**
  * @brief Initialize the executor module

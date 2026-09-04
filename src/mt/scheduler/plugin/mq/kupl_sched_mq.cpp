@@ -24,29 +24,25 @@
 #include "tools/struct/kupl_vector.h"
 #include "tools/struct/kupl_list.h"
 
-#define KUPL_RANDOM_SHIFT              16
-#define KUPL_MQ_DEFAULT                (-1)
+#define KUPL_RANDOM_SHIFT 16
+#define KUPL_MQ_DEFAULT (-1)
 
 static const unsigned kupl_primes[] = {
-    0x9e3779b1, 0xe1626741, 0x9677cd4d, 0x99afc3fd, 0x3d9910ed, 0x46eb5ea7,
-    0xffe6cc59, 0x79695e6b, 0xbe3a6929, 0xf3f16801, 0x2e687b5b, 0x6c97d5ed,
-    0x2109f6dd, 0xbc98c09f, 0xadc6a877, 0xe222cfff, 0x29609227, 0xb07dd827,
-    0x43977ab5, 0xd5bee2b3, 0xdcf0674b, 0x24ba5fdb, 0x6eb081f1, 0x085a3d61,
-    0xba5703f5, 0x287488f9, 0xbe4d6fe9, 0x0620452d, 0x0954c4e1, 0x972702cd,
-    0xb495a877, 0x3af18231, 0x5f15e201, 0x79f149e3, 0x9d114db9, 0xc8b93f49,
-    0xbec333cd, 0x542acfa9, 0xef1affc7, 0x5d2e980b, 0x3549366b, 0xb98294e5,
-    0xe9f3ffa7, 0x6bdef3c9, 0x5ca19031, 0xe6baf34b, 0x343377f7, 0xf2480f45,
-    0x54581edb, 0xf0a9f391, 0x892d9483, 0x629750ad, 0x3d2402a3, 0x0742d917,
-    0x40c9520f, 0x85fa0ca7, 0xfc411073, 0x3ccc14db, 0xb3e6bd7b, 0xb892d829,
-    0xc3749363, 0xc235baf3, 0xe6d9293b, 0x0bb9288f};
-
+    0x9e3779b1, 0xe1626741, 0x9677cd4d, 0x99afc3fd, 0x3d9910ed, 0x46eb5ea7, 0xffe6cc59, 0x79695e6b,
+    0xbe3a6929, 0xf3f16801, 0x2e687b5b, 0x6c97d5ed, 0x2109f6dd, 0xbc98c09f, 0xadc6a877, 0xe222cfff,
+    0x29609227, 0xb07dd827, 0x43977ab5, 0xd5bee2b3, 0xdcf0674b, 0x24ba5fdb, 0x6eb081f1, 0x085a3d61,
+    0xba5703f5, 0x287488f9, 0xbe4d6fe9, 0x0620452d, 0x0954c4e1, 0x972702cd, 0xb495a877, 0x3af18231,
+    0x5f15e201, 0x79f149e3, 0x9d114db9, 0xc8b93f49, 0xbec333cd, 0x542acfa9, 0xef1affc7, 0x5d2e980b,
+    0x3549366b, 0xb98294e5, 0xe9f3ffa7, 0x6bdef3c9, 0x5ca19031, 0xe6baf34b, 0x343377f7, 0xf2480f45,
+    0x54581edb, 0xf0a9f391, 0x892d9483, 0x629750ad, 0x3d2402a3, 0x0742d917, 0x40c9520f, 0x85fa0ca7,
+    0xfc411073, 0x3ccc14db, 0xb3e6bd7b, 0xb892d829, 0xc3749363, 0xc235baf3, 0xe6d9293b, 0x0bb9288f};
 
 static thread_local unsigned th_x, th_a;
 static thread_local bool random_inited = false;
 static int enable_priority;
 
-static kupl_always_inline
-unsigned short kupl_get_random() {
+static kupl_always_inline unsigned short kupl_get_random()
+{
     unsigned x = th_x;
     unsigned short r = (unsigned short)(x >> KUPL_RANDOM_SHIFT);
 
@@ -55,27 +51,25 @@ unsigned short kupl_get_random() {
     return r;
 }
 
-static kupl_always_inline
-void kupl_init_random(int executor_id) {
+static kupl_always_inline void kupl_init_random(int executor_id)
+{
     if (random_inited) {
         return;
     }
     unsigned seed = (unsigned)executor_id;
 
-    th_a =
-        kupl_primes[seed % (sizeof(kupl_primes) / sizeof(kupl_primes[0]))];
+    th_a = kupl_primes[seed % (sizeof(kupl_primes) / sizeof(kupl_primes[0]))];
     th_x = (seed + 1) * th_a + 1;
     random_inited = true;
 }
 
 typedef struct queue {
-    kupl_vector_t    *q;
-    kupl_lock_t      *add_lock;
-    kupl_lock_t      *get_lock;
+    kupl_vector_t *q;
+    kupl_lock_t *add_lock;
+    kupl_lock_t *get_lock;
 } queue_t;
 
-static kupl_always_inline
-void queue_cleanup(queue_t *queue)
+static kupl_always_inline void queue_cleanup(queue_t *queue)
 {
     if (queue == nullptr) {
         return;
@@ -86,8 +80,7 @@ void queue_cleanup(queue_t *queue)
     kupl_safe_free(queue);
 }
 
-static kupl_always_inline
-queue_t *queue_create(int size)
+static kupl_always_inline queue_t *queue_create(int size)
 {
     queue_t *queue = (queue_t *)kupl_malloc_inner(sizeof(queue_t));
     if (queue == nullptr) {
@@ -105,8 +98,7 @@ err:
     return nullptr;
 }
 
-static kupl_always_inline
-int queue_add_tb(queue_t *queue, kupl_taskbase_t *tb)
+static kupl_always_inline int queue_add_tb(queue_t *queue, kupl_taskbase_t *tb)
 {
     int err = KUPL_ERROR;
     if (kupl_unlikely(queue == nullptr)) {
@@ -120,8 +112,7 @@ int queue_add_tb(queue_t *queue, kupl_taskbase_t *tb)
     return err;
 }
 
-static kupl_always_inline
-kupl_taskbase_t *queue_get_tb(queue_t *queue)
+static kupl_always_inline kupl_taskbase_t *queue_get_tb(queue_t *queue)
 {
     kupl_taskbase_t *tb = nullptr;
     if (kupl_unlikely(queue == nullptr)) {
@@ -139,13 +130,13 @@ kupl_taskbase_t *queue_get_tb(queue_t *queue)
 }
 
 typedef struct place_queue {
-    queue_t     **qs;
-    cpu_set_t   *eid_set;
-    int         queue_cnt;
+    queue_t **qs;
+    cpu_set_t *eid_set;
+    int queue_cnt;
 } place_queue_t;
 
-static kupl_always_inline
-int parse_eid(char *token) {
+static kupl_always_inline int parse_eid(char *token)
+{
     char *end = nullptr;
     long eid = std::strtol(token, &end, KUPL_BASE_DEC);
     if (end == nullptr || end == token || *end != '\0' || errno == ERANGE) {
@@ -157,8 +148,7 @@ int parse_eid(char *token) {
     return (int)eid;
 }
 
-static kupl_always_inline
-void parse_place_scatter(char *str, cpu_set_t *eid_set)
+static kupl_always_inline void parse_place_scatter(char *str, cpu_set_t *eid_set)
 {
     char *save;
     char *token = strtok_r(str, ",", &save);
@@ -168,12 +158,11 @@ void parse_place_scatter(char *str, cpu_set_t *eid_set)
             continue;
         }
         CPU_SET(eid, eid_set);
-        token = strtok_r(nullptr, ",",  &save);
+        token = strtok_r(nullptr, ",", &save);
     }
 }
 
-static kupl_always_inline
-void parse_place_range(char *str, cpu_set_t *eid_set)
+static kupl_always_inline void parse_place_range(char *str, cpu_set_t *eid_set)
 {
     int range_start = 0;
     int range_end = 0;
@@ -181,7 +170,7 @@ void parse_place_range(char *str, cpu_set_t *eid_set)
     char *token = strtok_r(str, "-", &save);
     if (token != nullptr) {
         range_start = parse_eid(token);
-        token = strtok_r(nullptr, "-",  &save);
+        token = strtok_r(nullptr, "-", &save);
     }
     if (token != nullptr) {
         range_end = parse_eid(token);
@@ -199,8 +188,7 @@ void parse_place_range(char *str, cpu_set_t *eid_set)
     }
 }
 
-static kupl_always_inline
-void parse_place_single(char *str, cpu_set_t *eid_set)
+static kupl_always_inline void parse_place_single(char *str, cpu_set_t *eid_set)
 {
     int eid = parse_eid(str);
     if (kupl_unlikely(eid == KUPL_EIDCID_INIT)) {
@@ -209,8 +197,7 @@ void parse_place_single(char *str, cpu_set_t *eid_set)
     CPU_SET(eid, eid_set);
 }
 
-static kupl_always_inline
-bool parse_place(char *_str, cpu_set_t *eid_set)
+static kupl_always_inline bool parse_place(char *_str, cpu_set_t *eid_set)
 {
     const size_t max_len = 20;
     size_t len = strlen(_str) + 1;
@@ -243,8 +230,7 @@ bool parse_place(char *_str, cpu_set_t *eid_set)
     return false;
 }
 
-static kupl_always_inline
-int cal_place_queue_cnt(char* affinity)
+static kupl_always_inline int cal_place_queue_cnt(char *affinity)
 {
     // without place queue
     if (*affinity == 0) {
@@ -259,22 +245,21 @@ int cal_place_queue_cnt(char* affinity)
             continue;
         }
         switch (affinity[i]) {
-        case '|':
-            place_cnt++;
-            break;
-        case ',':
-        case '-':
-            break;
-        default:
-            kupl_warn("mq place queue invalid affinity");
-            return KUPL_MQ_DEFAULT;
+            case '|':
+                place_cnt++;
+                break;
+            case ',':
+            case '-':
+                break;
+            default:
+                kupl_warn("mq place queue invalid affinity");
+                return KUPL_MQ_DEFAULT;
         }
     }
     return place_cnt;
 }
 
-static kupl_always_inline
-void place_queue_cleanup(place_queue_t *queue)
+static kupl_always_inline void place_queue_cleanup(place_queue_t *queue)
 {
     if (queue == nullptr) {
         return;
@@ -289,8 +274,7 @@ void place_queue_cleanup(place_queue_t *queue)
     kupl_safe_free(queue);
 }
 
-static kupl_always_inline
-place_queue_t *place_queue_create(int size, char* affinity)
+static kupl_always_inline place_queue_t *place_queue_create(int size, char *affinity)
 {
     place_queue_t *queue = (place_queue_t *)kupl_calloc(sizeof(place_queue_t), 1);
     if (queue == nullptr) {
@@ -338,13 +322,13 @@ error:
 }
 
 typedef struct kupl_sched_mq {
-    int                 queue_size;         // queue size
-    int                 num_executors;      // executor num
-    priority_queue_t    *priority_queues;  // priority_queues own by executors
-    queue_t             **local_queues;     // local_queues own by executors
-    kupl_slist_t       **place_queues;     // place_queues own by executors
-    place_queue_t       *real_place_queues; // real place_queues
-    int                 *last_steal;
+    int queue_size;                    // queue size
+    int num_executors;                 // executor num
+    priority_queue_t *priority_queues; // priority_queues own by executors
+    queue_t **local_queues;            // local_queues own by executors
+    kupl_slist_t **place_queues;       // place_queues own by executors
+    place_queue_t *real_place_queues;  // real place_queues
+    int *last_steal;
 } kupl_sched_mq_t;
 
 static int kupl_sched_mq_init(kupl_sched_plugin_property_t *property)
@@ -356,12 +340,9 @@ static int kupl_sched_mq_init(kupl_sched_plugin_property_t *property)
 
     return KUPL_OK;
 }
-static void kupl_sched_mq_fini()
-{
-}
+static void kupl_sched_mq_fini() {}
 
-static kupl_always_inline
-int kupl_create_place_queue_list(int index, kupl_sched_mq_t *sched)
+static kupl_always_inline int kupl_create_place_queue_list(int index, kupl_sched_mq_t *sched)
 {
     // create place queues
     auto pq = sched->real_place_queues;
@@ -382,14 +363,13 @@ int kupl_create_place_queue_list(int index, kupl_sched_mq_t *sched)
 }
 
 static void kupl_sched_mq_cleanup(void *_sched);
-static void* kupl_sched_mq_create()
+static void *kupl_sched_mq_create()
 {
     kupl_sched_mq_t *sched = (kupl_sched_mq_t *)kupl_calloc(1, sizeof(kupl_sched_mq_t));
     if (kupl_unlikely(sched == nullptr)) {
         return nullptr;
     }
-    auto host_info = kupl_get_host_info();
-    auto num_executors = host_info->avail_pu_cnt;
+    auto num_executors = kupl_get_num_executors();
     sched->num_executors = num_executors;
     sched->queue_size = kupl_config_get_value(KUPL_SCHED_QUEUE_LENGTH);
 
@@ -511,8 +491,7 @@ place_queue:
     return err;
 }
 
-static kupl_always_inline
-kupl_taskbase_t *pop_one_tb(kupl_sched_mq_t *sched, int executor_id)
+static kupl_always_inline kupl_taskbase_t *pop_one_tb(kupl_sched_mq_t *sched, int executor_id)
 {
     kupl_taskbase_t *tb = nullptr;
 
@@ -602,7 +581,7 @@ static const kupl_sched_plugin_api_t KUPL_SCHED_PLUGIN_GLOBAL_VAR(mq) = {
     .get_tb = kupl_sched_mq_get_tb,
 };
 
-const kupl_sched_plugin_api_t* kupl_sched_mq_get_instance()
+const kupl_sched_plugin_api_t *kupl_sched_mq_get_instance()
 {
     return &KUPL_SCHED_PLUGIN_GLOBAL_VAR(mq);
 }

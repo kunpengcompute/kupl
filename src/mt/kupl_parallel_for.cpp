@@ -1006,8 +1006,7 @@ err:
 
 int kupl_pf_init()
 {
-    auto host_info = kupl_get_host_info();
-    pf_num_thread = host_info->avail_pu_cnt;
+    pf_num_thread = kupl_get_num_executors();
     g_concurrency_default = pf_num_thread;
     max_active_levels = kupl_config_get_value(KUPL_MAX_ACTIVE_LEVELS);
     if (max_active_levels <= 0 || max_active_levels > KUPL_PARALLEL_MAX_ACTIVE_LEVEL) {

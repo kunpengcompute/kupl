@@ -25,8 +25,7 @@ kupl_egroup_h kupl_egroup_create(int *executors, int executors_num)
     if (!g_core_inited && kupl_init() == KUPL_ERROR) {
         return nullptr;
     }
-    auto host_info = kupl_get_host_info();
-    int num_executors = host_info->avail_pu_cnt;
+    int num_executors = kupl_get_num_executors();
     if (kupl_unlikely((executors_num > KUPL_EXECUTOR_ID_MAX) || (executors_num > num_executors) ||
                       (executors_num < 0))) {
         return nullptr;
