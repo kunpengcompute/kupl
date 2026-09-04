@@ -57,10 +57,12 @@ yum list | grep kernel
 ```
 yum list installed | grep environment-modules.aarch64
 ```
+
 回显有如下信息说明已安装module工具。
 ```
 environment-modules.aarch64                        5.0.1-3.oe2203sp1                @OS
 ```
+
 如果未安装module工具，执行以下命令安装，并加载环境变量。
 ```
 yum install -y environment-modules
@@ -68,8 +70,14 @@ source /etc/profile.d/modules.sh
 ```
 
 #### 加载 module
+执行以下命令加载 module
 ```
 module use [HPCKit安装目录]/HPCKit/latest/modulefiles
+```
+
+执行以下命令，如果输出包含了刚才 `module use` 的路径，说明 module 加载成功
+```
+echo $MODULEPATH
 ```
 
 #### 加载编译器环境变量
@@ -92,20 +100,25 @@ yum install cmake numactl numactl-devel
 克隆或者下载软件包，并进入到软件包的根目录
 
 确认您需要的编译的类型（GCC 或 Bisheng），在终端执行相应的加载命令：
+
 - 若使用 GCC
 ```
-sh build.sh --install_path=[KUPL安装目录]
+sh build.sh
 ```
 - 若使用 BiSheng
 ```
-sh build.sh --compiler=clang --install_path=[KUPL安装目录]
+sh build.sh --compiler=clang
 ```
 ### 6. 更多
 #### 查看编译选项
 ```
 sh build.sh --help
 ```
-#### 编译运行测试程序(GCC)
+#### 编译运行测试程序
+
+确认您需要的编译器类型（GCC 或 Bisheng），在终端执行相应的加载命令：
+
+- 若使用 GCC
 ```
 module unload bisheng/hmpi26.1.RC1/release
 
@@ -115,10 +128,13 @@ sh build.sh --build_kind=test
 
 sh run_lcov.sh
 ```
-#### 编译运行测试程序(BiSheng)
-需要编译并加载 Bisheng 版本的 googletest。
+
+- 若使用 BiSheng
+
+需要编译并加载 Bisheng 版本的 googletest
 
 指定编译 googletest 的编译器为 Bisheng
+
 ```
 export CC=clang
 export CXX=clang++
