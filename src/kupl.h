@@ -389,6 +389,19 @@ kupl_export int kupl_sgraph_add_dep(kupl_sgraph_node_h precede, kupl_sgraph_node
  */
 kupl_export void kupl_sgraph_destroy(kupl_sgraph_h sgraph);
 
+typedef enum kupl_proc_bind {
+    KUPL_PROC_BIND_MASTER,
+    KUPL_PROC_BIND_CLOSE,
+    KUPL_PROC_BIND_SPREAD
+} kupl_proc_bind_t;
+
+/**
+ * @brief set kupl proc bind policy
+ *
+ * @param [in] proc_bind the proc bind policy
+ */
+kupl_export void kupl_push_proc_bind(kupl_proc_bind_t proc_bind);
+
 /**
  * @brief Get kupl executor num, used for kupl_egroup_create
  *

@@ -114,8 +114,7 @@ static void kupl_sched_static_mq_fini() {}
 static void kupl_sched_static_mq_cleanup(void *_sched);
 static void *kupl_sched_static_mq_create()
 {
-    auto host_info = kupl_get_host_info();
-    int num_executors = host_info->avail_pu_cnt;
+    int num_executors = kupl_get_num_executors();
 
     kupl_sched_static_mq_t *sched = (kupl_sched_static_mq_t *)kupl_calloc(1, sizeof(kupl_sched_static_mq_t));
     if (kupl_unlikely(sched == nullptr)) {

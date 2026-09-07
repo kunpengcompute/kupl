@@ -263,8 +263,7 @@ int kupl_ptrace_init()
     ptrace_executor_buffersize = kupl_config_get_value(KUPL_PTRACE_THREAD_BUFFER_SIZE);
     kupl_debug("kupl profile trace init");
     g_ptrace_ts = kupl_now_ns();
-    const kupl_host_info_t *host_info = kupl_get_host_info();
-    ptrace_executor_count = host_info->avail_pu_cnt;
+    ptrace_executor_count = kupl_get_num_executors();
     if (ptrace_executor_count == 0) {
         return kupl_log_error_return(ERROR, "ptrace executor count is 0");
     }

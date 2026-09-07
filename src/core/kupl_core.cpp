@@ -18,6 +18,7 @@
 #include "memory/hbw/kupl_hbw.h"
 #include "memory/mem/kupl_mem.h"
 #include "executor/kupl_executor.h"
+#include "executor/kupl_places.h"
 #include "mt/scheduler/kupl_sched.h"
 #include "mt/kupl_graph.h"
 #include "mt/kupl_queue.h"
@@ -151,6 +152,10 @@ int kupl_init()
         goto err_utils_init;
     }
 
+    if (kupl_unlikely(kupl_places_init() != KUPL_OK)) {
+        goto err_places_init;
+    }
+
     if (kupl_unlikely(!g_tools_inited && kupl_tools_init() != KUPL_OK)) {
         kupl_error("Initialize tools module failed");
         goto err_tools_init;
@@ -202,6 +207,8 @@ err_memory_init:
 err_sdma_init:
     kupl_tools_fini();
 err_tools_init:
+    kupl_places_fini();
+err_places_init:
     kupl_utils_fini();
 err_utils_init:
     return KUPL_ERROR;
@@ -225,6 +232,7 @@ __attribute__((destructor)) void kupl_fini()
     if (g_tools_inited) {
         kupl_tools_fini();
     }
+    kupl_places_fini();
     if (g_utils_inited) {
         kupl_utils_fini();
     }

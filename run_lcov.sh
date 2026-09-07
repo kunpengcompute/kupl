@@ -49,11 +49,17 @@ if [[ "${BUILD_KIND}" == "test" ]]; then
     exit 0
   fi
   if [ $hbw_detected -eq 1 ]; then
-    KUPL_EXECUTOR_COUNT=1024 KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml
-    KUPL_EXECUTOR_COUNT=1024 KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq numactl -N 0 --membind=16 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=*kupl_malloc*
+    KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml
+    KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq numactl -N 0 --membind=16 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=*kupl_malloc*
   else
-    KUPL_EXECUTOR_COUNT=1024 KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=-*hbw*:*kupl_mem_*
+    KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=-*hbw*:*kupl_mem_*
   fi
+  KUPL_EXECUTOR_COUNT=4 KUPL_DISPLAY_AFFINITY=1 KUPL_PLACES="cores(3)" KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=test_executor.kupl_proc_bind
+  KUPL_EXECUTOR_COUNT=4 KUPL_DISPLAY_AFFINITY=1 KUPL_PLACES="numa_domains" KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=test_executor.kupl_proc_bind
+  KUPL_EXECUTOR_COUNT=4 KUPL_DISPLAY_AFFINITY=1 KUPL_PLACES="sockets" KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=test_executor.kupl_proc_bind
+  KUPL_EXECUTOR_COUNT=4 KUPL_DISPLAY_AFFINITY=1 KUPL_PLACES="{0,3,6}:4:2" KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=test_executor.kupl_proc_bind
+  KUPL_EXECUTOR_COUNT=4 KUPL_DISPLAY_AFFINITY=1 KUPL_PROC_BIND=false KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=test_executor.kupl_proc_bind
+  KUPL_EXECUTOR_COUNT=4 KUPL_DISPLAY_AFFINITY=1 KUPL_PROC_BIND=close KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=test_executor.kupl_proc_bind
 
   KUPL_SCHED_MQ_PLACEQ_AFFINITY="0|0,1|0-1023|6-5|1025-1026|*" KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=mq numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=*queue_event*
   KUPL_SCHED_MQ_PLACEQ_AFFINITY="" KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=mq numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=*queue_event*

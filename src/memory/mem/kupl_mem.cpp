@@ -194,7 +194,7 @@ static int mem_alloc(kupl_mem_t *mem)
         return KUPL_ERROR;
     }
     int pin = KUPL_ERROR;
-    if (mem->size >= (size_t)kupl_config_get_value(KUPL_SDMA_MEMCPY_THRESHOLD)) {
+    if (mem->size >= (size_t)kupl_config_get_value(KUPL_MEMCPY_SDMA_THRESHOLD)) {
         pin = kupl_mlock(mem->base_ddr, mem->size);
     }
     mem->base_hbw = hbw;

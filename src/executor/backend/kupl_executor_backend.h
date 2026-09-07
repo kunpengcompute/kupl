@@ -29,7 +29,7 @@ typedef enum kupl_backend_type {
 
 typedef int (*kupl_backend_base_init)(void *exec);
 typedef void (*kupl_backend_base_fini)(void *exec);
-typedef int (*kupl_backend_base_setaffinity)(int core_id);
+typedef int (*kupl_backend_base_setaffinity)(int place_id);
 typedef int (*kupl_backend_base_set_geid)(int geid);
 typedef int (*kupl_backend_base_get_geid)(void);
 typedef int (*kupl_backend_base_set_gcid)(int gcid);
@@ -74,7 +74,7 @@ int kupl_get_global_executor_id(void);
  */
 int kupl_get_global_core_id(void);
 
-int kupl_set_affinity(int core_id);
+int kupl_set_affinity(int place_id);
 
 int kupl_backend_init(void *exec);
 

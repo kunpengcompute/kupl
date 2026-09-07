@@ -37,14 +37,14 @@ KUPL_CONFIG_INT(KUPL_ENABLE_HARDWARE_VERBOSE, 0, 0, 1,
                 "print the hardward topology infomation")
 KUPL_CONFIG_INT(KUPL_LOG_LEVEL, 2, 0, 4,
                 "the min log level (0:debug 1:info 2:warn 3:error 4:fatal)")
-KUPL_CONFIG_INT(KUPL_MAX_GCID, 1024, 16, 10240,
-                "the max gcid and is the max threads number the runtime can use")
+KUPL_CONFIG_INT(KUPL_DISPLAY_AFFINITY, 0, 0, 1,
+                "enable to display affinity")
 KUPL_CONFIG_INT(KUPL_ENABLE_PRIORITY, 0, 0, 1,
                 "enable the sched priority")
 KUPL_CONFIG_INT(KUPL_SCHED_QUEUE_LENGTH, 512, 64, 102400,
                 "the max ult numbers in ready queue")
-KUPL_CONFIG_INT(KUPL_EXECUTOR_COUNT, 1024, 1, 1024,
-                "the executor thread's count (the valid max count is the CPU core count).")
+KUPL_CONFIG_INT(KUPL_EXECUTOR_COUNT, 0, 0, 1024,
+                "the executor thread's count (0:the executor conunt is set to the count of PLACES)")
 KUPL_CONFIG_INT(KUPL_ENABLE_YIELD, 1, 0, 1,
                 "enable the executor thread yield while it cannot get ult for multiple times")
 KUPL_CONFIG_INT(KUPL_YIELD_COUNT, 2147483647, 1, 2147483647,
@@ -53,12 +53,12 @@ KUPL_CONFIG_INT(KUPL_TRACE_TASKBASE, 1, 0, 1,
                 "trace taskbase")
 KUPL_CONFIG_INT(KUPL_MEMCPY_MT_THRESHOLD, 524288, 0, 2147483647,
                 "the threshold size of memcpy and memcpy2d when to use mutil threads memcpy, default is 512KB")
-KUPL_CONFIG_INT(KUPL_SDMA_MEMCPY_THRESHOLD, 524288, 0, 2147483647,
+KUPL_CONFIG_INT(KUPL_MEMCPY_SDMA_THRESHOLD, 524288, 0, 2147483647,
                 "the threshold size of memcpy when to use sdma memcpy, default is 2M")
 KUPL_CONFIG_INT(KUPL_CORES_PER_SDMA, 152, 1, 200,
                 "the number of the cores for each SDMA device")
-KUPL_CONFIG_INT(KUPL_KERNEL_CONCURRENCY, 1, 1, 1024,
-                "the number of threads used by memcpy")
+KUPL_CONFIG_INT(KUPL_KERNEL_CONCURRENCY, 0, 0, 1024,
+                "the kernel concurrency of kupl parallel for (0:the concurrency is set to the executors num)")
 KUPL_CONFIG_INT(KUPL_MAX_ACTIVE_LEVELS, 1, 1, 2,
                 "the max number of levels of parallel nesting")
 KUPL_CONFIG_INT(KUPL_BCAST_TOPO_SPLIT, 16, 1, 512,
@@ -86,6 +86,10 @@ KUPL_CONFIG_STR(KUPL_EXECUTOR_WAIT_POLICY,
                 "active", "the executor wait policy, now support active, passive")
 KUPL_CONFIG_STR(KUPL_EXECUTOR_BACKEND,
                 "omp", "the executor backend, now support omp, pthread")
+KUPL_CONFIG_STR(KUPL_PROC_BIND,
+                "true", "the proc bind policy, now support true, false, master, close, spread")
+KUPL_CONFIG_STR(KUPL_PLACES,
+                "cores", "kupl places, now support abstract name or place-list")
 KUPL_CONFIG_STR(KUPL_SHM_TYPE,
                 "posix", "the shm type, now support posix, xpmem, sls")
 KUPL_CONFIG_STR(KUPL_SCHED_MQ_PLACEQ_AFFINITY,
@@ -94,8 +98,6 @@ KUPL_CONFIG_STR(KUPL_BARRIER_ALGORITHM,
                 "", "select the thread barrier algorithm")
 KUPL_CONFIG_STR(KUPL_SHM_FENCE_ALGORITHM,
                 "", "select the process barrier algorithm")
-KUPL_CONFIG_STR(KUPL_SCHED_HYBRID_POLICY,
-                "", "select the scheduler plugin for hybrid plugin")
 KUPL_CONFIG_STR(KUPL_SHM_BCAST_ALGORITHM,
                 "", "select the shm bcast algorithm")
 KUPL_CONFIG_STR(KUPL_SHM_ALLREDUCE_ALGORITHM,

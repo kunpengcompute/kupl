@@ -44,17 +44,16 @@ static void sched_cleanup(void *_sched);
 
 static void *sched_create()
 {
-    auto host_info = kupl_get_host_info();
     auto sched = static_cast<sched_data_t *>(kupl_calloc(1, sizeof(sched_data_t)));
     if (kupl_unlikely(sched == nullptr)) {
         return nullptr;
     }
-    sched->slot = (executor_slot_t *)kupl_calloc((size_t)host_info->avail_pu_cnt, sizeof(executor_slot_t));
+    sched->slot = (executor_slot_t *)kupl_calloc((size_t)kupl_get_num_executors(), sizeof(executor_slot_t));
     if (sched->slot == nullptr) {
         sched_cleanup(sched);
         return nullptr;
     }
-    sched->slot_num = host_info->avail_pu_cnt;
+    sched->slot_num = kupl_get_num_executors();
     return sched;
 }
 

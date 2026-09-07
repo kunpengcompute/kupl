@@ -43,9 +43,6 @@ TEST(test_executor_inner, executor_err)
 
 TEST(test_executor_inner, executor_normal)
 {
-    int master_core_id = kupl_executor_get_master_core_id();
-    ASSERT_TRUE(master_core_id == 0);
-
     int executor_id = kupl_get_executor_num();
     ASSERT_TRUE(executor_id == 0);
 

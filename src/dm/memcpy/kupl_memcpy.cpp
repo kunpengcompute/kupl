@@ -393,7 +393,7 @@ int kupl_memcpy(void *dst, const void *src, size_t count)
         return KUPL_ERROR;
     }
     if (sdma_memcpy_func_init) {
-        if (count < (size_t)kupl_config_get_value(KUPL_SDMA_MEMCPY_THRESHOLD) ||
+        if (count < (size_t)kupl_config_get_value(KUPL_MEMCPY_SDMA_THRESHOLD) ||
             !kupl_get_sdma_chn_by_cid(kupl_get_core_index()) || !kupl_memory_is_pinned(dst, count) ||
             !kupl_memory_is_pinned(const_cast<void *>(src), count)) {
             memcpy(dst, src, count);
@@ -674,7 +674,7 @@ int kupl_memcpy2d(void *dst, size_t dpitch, const void *src, size_t spitch, size
         return KUPL_ERROR;
     }
     if (sdma_memcpy_func_init) {
-        if (width * height < (size_t)kupl_config_get_value(KUPL_SDMA_MEMCPY_THRESHOLD) ||
+        if (width * height < (size_t)kupl_config_get_value(KUPL_MEMCPY_SDMA_THRESHOLD) ||
             !kupl_get_sdma_chn_by_cid(kupl_get_core_index()) ||
             !kupl_memory_is_pinned(dst, (height - 1) * dpitch + width) ||
             !kupl_memory_is_pinned(const_cast<void *>(src), (height - 1) * spitch + width)) {
