@@ -590,6 +590,11 @@ kupl_export void kupl_set_kernel_concurrency(int num);
  */
 kupl_export int kupl_get_kernel_concurrency(void);
 
+/**
+ * @brief get the max number of threads used by kupl parallel for
+ *
+ * @return the number of threads used next
+ */
 kupl_export int kupl_get_max_concurrency(void);
 
 /**
