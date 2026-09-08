@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <mutex>
 #include <condition_variable>
+#include <pthread.h>
 #include "kupl.h"
 #include "core/kupl_core.h"
 #include "backend/kupl_executor_backend.h"
@@ -393,6 +394,36 @@ int kupl_get_kernel_concurrency_inner(void)
         return g_kernel_concurrency;
     }
     return kupl_get_num_executors();
+}
+
+int kupl_get_max_concurrency(void)
+{
+    if (!g_core_inited) {
+        kupl_config_load();
+        int config_count = kupl_config_get_value(KUPL_EXECUTOR_COUNT);
+        int pu_conf = static_cast<int>(sysconf(_SC_NPROCESSORS_CONF));
+        cpu_set_t set;
+        CPU_ZERO(&set);
+        pthread_getaffinity_np(pthread_self(), sizeof(set), &set);
+        int affinity = 0;
+        for (int i = 0; i < pu_conf; ++i) {
+            if (CPU_ISSET(i, &set)) {
+                affinity++;
+            }
+        }
+        int count = config_count == 0 ? pu_conf : config_count;
+        if (pu_conf < count) {
+            count = pu_conf;
+        }
+        if (affinity < count) {
+            count = affinity;
+        }
+        return count > 0 ? count : 1;
+    }
+    if (kupl_in_parallel()) {
+        return 1;
+    }
+    return kupl_get_kernel_concurrency_inner();
 }
 
 void kupl_set_kernel_concurrency_local(int num)
