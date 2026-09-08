@@ -221,6 +221,14 @@ kupl_export void kupl_graph_destroy(kupl_graph_h graph);
  */
 kupl_export void kupl_graph_wait(kupl_graph_h graph);
 
+/**
+ * @brief test if all the ults and tasks in the graph are finished
+ *
+ * @param [in] graph        the graph handler
+ * @return                  the number of tasks remain in the graph
+ */
+kupl_export int kupl_graph_test(kupl_graph_h graph);
+
 /** @brief the flag for task */
 enum kupl_task_flag {
     /**
