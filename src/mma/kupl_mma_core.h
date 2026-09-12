@@ -48,6 +48,9 @@ class is_int_constexpr<Int<V>> : public std::true_type {};
 template <int V>
 class Ops : public Val<int, V> {};
 
+template <int V>
+class TensorType : public Val<int, V> {};
+
 template <typename... Args>
 class kupl_tuple {
 public:
@@ -225,6 +228,25 @@ private:
     Layout layout_;
 };
 
+typedef enum tensor_type {
+    KP36_KUPL_MATRIX = 0
+} tensor_type_t;
+
+template<typename Layout>
+class Tensor<TensorType<KP36_KUPL_MATRIX>, Layout> {
+public:
+    Tensor(Layout layout) : layout_(layout)
+    {
+    }
+
+    ~Tensor()
+    {
+    }
+
+private:
+    Layout layout_;
+};
+
 template <typename dtype, typename Layout>
 class TensorAdd {
 public:
@@ -363,6 +385,7 @@ typedef enum mma_atom {
     KP36_32x16x512_F64F64F64,
     KP36_16x64x2_BF16BF16F32,
     KP36_16x64x1_BF16BF16F32,
+    KP36_32x32x2_BF16BF16F32,
     KP36_16x64x4_INT8INT8INT32,
     KP36_32x32x4_INT8INT8INT32
 } mma_atom_t;
@@ -372,14 +395,21 @@ class TiledMma {
 public:
     template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
               typename LayoutB, typename dtypeC, typename LayoutC>
-    friend void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
+    friend kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
                     Tensor<dtypeC, LayoutC> C) MMA_INOUT;
+
+    template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
+              typename LayoutB>
+    friend kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B) MMA_INOUT;
 
 private:
     template <typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB, typename LayoutB,
               typename dtypeC, typename LayoutC>
-    void call(Tensor<dtypeD, LayoutD> &D, const Tensor<dtypeA, LayoutA> &A, const Tensor<dtypeB, LayoutB> &B,
+    void kupl_always_inline call(Tensor<dtypeD, LayoutD> &D, const Tensor<dtypeA, LayoutA> &A, const Tensor<dtypeB, LayoutB> &B,
               const Tensor<dtypeC, LayoutC> &C) MMA_INOUT;
+
+    template <typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB, typename LayoutB>
+    void kupl_always_inline call(Tensor<dtypeD, LayoutD> &D, const Tensor<dtypeA, LayoutA> &A, const Tensor<dtypeB, LayoutB> &B) MMA_INOUT;
 };
 
 typedef enum store_atom {
@@ -393,11 +423,11 @@ template <typename StoreAtom, typename Shape>
 class TiledStore {
 public:
     template <typename TiledStore, typename dtype, typename Layout>
-    friend void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
+    friend kupl_always_inline void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
 
 private:
     template <typename dtype, typename Layout>
-    void call(Tensor<dtype, Layout> &tensor) MMA_IN;
+    kupl_always_inline void call(Tensor<dtype, Layout> &tensor) MMA_IN;
 };
 
 typedef enum copy_atom {
@@ -405,12 +435,15 @@ typedef enum copy_atom {
     KP36_1x16_F64_TRANS_CM2RM,
     KP36_16x2_BF16_TRANS_RM2ZZ,
     KP36_2x64_BF16_TRANS_CM2NN,
+    KP36_32x2_BF16_TRANS_RM2ZZ,
+    KP36_2x32_BF16_TRANS_CM2NN,
     KP36_16x1_BF16_TRANS_RM2CM,
     KP36_1x64_BF16_TRANS_CM2RM,
     KP36_16x4_INT8_TRANS_RM2ZZ,
     KP36_4x64_INT8_TRANS_CM2NN,
     KP36_32x4_INT8_TRANS_RM2ZZ,
     KP36_4x32_INT8_TRANS_CM2NN,
+    KP36_32x32_F32_STORE,
     KP36_PREFETCH_L1,
     KP36_PREFETCH_L2
 } copy_atom_t;
@@ -419,14 +452,14 @@ template <typename CopyAtom, typename Shape>
 class TiledCopy {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
     template <typename TiledCopy, typename dtypeS, typename LayoutS>
     friend void copy(TiledCopy tiled_copy, Tensor<dtypeS, LayoutS> src);
 
 private:
     template <typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    void call(Tensor<dtypeD, LayoutD> &dst, const Tensor<dtypeS, LayoutS> &src) MMA_IN;
+    kupl_always_inline void call(Tensor<dtypeD, LayoutD> &dst, const Tensor<dtypeS, LayoutS> &src) MMA_IN;
 
     template <typename dtypeS, typename LayoutS>
     void call(Tensor<dtypeS, LayoutS> &src);
@@ -462,6 +495,19 @@ Tensor<dtype, Layout> make_tensor(dtype *ptr, Layout layout)
     return Tensor<dtype, Layout>{ptr, layout};
 }
 
+template<typename Layout>
+Tensor<TensorType<KP36_KUPL_MATRIX>, Layout> make_tensor(Layout layout)
+{
+    return Tensor<TensorType<KP36_KUPL_MATRIX>, Layout>{layout};
+}
+
+template<typename Layout>
+kupl_always_inline
+void clear(Tensor<TensorType<KP36_KUPL_MATRIX>, Layout> tensor) MMA_INOUT
+{
+    svzero_za();
+}
+
 template <typename MmaAtom, typename Shape>
 TiledMma<MmaAtom, Shape> make_tiled_mma([[maybe_unused]] MmaAtom mma_atom, [[maybe_unused]] Shape atom_shape)
 {
@@ -470,10 +516,17 @@ TiledMma<MmaAtom, Shape> make_tiled_mma([[maybe_unused]] MmaAtom mma_atom, [[may
 
 template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
           typename LayoutB, typename dtypeC, typename LayoutC>
-void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
+kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
          Tensor<dtypeC, LayoutC> C) MMA_INOUT
 {
     tiled_mma.call(D, A, B, C);
+}
+
+template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
+          typename LayoutB>
+kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B) MMA_INOUT
+{
+    tiled_mma.call(D, A, B);
 }
 
 template <typename StoreAtom, typename Shape>
@@ -483,7 +536,7 @@ TiledStore<StoreAtom, Shape> make_tiled_store([[maybe_unused]] StoreAtom store_a
 }
 
 template <typename TiledStore, typename dtype, typename Layout>
-void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN
+kupl_always_inline void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN
 {
     tiled_store.call(tensor);
 }
@@ -495,7 +548,7 @@ TiledCopy<CopyAtom, Shape> make_tiled_copy([[maybe_unused]] CopyAtom copy_atom, 
 }
 
 template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN
+kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN
 {
     tiled_copy.call(dst, src);
 }
@@ -518,13 +571,19 @@ public:
 private:
     template <int size_m, int size_n, typename StrideA, typename StrideB, typename StrideC, typename dtypeA,
               typename dtypeB, typename dtypeC>
-    static void call_mma(dtypeA *A, dtypeB *B, dtypeC *C, int size_k) MMA_INOUT;
+    static kupl_always_inline void call_mma(dtypeA *A, dtypeB *B, dtypeC *C, int size_k) MMA_INOUT;
+
+    template <int size_m, int size_n, typename StrideA, typename StrideB, typename dtypeA, typename dtypeB>
+    static kupl_always_inline void call_mma(dtypeA *A, dtypeB *B, int size_k) MMA_INOUT;
 
     template <int size_m, int size_n, typename StrideD, typename dtypeD>
-    static void call_store(dtypeD *data) MMA_IN;
+    static kupl_always_inline void call_store(dtypeD *data) MMA_IN;
 
     template <typename CopyAtom, typename dtypeD, typename dtypeS>
-    static void call_copy(dtypeD *dst, dtypeS *src, int size_m, int size_n) MMA_IN;
+    static kupl_always_inline void call_copy(dtypeD *dst, dtypeS *src, int size_m, int size_n) MMA_IN;
+
+    template <typename CopyAtom, typename dtypeD, typename strideD>
+    static kupl_always_inline void call_copy(dtypeD *dst) MMA_IN;
 
     template <typename CopyAtom, typename dtypeS>
     static void call_copy(dtypeS *data, int size);
@@ -550,13 +609,13 @@ class TiledMma<Ops<KP36_32x16x512_F64F64F64>, Shape<Int<AtomShapeM>, Int<AtomSha
 public:
     template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
               typename LayoutB, typename dtypeC, typename LayoutC>
-    friend void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
+    friend kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
                     Tensor<dtypeC, LayoutC> C) MMA_INOUT;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeA, typename ShapeA, typename StrideA,
               typename dtypeB, typename ShapeB, typename StrideB, typename dtypeC, typename ShapeC, typename StrideC>
-    void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
+    kupl_always_inline void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
               const Tensor<dtypeA, Layout<ShapeA, StrideA>> &A, const Tensor<dtypeB, Layout<ShapeB, StrideB>> &B,
               const Tensor<dtypeC, Layout<ShapeC, StrideC>> &C) MMA_INOUT
     {
@@ -570,13 +629,13 @@ class TiledMma<Ops<KP36_32x16x1_F64F64F64>, Shape<Int<AtomShapeM>, Int<AtomShape
 public:
     template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
               typename LayoutB, typename dtypeC, typename LayoutC>
-    friend void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
+    friend kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
                     Tensor<dtypeC, LayoutC> C) MMA_INOUT;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeA, typename ShapeA, typename StrideA,
               typename dtypeB, typename ShapeB, typename StrideB, typename dtypeC, typename ShapeC, typename StrideC>
-    void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
+    kupl_always_inline void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
               const Tensor<dtypeA, Layout<ShapeA, StrideA>> &A, const Tensor<dtypeB, Layout<ShapeB, StrideB>> &B,
               const Tensor<dtypeC, Layout<ShapeC, StrideC>> &C) MMA_INOUT
     {
@@ -590,13 +649,13 @@ class TiledMma<Ops<KP36_16x64x2_BF16BF16F32>, Shape<Int<AtomShapeM>, Int<AtomSha
 public:
     template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
               typename LayoutB, typename dtypeC, typename LayoutC>
-    friend void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
+    friend kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
                     Tensor<dtypeC, LayoutC> C) MMA_INOUT;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeA, typename ShapeA, typename StrideA,
               typename dtypeB, typename ShapeB, typename StrideB, typename dtypeC, typename ShapeC, typename StrideC>
-    void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
+    kupl_always_inline void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
               const Tensor<dtypeA, Layout<ShapeA, StrideA>> &A, const Tensor<dtypeB, Layout<ShapeB, StrideB>> &B,
               const Tensor<dtypeC, Layout<ShapeC, StrideC>> &C) MMA_INOUT
     {
@@ -610,13 +669,13 @@ class TiledMma<Ops<KP36_16x64x1_BF16BF16F32>, Shape<Int<AtomShapeM>, Int<AtomSha
 public:
     template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
               typename LayoutB, typename dtypeC, typename LayoutC>
-    friend void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
+    friend kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
                     Tensor<dtypeC, LayoutC> C) MMA_INOUT;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeA, typename ShapeA, typename StrideA,
               typename dtypeB, typename ShapeB, typename StrideB, typename dtypeC, typename ShapeC, typename StrideC>
-    void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
+    kupl_always_inline void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
               const Tensor<dtypeA, Layout<ShapeA, StrideA>> &A, const Tensor<dtypeB, Layout<ShapeB, StrideB>> &B,
               const Tensor<dtypeC, Layout<ShapeC, StrideC>> &C) MMA_INOUT
     {
@@ -626,17 +685,34 @@ private:
 };
 
 template <int AtomShapeM, int AtomShapeN, int AtomShapeK>
+class TiledMma<Ops<KP36_32x32x2_BF16BF16F32>, Shape<Int<AtomShapeM>, Int<AtomShapeN>, Int<AtomShapeK>>> {
+public:
+    template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
+              typename LayoutB>
+    friend kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B) MMA_INOUT;
+
+private:
+    template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeA, typename ShapeA, typename StrideA,
+              typename dtypeB, typename ShapeB, typename StrideB>
+    kupl_always_inline void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
+              const Tensor<dtypeA, Layout<ShapeA, StrideA>> &A, const Tensor<dtypeB, Layout<ShapeB, StrideB>> &B) MMA_INOUT
+    {
+        TiledCallFunc::call_mma<M_32 * AtomShapeM, N_32 * AtomShapeN, StrideA, StrideB, dtypeA, dtypeB>(A.get_ptr(), B.get_ptr(), K_2 * AtomShapeK);
+    }
+};
+
+template <int AtomShapeM, int AtomShapeN, int AtomShapeK>
 class TiledMma<Ops<KP36_16x64x4_INT8INT8INT32>, Shape<Int<AtomShapeM>, Int<AtomShapeN>, Int<AtomShapeK>>> {
 public:
     template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
               typename LayoutB, typename dtypeC, typename LayoutC>
-    friend void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
+    friend kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
                     Tensor<dtypeC, LayoutC> C) MMA_INOUT;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeA, typename ShapeA, typename StrideA,
               typename dtypeB, typename ShapeB, typename StrideB, typename dtypeC, typename ShapeC, typename StrideC>
-    void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
+    kupl_always_inline void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
               const Tensor<dtypeA, Layout<ShapeA, StrideA>> &A, const Tensor<dtypeB, Layout<ShapeB, StrideB>> &B,
               const Tensor<dtypeC, Layout<ShapeC, StrideC>> &C) MMA_INOUT
     {
@@ -650,13 +726,13 @@ class TiledMma<Ops<KP36_32x32x4_INT8INT8INT32>, Shape<Int<AtomShapeM>, Int<AtomS
 public:
     template <typename TiledMma, typename dtypeD, typename LayoutD, typename dtypeA, typename LayoutA, typename dtypeB,
               typename LayoutB, typename dtypeC, typename LayoutC>
-    friend void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
+    friend kupl_always_inline void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> A, Tensor<dtypeB, LayoutB> B,
                     Tensor<dtypeC, LayoutC> C) MMA_INOUT;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeA, typename ShapeA, typename StrideA,
               typename dtypeB, typename ShapeB, typename StrideB, typename dtypeC, typename ShapeC, typename StrideC>
-    void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
+    kupl_always_inline void call([[maybe_unused]] Tensor<dtypeD, Layout<ShapeD, StrideD>> &D,
               const Tensor<dtypeA, Layout<ShapeA, StrideA>> &A, const Tensor<dtypeB, Layout<ShapeB, StrideB>> &B,
               const Tensor<dtypeC, Layout<ShapeC, StrideC>> &C) MMA_INOUT
     {
@@ -669,11 +745,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledStore<Ops<KP36_32x16_F64_STORE>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledStore, typename dtype, typename Layout>
-    friend void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
+    friend kupl_always_inline void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &tensor) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &tensor) MMA_IN
     {
         TiledCallFunc::call_store<M_32 * AtomShapeM, N_16 * AtomShapeN, StrideD, dtypeD>(tensor.get_ptr());
     }
@@ -683,11 +759,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledStore<Ops<KP36_16x64_F32_STORE>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledStore, typename dtype, typename Layout>
-    friend void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
+    friend kupl_always_inline void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &tensor) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &tensor) MMA_IN
     {
         TiledCallFunc::call_store<M_16 * AtomShapeM, N_64 * AtomShapeN, StrideD, dtypeD>(tensor.get_ptr());
     }
@@ -697,11 +773,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledStore<Ops<KP36_16x64_INT32_STORE>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledStore, typename dtype, typename Layout>
-    friend void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
+    friend kupl_always_inline void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &tensor) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &tensor) MMA_IN
     {
         TiledCallFunc::call_store<M_16 * AtomShapeM, N_64 * AtomShapeN, StrideD, dtypeD>(tensor.get_ptr());
     }
@@ -711,11 +787,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledStore<Ops<KP36_32x32_INT32_STORE>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledStore, typename dtype, typename Layout>
-    friend void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
+    friend kupl_always_inline void store(TiledStore tiled_store, Tensor<dtype, Layout> tensor) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &tensor) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &tensor) MMA_IN
     {
         TiledCallFunc::call_store<M_32 * AtomShapeM, N_32 * AtomShapeN, StrideD, dtypeD>(tensor.get_ptr());
     }
@@ -725,11 +801,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledCopy<Ops<KP36_32x1_F64_TRANS_RM2CM>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_32x1_F64_TRANS_RM2CM>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                  M_32 * AtomShapeM, N_1 * AtomShapeN);
@@ -740,11 +816,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledCopy<Ops<KP36_1x16_F64_TRANS_CM2RM>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_1x16_F64_TRANS_CM2RM>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                  M_1 * AtomShapeM, N_16 * AtomShapeN);
@@ -755,11 +831,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledCopy<Ops<KP36_16x2_BF16_TRANS_RM2ZZ>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_16x2_BF16_TRANS_RM2ZZ>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                   M_16 * AtomShapeM, N_2 * AtomShapeN);
@@ -770,11 +846,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledCopy<Ops<KP36_2x64_BF16_TRANS_CM2NN>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_2x64_BF16_TRANS_CM2NN>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                   M_2 * AtomShapeM, N_64 * AtomShapeN);
@@ -782,14 +858,44 @@ private:
 };
 
 template <int AtomShapeM, int AtomShapeN>
-class TiledCopy<Ops<KP36_16x1_BF16_TRANS_RM2CM>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
+class TiledCopy<Ops<KP36_32x2_BF16_TRANS_RM2ZZ>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    {
+        TiledCallFunc::call_copy<Ops<KP36_32x2_BF16_TRANS_RM2ZZ>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
+                                                                                  M_32 * AtomShapeM, N_2 * AtomShapeN);
+    }
+};
+
+template <int AtomShapeM, int AtomShapeN>
+class TiledCopy<Ops<KP36_2x32_BF16_TRANS_CM2NN>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
+public:
+    template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+
+private:
+    template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    {
+        TiledCallFunc::call_copy<Ops<KP36_2x32_BF16_TRANS_CM2NN>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
+                                                                                  M_2 * AtomShapeM, N_32 * AtomShapeN);
+    }
+};
+
+template <int AtomShapeM, int AtomShapeN>
+class TiledCopy<Ops<KP36_16x1_BF16_TRANS_RM2CM>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
+public:
+    template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+
+private:
+    template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_16x1_BF16_TRANS_RM2CM>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                   M_16 * AtomShapeM, N_1 * AtomShapeN);
@@ -800,11 +906,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledCopy<Ops<KP36_1x64_BF16_TRANS_CM2RM>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_1x64_BF16_TRANS_CM2RM>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                   M_1 * AtomShapeM, N_64 * AtomShapeN);
@@ -815,11 +921,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledCopy<Ops<KP36_16x4_INT8_TRANS_RM2ZZ>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_16x4_INT8_TRANS_RM2ZZ>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                   M_16 * AtomShapeM, N_4 * AtomShapeN);
@@ -830,11 +936,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledCopy<Ops<KP36_4x64_INT8_TRANS_CM2NN>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_4x64_INT8_TRANS_CM2NN>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                   M_4 * AtomShapeM, N_64 * AtomShapeN);
@@ -845,11 +951,11 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledCopy<Ops<KP36_32x4_INT8_TRANS_RM2ZZ>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_32x4_INT8_TRANS_RM2ZZ>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                   M_32 * AtomShapeM, N_4 * AtomShapeN);
@@ -860,14 +966,28 @@ template <int AtomShapeM, int AtomShapeN>
 class TiledCopy<Ops<KP36_4x32_INT8_TRANS_CM2NN>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
 public:
     template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
-    friend void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
 
 private:
     template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
-    void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
     {
         TiledCallFunc::call_copy<Ops<KP36_4x32_INT8_TRANS_CM2NN>, dtypeD, dtypeS>(dst.get_ptr(), src.get_ptr(),
                                                                                   M_4 * AtomShapeM, N_32 * AtomShapeN);
+    }
+};
+
+template <int AtomShapeM, int AtomShapeN>
+class TiledCopy<Ops<KP36_32x32_F32_STORE>, Shape<Int<AtomShapeM>, Int<AtomShapeN>>> {
+public:
+    template <typename TiledCopy, typename dtypeD, typename LayoutD, typename dtypeS, typename LayoutS>
+    friend kupl_always_inline void copy(TiledCopy tiled_copy, Tensor<dtypeD, LayoutD> dst, Tensor<dtypeS, LayoutS> src) MMA_IN;
+
+private:
+    template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
+    kupl_always_inline void call(Tensor<dtypeD, Layout<ShapeD, StrideD>> &dst, const Tensor<dtypeS, Layout<ShapeS, StrideS>> &src) MMA_IN
+    {
+        TiledCallFunc::call_copy<Ops<KP36_32x32_F32_STORE>, dtypeD, StrideD>(dst.get_ptr());
     }
 };
 

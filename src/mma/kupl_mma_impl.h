@@ -31,6 +31,15 @@ static kupl_always_inline bool mma_check(void *data_a, void *data_b, void *data_
     return true;
 }
 
+static kupl_always_inline bool mma_check_2(void *data_a, void *data_b) MMA_INOUT
+{
+    if (kupl_unlikely(data_a == nullptr || data_b == nullptr)) {
+        printf("The original ptr for KUPL mma matrix is nullptr\n");
+        return false;
+    }
+    return true;
+}
+
 template <>
 kupl_always_inline void TiledCallFunc::call_mma<32, 16, Stride<Int<1>, Int<32>>, Stride<Int<16>, Int<1>>,
                                                 Stride<Int<16>, Int<1>>, double, double, double>(double *data_a,
@@ -153,6 +162,96 @@ TiledCallFunc::call_mma<16, 64, Stride<Int<2>, Stride<Int<1>, Int<32>>>, Stride<
 
         data_atmp += 32;
         data_btmp += 128;
+    }
+}
+
+#define SVLDNT1_BF16(pg, base)                                      \
+    [&] {                                                           \
+        svbfloat16_t res;                                           \
+        __asm__ volatile (                                          \
+            "ldnt1h { %0.h }, %1/z, [%2]\n"                         \
+            : "=w" (res)                                            \
+            : "Upl" (pg), "r" (base)                                \
+            : "memory"                                              \
+        );                                                          \
+        return res;                                                 \
+    }()
+
+#define SVLDNT1_INDEX_BF16(pg, base, index)                         \
+    [&] {                                                           \
+        svbfloat16_t res;                                           \
+        __asm__ volatile (                                          \
+            "ldnt1h { %0.h }, %1/z, [%2, %3, lsl #1]\n"             \
+            : "=w" (res)                                            \
+            : "Upl" (pg), "r" (base), "r" ((int64_t)(index))        \
+            : "memory"                                              \
+        );                                                          \
+        return res;                                                 \
+    }()
+
+template <>
+kupl_always_inline void
+TiledCallFunc::call_mma<32, 32, Stride<Int<2>, Stride<Int<1>, Int<64>>>, Stride<Stride<Int<1>, Int<64>>, Int<2>>,
+                        bfloat16_t, bfloat16_t>(bfloat16_t *data_a, bfloat16_t *data_b,
+                                                                                int size_k) MMA_INOUT
+{
+    if (kupl_unlikely(mma_check_2(data_a, data_b) == false)) {
+        return;
+    }
+    svbool_t p16 = svwhilelt_b16(0, 32);
+    bfloat16_t *data_atmp = data_a;
+    bfloat16_t *data_btmp = data_b;
+    svbfloat16_t va0;
+    svbfloat16_t va1;
+    svbfloat16_t vb0;
+    svbfloat16_t vb1;
+    for (int i = 0; i < size_k / 2; i++) {
+        va0 = svld1(p16, data_atmp);
+        vb0 = SVLDNT1_BF16(p16, data_btmp);
+        svmopa_za32_bf16_m(0, p16, p16, va0, vb0);
+        vb1 = SVLDNT1_INDEX_BF16(p16, data_btmp, 32);
+        svmopa_za32_bf16_m(1, p16, p16, va0, vb1);
+        va1 = svld1(p16, data_atmp + 32);
+        svmopa_za32_bf16_m(2, p16, p16, va1, vb0);
+        svmopa_za32_bf16_m(3, p16, p16, va1, vb1);
+
+        data_atmp += 64;
+        data_btmp += 64;
+    }
+}
+
+template <>
+kupl_always_inline void
+TiledCallFunc::call_mma<32, 32, Stride<Int<2>, Stride<Int<1>, Int<64>>>, Stride<Int<576>, Int<1>>,
+                        bfloat16_t, bfloat16_t>(bfloat16_t *data_a, bfloat16_t *data_b,
+                                                                                int size_k) MMA_INOUT
+{
+    if (kupl_unlikely(mma_check_2(data_a, data_b) == false)) {
+        return;
+    }
+    svbool_t p16 = svwhilelt_b16(0, 32);
+    bfloat16_t *data_atmp = data_a;
+    bfloat16_t *data_btmp = data_b;
+    svbfloat16_t va0;
+    svbfloat16_t va1;
+    svbfloat16_t vb0;
+    svbfloat16_t vb1;
+    svbfloat16_t vb2;
+    svbfloat16_t vb3;
+    for (int i = 0; i < size_k / 2; i++) {
+        vb0 = SVLDNT1_BF16(p16, data_btmp);
+        vb1 = SVLDNT1_INDEX_BF16(p16, data_btmp, 576);
+        vb2 = svzip1_bf16(vb0, vb1);
+        va0 = svld1_bf16(p16, data_atmp);
+        svmopa_za32_bf16_m(0, p16, p16, va0, vb2);
+        vb3 = svzip2_bf16(vb0, vb1);
+        svmopa_za32_bf16_m(1, p16, p16, va0, vb3);
+        va1 = svld1_bf16(p16, data_atmp + 32);
+        svmopa_za32_bf16_m(2, p16, p16, va1, vb2);
+        svmopa_za32_bf16_m(3, p16, p16, va1, vb3);
+
+        data_atmp += 64;
+        data_btmp += 2 * 576;
     }
 }
 
@@ -666,6 +765,78 @@ kupl_always_inline void TiledCallFunc::call_copy<Ops<KP36_2x64_BF16_TRANS_CM2NN>
 }
 
 template <>
+kupl_always_inline void TiledCallFunc::call_copy<Ops<KP36_32x2_BF16_TRANS_RM2ZZ>, bfloat16_t, bfloat16_t>(
+    bfloat16_t *data_dst, bfloat16_t *data_src, int size_m, int size_n) MMA_IN
+{
+    if (kupl_unlikely(copy_check(data_dst, data_src, size_m, size_n) == false)) {
+        return;
+    }
+    if (kupl_unlikely(
+            size_n %
+            BF16_TILE_32)) { // 向量寄存器的宽度为512，对于bfloat16精度数据而言一个向量寄存器可以存放32个bfloat16数据
+        printf("The KUPL copy atom KP36_32x2_BF16_TRANS_RM2ZZ now can "
+               "only support scenarios where n is a multiple of 32\n");
+        return;
+    }
+    svbool_t p = svwhilelt_b32(0, F32_TILE_16);
+    for (int tile_m = 0; tile_m < size_m; tile_m += M_32) {
+        for (int tile_n = 0; tile_n < size_n; tile_n += BF16_TILE_32) {
+            for (int m = 0; m < M_32; m += M_16) {
+                // 横着写入向量寄存器
+                bfloat16_t *data_src0 = data_src + tile_m * size_n + m * size_n + tile_n;
+                for (uint32_t t = 0; t < F32_TILE_16; t++) {
+                    svld1_hor_za32(TILE_0, t, p, reinterpret_cast<float *>(data_src0));
+                    data_src0 += size_n;
+                }
+
+                // 竖着写回buffer
+                bfloat16_t *data_dst0 = data_dst + tile_m * size_n + tile_n * M_32 + m * 2;
+                for (uint32_t t = 0; t < F32_TILE_16; t++) {
+                    svst1_ver_za32(TILE_0, t, p, reinterpret_cast<float *>(data_dst0));
+                    data_dst0 += M_32 * N_2;
+                }
+            }
+        }
+    }
+}
+
+template <>
+kupl_always_inline void TiledCallFunc::call_copy<Ops<KP36_2x32_BF16_TRANS_CM2NN>, bfloat16_t, bfloat16_t>(
+    bfloat16_t *data_dst, bfloat16_t *data_src, int size_m, int size_n) MMA_IN
+{
+    if (kupl_unlikely(copy_check(data_dst, data_src, size_m, size_n) == false)) {
+        return;
+    }
+    if (kupl_unlikely(
+            size_m %
+            BF16_TILE_32)) { // 向量寄存器的宽度为512，对于bfloat16精度数据而言一个向量寄存器可以存放32个bfloat16数据
+        printf("The KUPL copy atom KP36_2x32_BF16_TRANS_CM2NN now can "
+               "only support scenarios where m is a multiple of 32\n");
+        return;
+    }
+    svbool_t p = svwhilelt_b32(0, 16);
+    for (int tile_n = 0; tile_n < size_n; tile_n += N_32) {
+        for (int tile_m = 0; tile_m < size_m; tile_m += BF16_TILE_32) {
+            for (int n = 0; n < N_32; n += N_16) {
+                // 横着写入向量寄存器
+                bfloat16_t *data_src0 = data_src + tile_n * size_m + n * size_m + tile_m;
+                for (uint32_t t = 0; t < F32_TILE_16; t++) {
+                    svld1_hor_za32(TILE_0, t, p, reinterpret_cast<float *>(data_src0));
+                    data_src0 += size_m;
+                }
+
+                // 竖着写回buffer
+                bfloat16_t *data_dst0 = data_dst + tile_n * size_m + tile_m * N_32 + n * 2;
+                for (uint32_t t = 0; t < F32_TILE_16; t++) {
+                    svst1_ver_za32(TILE_0, t, p, reinterpret_cast<float *>(data_dst0));
+                    data_dst0 += M_2 * N_32;
+                }
+            }
+        }
+    }
+}
+
+template <>
 kupl_always_inline void TiledCallFunc::call_copy<Ops<KP36_16x1_BF16_TRANS_RM2CM>, bfloat16_t, bfloat16_t>(
     bfloat16_t *data_dst, bfloat16_t *data_src, int size_m, int size_n) MMA_IN
 {
@@ -877,6 +1048,46 @@ kupl_always_inline void TiledCallFunc::call_copy<Ops<KP36_4x32_INT8_TRANS_CM2NN>
                 data_dst1 += N_32 * M_4;
             }
         }
+    }
+}
+
+template <>
+kupl_always_inline void TiledCallFunc::call_copy<Ops<KP36_32x32_F32_STORE>, float, Stride<Stride<Int<1>, Int<1024>>, Int<16>>>(float *data_dst) MMA_IN
+{
+    const svbool_t ptrue = svptrue_b16();
+    float *matd0 = data_dst;
+    float *matd1 = data_dst + 16 * 16;
+    float *matd2 = data_dst + 1024;
+    float *matd3 = data_dst + 1024 + 16 * 16;
+    for (int t = 0; t < 16; ++t) {
+        svst1_ver_za32(0, t, ptrue, matd0);
+        svst1_ver_za32(1, t, ptrue, matd1);
+        svst1_ver_za32(2, t, ptrue, matd2);
+        svst1_ver_za32(3, t, ptrue, matd3);
+        matd0 += 16;
+        matd1 += 16;
+        matd2 += 16;
+        matd3 += 16;
+    }
+}
+
+template <>
+kupl_always_inline void TiledCallFunc::call_copy<Ops<KP36_32x32_F32_STORE>, float, Stride<Stride<Int<1>, Int<2048>>, Int<16>>>(float *data_dst) MMA_IN
+{
+    const svbool_t ptrue = svptrue_b16();
+    float *matd0 = data_dst;
+    float *matd1 = data_dst + 16 * 16;
+    float *matd2 = data_dst + 2048;
+    float *matd3 = data_dst + 2048 + 16 * 16;
+    for (int t = 0; t < 16; ++t) {
+        svst1_ver_za32(0, t, ptrue, matd0);
+        svst1_ver_za32(1, t, ptrue, matd1);
+        svst1_ver_za32(2, t, ptrue, matd2);
+        svst1_ver_za32(3, t, ptrue, matd3);
+        matd0 += 16;
+        matd1 += 16;
+        matd2 += 16;
+        matd3 += 16;
     }
 }
 
