@@ -20,32 +20,21 @@ link_directories(${CMAKE_INSTALL_PREFIX}/lib)
 set(LIBRARY_PATH_ENV "$ENV{LIBRARY_PATH}")
 string(REPLACE ":" ";" LIBRARY_PATH_LIST "${LIBRARY_PATH_ENV}")
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    set(COMPILER_FILTER "gcc")
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(COMPILER_FILTER "clang")
-else()
-    message(FATAL_ERROR "Unsupported compiler: ${CMAKE_CXX_COMPILER_ID}")
-endif()
-
-set(FILTERED_PATHS "")
-foreach(PATH_ITEM IN LISTS LIBRARY_PATH_LIST)
-    if(NOT "${PATH_ITEM}" STREQUAL "")
-        if("${PATH_ITEM}" MATCHES "${COMPILER_FILTER}")
-            list(APPEND FILTERED_PATHS "${PATH_ITEM}")
-        endif()
-        if("${PATH_ITEM}" MATCHES "gtest")
-            list(APPEND FILTERED_PATHS "${PATH_ITEM}")
-        endif()
-    endif()
-endforeach()
-
-find_package(GTest
-    HINTS ${FILTERED_PATHS}
+find_path(GTest_DIR
+    NAMES GTestConfig.cmake
+    HINTS ENV LIBRARY_PATH
+    PATH_SUFFIXES cmake/GTest lib/cmake/GTest lib64/cmake/GTest
 )
+find_package(GTest CONFIG)
 
 if("${GTest_FOUND}")
     set(GTEST_LIB "GTest::gtest")
+    message(STATUS "Found GTest: TRUE")
+    get_target_property(_gtest_inc GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(_gtest_lib GTest::gtest IMPORTED_LOCATION_NOCONFIG)
+    message(STATUS "GTest config dir: ${GTest_DIR}")
+    message(STATUS "GTest include: ${_gtest_inc}")
+    message(STATUS "GTest lib: ${_gtest_lib}")
 else()
     set(GTEST_LIB "gtest")
 endif()
