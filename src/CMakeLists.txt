@@ -90,17 +90,6 @@ endif()
 libkupl_source_files(KUPL_SRCS)
 add_library(${LIBKUPL_NAME} SHARED ${KUPL_SRCS})
 
-if(ENABLE_KUPL_MMA)
-    message("-- Enable kupl mma")
-    add_definitions(-DENABLE_KUPL_MMA)
-endif()
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set_source_files_properties(mma/kupl_mma.cpp PROPERTIES COMPILE_OPTIONS "-mcpu=linxicore6100;--rtlib=compiler-rt;-Wno-undefined-arm-za;-Wno-undefined-arm-streaming")
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set_source_files_properties(mma/kupl_mma.cpp PROPERTIES COMPILE_OPTIONS "-march=armv9-a+sme-f64f64+sve")
-endif()
-
 if(ENABLE_KUPL_GLIBC_MALLOC)
     message("-- Caution: kupl will disable the memory pool, performance maybe bad!")
     add_definitions(-DENABLE_KUPL_GLIBC_MALLOC)

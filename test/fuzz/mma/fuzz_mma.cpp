@@ -20,7 +20,7 @@
 using namespace kupl::tensor;
 
 #if defined(__clang__)
-#define test_kupl_za
+#define test_kupl_za        __kupl_mma
 #define test_kupl_streaming
 #elif defined(__GNUC__)
 #define test_kupl_za        __arm_new("za")

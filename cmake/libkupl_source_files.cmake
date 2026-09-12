@@ -31,6 +31,13 @@ function(libkupl_header_install)
 
     install(FILES ${BASE_HEADER} DESTINATION ${KUPL_INSTALL_INCLUDEDIR} PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
 
+    # install kupl mma
+    install(
+        DIRECTORY mma/
+        DESTINATION ${KUPL_INSTALL_INCLUDEDIR}/mma
+        FILES_MATCHING PATTERN "*.h"
+    )
+
     if (KUPL_BUILD_KIND MATCHES "test")
         # install kupl dm
         install(
@@ -71,13 +78,6 @@ function(libkupl_header_install)
         install(
             DIRECTORY tools/
             DESTINATION ${KUPL_INSTALL_INCLUDEDIR}/tools
-            FILES_MATCHING PATTERN "*.h"
-        )
-
-        # install kupl mma
-        install(
-            DIRECTORY mma/
-            DESTINATION ${KUPL_INSTALL_INCLUDEDIR}/mma
             FILES_MATCHING PATTERN "*.h"
         )
     endif()
