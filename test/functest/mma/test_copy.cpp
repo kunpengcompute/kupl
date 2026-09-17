@@ -194,6 +194,57 @@ TEST(test_copy, KP36_16x2_BF16_TRANS_RM2ZZ)
 }
 
 test_kupl_za
+void KP36_32x2_BF16_TRANS_RM2ZZ_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
+{
+    constexpr int M = 32;
+    constexpr int K = 576;
+    auto shape_d = make_shape(Int<M>{}, make_shape(Int<2>{}, Int<K / 2>{}));
+    auto shape_s = make_shape(Int<M>{}, Int<K>{});
+
+    auto stride_d = make_stride(Int<2>{}, make_stride(Int<1>{}, Int<64>{}));
+    auto stride_s = make_stride(Int<K>{}, Int<1>{});
+
+    auto layout_d = make_layout(shape_d, stride_d);
+    auto layout_s = make_layout(shape_s, stride_s);
+
+    auto atom_copy_shape = make_shape(Int<1>{}, Int<K / 2>{});
+    auto tiled_copy = make_tiled_copy(Ops<KP36_32x2_BF16_TRANS_RM2ZZ>{}, atom_copy_shape);
+
+    auto tensor_d = make_tensor(dst, layout_d);
+    auto tensor_s = make_tensor(src, layout_s);
+    copy(tiled_copy, tensor_d, tensor_s);
+}
+
+TEST(test_copy, KP36_32x2_BF16_TRANS_RM2ZZ)
+{
+    constexpr int M = 32;
+    constexpr int K = 576;
+    bfloat16_t *dst = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * K));
+    bfloat16_t *src = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * K));
+    for (int m = 0; m < M; m++) {
+        for (int k = 0; k < K; k++) {
+            dst[m * K + k] = float_to_bf16_arm_copy(0.0);
+            src[m * K + k] = float_to_bf16_arm_copy(1.0 * ((m * K + k) % 100));
+        }
+    }
+
+    KP36_32x2_BF16_TRANS_RM2ZZ_kernel(dst, src);
+
+    bool res = true;
+    for (int tile_k = 0; tile_k < K; tile_k += 2) {
+        for (int m = 0; m < M; m++) {
+            for (int k = tile_k; k < tile_k + 2; k++) {
+                res = (bf16_to_float_arm_copy(dst[tile_k * M + m * 2 + k - tile_k]) != 1.0 * ((m * K + k) % 100)) ? false : true;
+            }
+        }
+    }
+    ASSERT_TRUE(res);
+
+    free(src);
+    free(dst);
+}
+
+test_kupl_za
 void KP36_2x64_BF16_TRANS_CM2NN_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
 {
     constexpr int K = 576;
@@ -229,6 +280,57 @@ TEST(test_copy, KP36_2x64_BF16_TRANS_CM2NN)
     }
 
     KP36_2x64_BF16_TRANS_CM2NN_kernel(dst, src);
+
+    bool res = true;
+    for (int tile_k = 0; tile_k < K; tile_k += 2) {
+        for (int n = 0; n < N; n++) {
+            for (int k = tile_k; k < tile_k + 2; k++) {
+                res = (bf16_to_float_arm_copy(dst[tile_k * N + n * 2 + k - tile_k]) != 1.0 * ((n * K + k) % 100)) ? false : true;
+            }
+        }
+    }
+    ASSERT_TRUE(res);
+
+    free(src);
+    free(dst);
+}
+
+test_kupl_za
+void KP36_2x32_BF16_TRANS_CM2NN_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
+{
+    constexpr int K = 576;
+    constexpr int N = 32;
+    auto shape_d = make_shape(make_shape(Int<2>{}, Int<K / 2>{}), Int<N>{});
+    auto shape_s = make_shape(Int<K>{}, Int<N>{});
+
+    auto stride_d = make_stride(make_stride(Int<1>{}, Int<64>{}), Int<2>{});
+    auto stride_s = make_stride(Int<1>{}, Int<K>{});
+
+    auto layout_d = make_layout(shape_d, stride_d);
+    auto layout_s = make_layout(shape_s, stride_s);
+
+    auto atom_copy_shape = make_shape(Int<K / 2>{}, Int<1>{});
+    auto tiled_copy = make_tiled_copy(Ops<KP36_2x32_BF16_TRANS_CM2NN>{}, atom_copy_shape);
+
+    auto tensor_d = make_tensor(dst, layout_d);
+    auto tensor_s = make_tensor(src, layout_s);
+    copy(tiled_copy, tensor_d, tensor_s);
+}
+
+TEST(test_copy, KP36_2x32_BF16_TRANS_CM2NN)
+{
+    constexpr int K = 576;
+    constexpr int N = 32;
+    bfloat16_t *dst = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * K * N));
+    bfloat16_t *src = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * K * N));
+    for (int n = 0; n < N; n++) {
+        for (int k = 0; k < K; k++) {
+            dst[n * K + k] = float_to_bf16_arm_copy(0.0);
+            src[n * K + k] = float_to_bf16_arm_copy(1.0 * ((n * K + k) % 100));
+        }
+    }
+
+    KP36_2x32_BF16_TRANS_CM2NN_kernel(dst, src);
 
     bool res = true;
     for (int tile_k = 0; tile_k < K; tile_k += 2) {
@@ -551,10 +653,10 @@ TEST(test_copy, KP36_4x32_INT8_TRANS_CM2NN)
     free(dst);
 }
 
-TEST(test_copy, KP36_PREFETCH_L1)
+TEST(test_copy, KP36_PREFETCH_L1STRM)
 {
     auto atom_prefetch_shape = make_shape(Int<1>{});
-    auto tiled_prefetch_L1 = make_tiled_copy(Ops<KP36_PREFETCH_L1>{}, atom_prefetch_shape);
+    auto tiled_prefetch_L1 = make_tiled_copy(Ops<KP36_PREFETCH_L1STRM>{}, atom_prefetch_shape);
 
     // double
     double *buf_ds = static_cast<double *>(malloc(sizeof(double *) * 8));
@@ -564,6 +666,15 @@ TEST(test_copy, KP36_PREFETCH_L1)
     auto tensor_ds = make_tensor(buf_ds, layout_ds);
     copy(tiled_prefetch_L1, tensor_ds);
     free(buf_ds);
+
+    // float
+    float *buf_fs = static_cast<float *>(malloc(sizeof(float *) * 16));
+    auto shape_fs = make_shape(Int<16>{});
+    auto stride_fs = make_stride(Int<1>{});
+    auto layout_fs = make_layout(shape_fs, stride_fs);
+    auto tensor_fs = make_tensor(buf_fs, layout_fs);
+    copy(tiled_prefetch_L1, tensor_fs);
+    free(buf_fs);
 
     // bfloat16_t
     bfloat16_t *buf_bs = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t *) * 32));
@@ -584,10 +695,52 @@ TEST(test_copy, KP36_PREFETCH_L1)
     free(buf_is);
 }
 
-TEST(test_copy, KP36_PREFETCH_L2)
+TEST(test_copy, KP36_PREFETCH_L1KEEP)
 {
     auto atom_prefetch_shape = make_shape(Int<1>{});
-    auto tiled_prefetch_L2 = make_tiled_copy(Ops<KP36_PREFETCH_L2>{}, atom_prefetch_shape);
+    auto tiled_prefetch_L1 = make_tiled_copy(Ops<KP36_PREFETCH_L1KEEP>{}, atom_prefetch_shape);
+
+    // double
+    double *buf_ds = static_cast<double *>(malloc(sizeof(double *) * 8));
+    auto shape_ds = make_shape(Int<8>{});
+    auto stride_ds = make_stride(Int<1>{});
+    auto layout_ds = make_layout(shape_ds, stride_ds);
+    auto tensor_ds = make_tensor(buf_ds, layout_ds);
+    copy(tiled_prefetch_L1, tensor_ds);
+    free(buf_ds);
+
+    // float
+    float *buf_fs = static_cast<float *>(malloc(sizeof(float *) * 16));
+    auto shape_fs = make_shape(Int<16>{});
+    auto stride_fs = make_stride(Int<1>{});
+    auto layout_fs = make_layout(shape_fs, stride_fs);
+    auto tensor_fs = make_tensor(buf_fs, layout_fs);
+    copy(tiled_prefetch_L1, tensor_fs);
+    free(buf_fs);
+
+    // bfloat16_t
+    bfloat16_t *buf_bs = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t *) * 32));
+    auto shape_bs = make_shape(Int<32>{});
+    auto stride_bs = make_stride(Int<1>{});
+    auto layout_bs = make_layout(shape_bs, stride_bs);
+    auto tensor_bs = make_tensor(buf_bs, layout_bs);
+    copy(tiled_prefetch_L1, tensor_bs);
+    free(buf_bs);
+
+    // int8_t
+    int8_t *buf_is = static_cast<int8_t *>(malloc(sizeof(int8_t *) * 64));
+    auto shape_is = make_shape(Int<64>{});
+    auto stride_is = make_stride(Int<1>{});
+    auto layout_is = make_layout(shape_is, stride_is);
+    auto tensor_is = make_tensor(buf_is, layout_is);
+    copy(tiled_prefetch_L1, tensor_is);
+    free(buf_is);
+}
+
+TEST(test_copy, KP36_PREFETCH_L2STRM)
+{
+    auto atom_prefetch_shape = make_shape(Int<1>{});
+    auto tiled_prefetch_L2 = make_tiled_copy(Ops<KP36_PREFETCH_L2STRM>{}, atom_prefetch_shape);
 
     // double
     double *buf_ds = static_cast<double *>(malloc(sizeof(double *) * 8));
@@ -597,6 +750,15 @@ TEST(test_copy, KP36_PREFETCH_L2)
     auto tensor_ds = make_tensor(buf_ds, layout_ds);
     copy(tiled_prefetch_L2, tensor_ds);
     free(buf_ds);
+
+    // float
+    float *buf_fs = static_cast<float *>(malloc(sizeof(float *) * 16));
+    auto shape_fs = make_shape(Int<16>{});
+    auto stride_fs = make_stride(Int<1>{});
+    auto layout_fs = make_layout(shape_fs, stride_fs);
+    auto tensor_fs = make_tensor(buf_fs, layout_fs);
+    copy(tiled_prefetch_L2, tensor_fs);
+    free(buf_fs);
 
     // bfloat16_t
     bfloat16_t *buf_bs = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t *) * 32));
@@ -615,4 +777,130 @@ TEST(test_copy, KP36_PREFETCH_L2)
     auto tensor_is = make_tensor(buf_is, layout_is);
     copy(tiled_prefetch_L2, tensor_is);
     free(buf_is);
+}
+
+TEST(test_copy, KP36_PREFETCH_L2KEEP)
+{
+    auto atom_prefetch_shape = make_shape(Int<1>{});
+    auto tiled_prefetch_L2 = make_tiled_copy(Ops<KP36_PREFETCH_L2KEEP>{}, atom_prefetch_shape);
+
+    // double
+    double *buf_ds = static_cast<double *>(malloc(sizeof(double *) * 8));
+    auto shape_ds = make_shape(Int<8>{});
+    auto stride_ds = make_stride(Int<1>{});
+    auto layout_ds = make_layout(shape_ds, stride_ds);
+    auto tensor_ds = make_tensor(buf_ds, layout_ds);
+    copy(tiled_prefetch_L2, tensor_ds);
+    free(buf_ds);
+
+    // float
+    float *buf_fs = static_cast<float *>(malloc(sizeof(float *) * 16));
+    auto shape_fs = make_shape(Int<16>{});
+    auto stride_fs = make_stride(Int<1>{});
+    auto layout_fs = make_layout(shape_fs, stride_fs);
+    auto tensor_fs = make_tensor(buf_fs, layout_fs);
+    copy(tiled_prefetch_L2, tensor_fs);
+    free(buf_fs);
+
+    // bfloat16_t
+    bfloat16_t *buf_bs = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t *) * 32));
+    auto shape_bs = make_shape(Int<32>{});
+    auto stride_bs = make_stride(Int<1>{});
+    auto layout_bs = make_layout(shape_bs, stride_bs);
+    auto tensor_bs = make_tensor(buf_bs, layout_bs);
+    copy(tiled_prefetch_L2, tensor_bs);
+    free(buf_bs);
+
+    // int8_t
+    int8_t *buf_is = static_cast<int8_t *>(malloc(sizeof(int8_t *) * 64));
+    auto shape_is = make_shape(Int<64>{});
+    auto stride_is = make_stride(Int<1>{});
+    auto layout_is = make_layout(shape_is, stride_is);
+    auto tensor_is = make_tensor(buf_is, layout_is);
+    copy(tiled_prefetch_L2, tensor_is);
+    free(buf_is);
+}
+
+test_kupl_za
+void KP36_VEC_COPY_HOR_kernel(float *out) test_kupl_streaming
+{
+    svbool_t pg = svptrue_b32();
+    auto sve_layout = make_layout(make_shape(Int<16>{}), make_stride(Int<1>{}));
+    auto vec = make_tensor<float>(sve_layout);
+
+    {
+        auto c_layout = make_layout(make_shape(Int<16>{}, Int<64>{}), make_stride(Int<64>{}, Int<1>{}));
+        auto za = make_tensor<float>(c_layout);
+        auto za_tile = za.tile(Int<0>{});
+        for (uint32_t row = 0; row < 16; ++row) {
+            float seed[16];
+            for (int i = 0; i < 16; ++i) {
+                seed[i] = static_cast<float>(row * 16 + i);
+            }
+            auto src_mem = make_tensor(seed, sve_layout);
+            copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, vec, src_mem);
+            auto dst_tile = za_tile(make_coord(static_cast<int>(row), Underscore{}));
+            copy(TiledCopy<Ops<KP36_VEC_COPY_HOR>, Shape<Int<1>>>{}, dst_tile, vec);
+            svfloat32_t v = svread_hor_za32_m(vec.data(), pg, 0, row);
+            svst1_f32(pg, out + row * 16, v);
+        }
+        for (uint32_t row = 0; row < 16; ++row) {
+            float seed[16];
+            for (int i = 0; i < 16; ++i) {
+                seed[i] = static_cast<float>(row * 16 + i);
+            }
+            svfloat32_t v = svld1_f32(pg, seed);
+            svwrite_hor_za32_m(0, row, pg, v);
+            copy(TiledCopy<Ops<KP36_VEC_COPY_HOR>, Shape<Int<1>>>{}, vec,
+                 za_tile(make_coord(static_cast<int>(row), Underscore{})));
+            auto dst_mem = make_tensor(out + 16 * 16 + row * 16, sve_layout);
+            copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, dst_mem, vec);
+        }
+    }
+    {
+        auto c_layout = make_layout(make_shape(Int<32>{}, Int<32>{}), make_stride(Int<32>{}, Int<1>{}));
+        auto za = make_tensor<float>(c_layout);
+        auto za_tile = za.tile(Int<0>{});
+        for (uint32_t row = 0; row < 16; ++row) {
+            float seed[16];
+            for (int i = 0; i < 16; ++i) {
+                seed[i] = static_cast<float>(row * 16 + i);
+            }
+            auto src_mem = make_tensor(seed, sve_layout);
+            copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, vec, src_mem);
+            auto dst_tile = za_tile(make_coord(static_cast<int>(row), Underscore{}));
+            copy(TiledCopy<Ops<KP36_VEC_COPY_HOR>, Shape<Int<1>>>{}, dst_tile, vec);
+            svfloat32_t v = svread_hor_za32_m(vec.data(), pg, 0, row);
+            svst1_f32(pg, out + 2 * 16 * 16 + row * 16, v);
+        }
+        for (uint32_t row = 0; row < 16; ++row) {
+            float seed[16];
+            for (int i = 0; i < 16; ++i) {
+                seed[i] = static_cast<float>(row * 16 + i);
+            }
+            svfloat32_t v = svld1_f32(pg, seed);
+            svwrite_hor_za32_m(0, row, pg, v);
+            copy(TiledCopy<Ops<KP36_VEC_COPY_HOR>, Shape<Int<1>>>{}, vec,
+                 za_tile(make_coord(static_cast<int>(row), Underscore{})));
+            auto dst_mem = make_tensor(out + 3 * 16 * 16 + row * 16, sve_layout);
+            copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, dst_mem, vec);
+        }
+    }
+}
+
+TEST(test_copy, KP36_VEC_COPY_HOR)
+{
+    float out[4 * 16 * 16] = {0};
+    KP36_VEC_COPY_HOR_kernel(out);
+    bool res = true;
+    for (int seg = 0; seg < 4; ++seg) {
+        for (int row = 0; row < 16; ++row) {
+            for (int i = 0; i < 16; ++i) {
+                if (out[seg * 16 * 16 + row * 16 + i] != static_cast<float>(row * 16 + i)) {
+                    res = false;
+                }
+            }
+        }
+    }
+    ASSERT_TRUE(res);
 }

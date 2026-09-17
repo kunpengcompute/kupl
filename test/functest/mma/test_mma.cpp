@@ -42,13 +42,14 @@ void KP36_32x16x1_F64F64F64_kernel(double *data_a, double *data_b, double *data_
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<512>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_32x16x1_F64F64F64>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tiled_store = make_tiled_store(Ops<KP36_32x16_F64_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_32x16_F64_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(data_a, layout_a);
     auto tensor_b = make_tensor(data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tiled_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 TEST(test_mma, KP36_32x16x1_F64F64F64)
@@ -113,13 +114,14 @@ void KP36_32x16x512_F64F64F64_kernel(double *data_a, double *data_b, double *dat
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<1>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_32x16x512_F64F64F64>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tiled_store = make_tiled_store(Ops<KP36_32x16_F64_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_32x16_F64_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(data_a, layout_a);
     auto tensor_b = make_tensor(data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tiled_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 TEST(test_mma, KP36_32x16x512_F64F64F64)
@@ -195,13 +197,14 @@ void KP36_16x64x2_BF16BF16F32_kernel(bfloat16_t *pack_data_a, bfloat16_t *pack_d
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<288>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_16x64x2_BF16BF16F32>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tile_store = make_tiled_store(Ops<KP36_16x64_F32_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_16x64_F32_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(pack_data_a, layout_a);
     auto tensor_b = make_tensor(pack_data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tile_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 TEST(test_mma, KP36_16x64x2_BF16BF16F32)
@@ -287,13 +290,14 @@ void KP36_16x64x1_BF16BF16F32_kernel(bfloat16_t *pack_data_a, bfloat16_t *pack_d
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<576>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_16x64x1_BF16BF16F32>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tile_store = make_tiled_store(Ops<KP36_16x64_F32_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_16x64_F32_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(pack_data_a, layout_a);
     auto tensor_b = make_tensor(pack_data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tile_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 TEST(test_mma, KP36_16x64x1_BF16BF16F32)
@@ -378,13 +382,14 @@ void KP36_16x64x4_INT8INT8INT32_kernel(int8_t *pack_data_a, int8_t *pack_data_b,
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<144>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_16x64x4_INT8INT8INT32>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tile_store = make_tiled_store(Ops<KP36_16x64_INT32_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_16x64_INT32_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(pack_data_a, layout_a);
     auto tensor_b = make_tensor(pack_data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tile_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 TEST(test_mma, KP36_16x64x4_INT8INT8INT32)
@@ -474,13 +479,14 @@ void KP36_32x32x4_INT8INT8INT32_kernel(int8_t *pack_data_a, int8_t *pack_data_b,
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<144>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_32x32x4_INT8INT8INT32>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tile_store = make_tiled_store(Ops<KP36_32x32_INT32_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_32x32_INT32_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(pack_data_a, layout_a);
     auto tensor_b = make_tensor(pack_data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tile_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 TEST(test_mma, KP36_32x32x4_INT8INT8INT32)
@@ -538,6 +544,110 @@ TEST(test_mma, KP36_32x32x4_INT8INT8INT32)
     for (int i = 0; i < M; i++) {
         for (int j = 0; j < N; j++) {
             if (data_c[i * N + j] != (i * N + j) % 100) {
+                res = false;
+            }
+        }
+    }
+    ASSERT_TRUE(res);
+
+    free(pack_data_a);
+    free(pack_data_b);
+
+    free(data_a);
+    free(data_b);
+    free(data_c);
+}
+
+test_kupl_za
+void KP36_32x32x2_BF16BF16F32_kernel(bfloat16_t *pack_data_a, bfloat16_t *pack_data_b, float *data_d,
+                                     int size_k) test_kupl_streaming
+{
+    auto shape_a = make_shape(Int<32>{}, make_shape(Int<2>{}, Int<1>{}));
+    auto shape_b = make_shape(make_shape(Int<2>{}, Int<1>{}), Int<32>{});
+    auto shape_d = make_shape(make_shape(Int<16>{}, Int<2>{}), Int<32>{});
+
+    auto stride_a = make_stride(Int<2>{}, make_stride(Int<1>{}, Int<64>{}));
+    auto stride_b = make_stride(make_stride(Int<1>{}, Int<64>{}), Int<2>{});
+    auto stride_d = make_stride(make_stride(Int<1>{}, Int<1024>{}), Int<16>{});
+
+    auto layout_a = make_layout(shape_a, stride_a);
+    auto layout_b = make_layout(shape_b, stride_b);
+    auto layout_d = make_layout(shape_d, stride_d);
+
+    auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<1>{});
+    auto tiled_mma = make_tiled_mma(Ops<KP36_32x32x2_BF16BF16F32>{}, atom_mma_shape);
+    auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
+    auto tiled_store = make_tiled_copy(Ops<KP36_32x32_F32_STORE>{}, atom_store_shape);
+
+    auto tensor_d = make_tensor(data_d, layout_d);
+
+    auto shape_za = make_shape(Int<32>{}, Int<32>{});
+    auto stride_za = make_stride(Int<32>{}, Int<1>{});
+    auto layout_za = make_layout(shape_za, stride_za);
+    auto za_d = make_tensor<decltype(tensor_d)::element_type>(layout_za);
+    clear(za_d);
+    for (int kt = 0; kt < size_k / 2; ++kt) {
+        auto tensor_a = make_tensor(pack_data_a + kt * 64, layout_a);
+        auto tensor_b = make_tensor(pack_data_b + kt * 64, layout_b);
+        mma(tiled_mma, za_d, tensor_a, tensor_b);
+    }
+    copy(tiled_store, tensor_d, za_d);
+}
+
+TEST(test_mma, KP36_32x32x2_BF16BF16F32)
+{
+    const int M = 32;
+    const int N = 32;
+    const int K = 576;
+    const int VER_STORE_LOWER_HALF = M / 2 * N;
+    bfloat16_t *data_a = (bfloat16_t *)malloc(sizeof(bfloat16_t) * M * K);
+    bfloat16_t *data_b = (bfloat16_t *)malloc(sizeof(bfloat16_t) * K * N);
+    float *data_c = (float *)malloc(sizeof(float) * (M * N + VER_STORE_LOWER_HALF));
+
+    bfloat16_t *pack_data_a = (bfloat16_t *)malloc(sizeof(bfloat16_t) * M * K);
+    bfloat16_t *pack_data_b = (bfloat16_t *)malloc(sizeof(bfloat16_t) * K * N);
+
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < K; j++) {
+            if (i == j) {
+                data_a[i * K + j] = float_to_bf16_arm_mma(1.0);
+            } else {
+                data_a[i * K + j] = float_to_bf16_arm_mma(0.0);
+            }
+        }
+    }
+    for (int i = 0; i < K; i++) {
+        for (int j = 0; j < N; j++) {
+            data_b[i * N + j] = float_to_bf16_arm_mma(1.0 * ((i * N + j) % 100));
+        }
+    }
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+            data_c[i * N + j] = 0.0;
+        }
+    }
+
+    for (int i = 0; i < K / 2; i++) {
+        for (int j = 0; j < M; j++) {
+            pack_data_a[i * M * 2 + j * 2] = data_a[j * K + 2 * i];
+            pack_data_a[i * M * 2 + j * 2 + 1] = data_a[j * K + 2 * i + 1];
+        }
+    }
+    for (int i = 0; i < K / 2; i++) {
+        for (int j = 0; j < N; j++) {
+            pack_data_b[i * N * 2 + j * 2] = data_b[(i * 2) * N + j];
+            pack_data_b[i * N * 2 + j * 2 + 1] = data_b[(i * 2 + 1) * N + j];
+        }
+    }
+
+    KP36_32x32x2_BF16BF16F32_kernel(pack_data_a, pack_data_b, data_c, K);
+
+    bool res = true;
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+            int base = (i < 16 ? 0 : 1024) + (j < 16 ? 0 : 256);
+            int idx = base + (j % 16) * 16 + (i % 16);
+            if (data_c[idx] != (i * N + j) % 100) {
                 res = false;
             }
         }

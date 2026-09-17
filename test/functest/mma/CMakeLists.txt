@@ -13,11 +13,9 @@ cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
 set(CMAKE_EXE_LINKER_FLAGS "-fprofile-arcs -ftest-coverage")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv9-a+sme-f64f64+sve")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv9-a+sme-f64f64+sve")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv9-a+sme-f64f64+sve -msve-vector-bits=512")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --rtlib=compiler-rt")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --rtlib=compiler-rt")
 endif()
 
 file(GLOB_RECURSE TEST_MMA_FILES *.cpp)
