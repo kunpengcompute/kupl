@@ -45,13 +45,14 @@ void KP36_32x16x512_F64F64F64_kernel(double *data_a, double *data_b, double *dat
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<1>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_32x16x512_F64F64F64>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tiled_store = make_tiled_store(Ops<KP36_32x16_F64_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_32x16_F64_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(data_a, layout_a);
     auto tensor_b = make_tensor(data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tiled_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 void KP36_32x16x512_F64F64F64_coverage()
@@ -88,13 +89,14 @@ void KP36_16x64x2_BF16BF16F32_kernel(bfloat16_t *data_a, bfloat16_t *data_b, flo
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<288>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_16x64x2_BF16BF16F32>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tile_store = make_tiled_store(Ops<KP36_16x64_F32_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_16x64_F32_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(data_a, layout_a);
     auto tensor_b = make_tensor(data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tile_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 void KP36_16x64x2_BF16BF16F32_coverage()
@@ -131,13 +133,14 @@ void KP36_16x64x1_BF16BF16F32_kernel(bfloat16_t *data_a, bfloat16_t *data_b, flo
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<576>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_16x64x1_BF16BF16F32>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tile_store = make_tiled_store(Ops<KP36_16x64_F32_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_16x64_F32_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(data_a, layout_a);
     auto tensor_b = make_tensor(data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tile_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 void KP36_16x64x1_BF16BF16F32_coverage()
@@ -174,13 +177,14 @@ void KP36_16x64x4_INT8INT8INT32_kernel(int8_t *data_a, int8_t *data_b, int32_t *
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<144>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_16x64x4_INT8INT8INT32>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tile_store = make_tiled_store(Ops<KP36_16x64_INT32_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_16x64_INT32_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(data_a, layout_a);
     auto tensor_b = make_tensor(data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tile_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 void KP36_16x64x4_INT8INT8INT32_coverage()
@@ -217,13 +221,14 @@ void KP36_32x32x4_INT8INT8INT32_kernel(int8_t *data_a, int8_t *data_b, int32_t *
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<144>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_32x32x4_INT8INT8INT32>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tile_store = make_tiled_store(Ops<KP36_32x32_INT32_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_32x32_INT32_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(data_a, layout_a);
     auto tensor_b = make_tensor(data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tile_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 void KP36_32x32x4_INT8INT8INT32_coverage()
@@ -269,13 +274,14 @@ void KP36_32x16x1_F64F64F64_kernel(double *data_a, double *data_b, double *data_
     auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<512>{});
     auto tiled_mma = make_tiled_mma(Ops<KP36_32x16x1_F64F64F64>{}, atom_mma_shape);
     auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
-    auto tiled_store = make_tiled_store(Ops<KP36_32x16_F64_STORE>{}, atom_store_shape);
+    auto tiled_store = make_tiled_copy(Ops<KP36_32x16_F64_STORE>{}, atom_store_shape);
 
     auto tensor_a = make_tensor(data_a, layout_a);
     auto tensor_b = make_tensor(data_b, layout_b);
     auto tensor_c = make_tensor(data_c, layout_c);
-    mma(tiled_mma, tensor_c, tensor_a, tensor_b, tensor_c);
-    store(tiled_store, tensor_c);
+    auto za_d = make_tensor<decltype(tensor_c)::element_type>(layout_c);
+    mma(tiled_mma, za_d, tensor_a, tensor_b, tensor_c);
+    copy(tiled_store, tensor_c, za_d);
 }
 
 void mma_base_example(int test_count)
