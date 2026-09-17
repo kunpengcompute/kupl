@@ -12,7 +12,15 @@
 
 #pragma once
 
-// External interfaces of the core of the mma module
+// Core: compiler helpers + constants + KUPL_MMA_IN macros + TiledCallFunc
 #include "mma/kupl_mma_core.h"
-// Implementation of the external interfaces of the MMA module
-#include "mma/kupl_mma_impl.h"
+// Layout metaprogramming: Val/Int/Ops/Shape/Stride/Layout/crd2idx/slice/make_*
+#include "mma/kupl_mma_layout.h"
+// Engines and SVE primitives: PtrEngine/VectorEngine/MatrixEngine + Sv* ops
+#include "mma/kupl_mma_engine.h"
+// Tensor abstraction: Tensor/arith/cvt/exp2f/make_tensor/clear/prefetch_impl
+#include "mma/kupl_mma_tensor.h"
+// TiledMma: MmaAtomTraits + TiledMma + call_mma specializations
+#include "mma/kupl_mma_mma.h"
+// TiledCopy: StoreTraits/TransTraits/PrefetchTraits + TiledCopy + call_copy specializations
+#include "mma/kupl_mma_copy.h"
