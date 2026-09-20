@@ -11,18 +11,22 @@
 set(KUPL_INSTALL_BIN_PATH ${CMAKE_INSTALL_PREFIX}/bin)
 set(FUZZ_BIN fuzz_mma_main)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv9-a+sme-f64f64+sve")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv9-a+sme-f64f64+sve")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=armv9-a+sme-f64f64+sve")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=armv9-a+sme-f64f64+sve")
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --rtlib=compiler-rt")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --rtlib=compiler-rt")
 endif()
 
 file(GLOB_RECURSE FUZZ_FILES *.h *.cpp)
 
 add_executable(${FUZZ_BIN} ${FUZZ_FILES})
-
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_link_options(test_mma_main PRIVATE --unwindlib=libunwind)
+endif()
 target_link_libraries(${FUZZ_BIN}
     -Wl,--start-group
-    kupl dl pthread gcov Secodefuzz
+    dl pthread gcov Secodefuzz
     -Wl,--end-group
 )
 

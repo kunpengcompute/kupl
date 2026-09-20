@@ -61,7 +61,6 @@ function build_src()
         -DCMAKE_CXX_COMPILER=${KUPL_CXX_COMPILER}       \
         -DENABLE_KUPL_PROFILE=${ENABLE_KUPL_PROFILE}    \
         -DENABLE_KUPL_TRACE=${ENABLE_KUPL_TRACE}        \
-        -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}            \
         -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
         -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
         -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}

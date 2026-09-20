@@ -102,7 +102,7 @@ void reduce_coverage()
 
     // invalid rd_args
     kupl_parallel_for_reduce(&desc, reduce_func, nullptr, nullptr);
-    
+
     // invalid policy
     desc.policy = (kupl_loop_policy_type_t)-1;
     kupl_parallel_for_reduce(&desc, reduce_func, nullptr, &rd_args);
