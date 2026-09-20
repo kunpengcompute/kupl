@@ -44,6 +44,7 @@ struct kupl_config_kv {
 #define KUPL_CONFIG_COUNT ((int)KUPL_CONFIG_ENUM_LAST)
 
 static kupl_config_kv g_kupl_config_kv[KUPL_CONFIG_COUNT];
+static bool g_config_inited = false;
 
 /* int, the valid range is [lower, upper] */
 static void get_env_int(struct kupl_config_kv *cfg)
@@ -98,6 +99,9 @@ static void get_env_str(struct kupl_config_kv *cfg)
 
 void kupl_config_load()
 {
+    if (g_config_inited) {
+        return;
+    }
 /** initialize all the configures with default value and read from environment */
 #define KUPL_CONFIG_INT(_env, _def, _lower, _upper, _doc)                         \
     g_kupl_config_kv[KUPL_CONFIG_TO_ENUM(_env, INT)].type = KUPL_CONFIG_TYPE_INT; \
@@ -133,6 +137,7 @@ void kupl_config_load()
 #undef KUPL_CONFIG_INT
 #undef KUPL_CONFIG_STR
     }
+    g_config_inited = true;
 }
 
 void kupl_config_unload()
@@ -144,6 +149,7 @@ void kupl_config_unload()
             cfg->cfg_str.value = cfg->cfg_str.def_value;
         }
     }
+    g_config_inited = false;
 }
 
 int kupl_config_int_type_value(kupl_config_enum env)

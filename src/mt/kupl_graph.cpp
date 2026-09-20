@@ -456,6 +456,15 @@ void kupl_graph_wait(kupl_graph_h graph)
     }
 }
 
+int kupl_graph_test(kupl_graph_h graph)
+{
+    if (graph == nullptr) {
+        return KUPL_ERROR;
+    }
+    kupl_sched_execute_tb(graph->sched);
+    return (int)KUPL_ATOMIC_LD_RLX(&graph->count);
+}
+
 int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info)
 {
     if (kupl_unlikely((graph == nullptr) || (info == nullptr))) {

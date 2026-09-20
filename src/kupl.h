@@ -221,6 +221,14 @@ kupl_export void kupl_graph_destroy(kupl_graph_h graph);
  */
 kupl_export void kupl_graph_wait(kupl_graph_h graph);
 
+/**
+ * @brief test if all the ults and tasks in the graph are finished
+ *
+ * @param [in] graph        the graph handler
+ * @return                  the number of tasks remain in the graph
+ */
+kupl_export int kupl_graph_test(kupl_graph_h graph);
+
 /** @brief the flag for task */
 enum kupl_task_flag {
     /**
@@ -581,6 +589,13 @@ kupl_export void kupl_set_kernel_concurrency(int num);
  * @return the number of threads used now
  */
 kupl_export int kupl_get_kernel_concurrency(void);
+
+/**
+ * @brief get the max number of threads used by kupl parallel for
+ *
+ * @return the number of threads used next
+ */
+kupl_export int kupl_get_max_concurrency(void);
 
 /**
  * @brief set the number of threads used by current thread，such as memcpy

@@ -11,6 +11,22 @@
  */
 #include "gtest/gtest.h"
 #include "kupl.h"
+#include "memory/mpool/kupl_mpool.h"
+
+TEST(test_executor, kupl_get_max_concurrency_without_init)
+{
+    ASSERT_FALSE(kupl_memory_is_inited());
+
+    int pre = kupl_get_max_concurrency();
+    ASSERT_FALSE(kupl_memory_is_inited());
+    ASSERT_GT(pre, 0);
+
+    int num = kupl_get_num_executors();
+    ASSERT_TRUE(kupl_memory_is_inited());
+
+    ASSERT_EQ(kupl_get_max_concurrency(), num);
+    ASSERT_EQ(pre, num);
+}
 
 TEST(test_executor, kupl_executor_num)
 {
