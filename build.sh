@@ -98,7 +98,7 @@ function build_cida()
         -DCMAKE_C_COMPILER=$(which mpicc)               \
         -DCMAKE_CXX_COMPILER=$(which mpicxx)            \
         -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}            \
-        -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
+        -DCMAKE_BUILD_TYPE=Debug                        \
         -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
         -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}
     cmake --build ${build_path} -j --target install
