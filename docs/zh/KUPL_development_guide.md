@@ -836,6 +836,8 @@ int main()
 
 -   **[kupl\_set\_kernel\_concurrency](#ZH-CN_TOPIC_0000002720922876)**
 
+-   **[kupl\_get\_max\_concurrency](#ZH-CN_TOPIC_0000002750502827)**
+
 -   **[kupl\_parallel\_for](#ZH-CN_TOPIC_0000002075945594)**
 
 -   **[kupl::parallel\_for](#ZH-CN_TOPIC_0000002373565418)**
@@ -1052,6 +1054,45 @@ kupl kernel concurrency = 2
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
 >-   上述示例设置并打印了全局算子并发度的值。上述kupl\_set\_kernel\_concurrency函数将算子并发度设置为2。
 >-   除了通过kupl\_set\_kernel\_concurrency函数接口设置算子并发度外，还可以通过环境变量KUPL\_KERNEL\_CONCURRENCY来设置算子并发度。
+
+##### kupl\_get\_max\_concurrency<a id="ZH-CN_TOPIC_0000002750502827"></a>
+
+获取kupl parallel for将使用的最大线程数。
+
+**接口定义<a id="section2557134318550"></a>**
+
+int kupl\_get\_max\_concurrency\(\);
+
+**返回值<a id="section2557134318551"></a>**
+
+-   未初始化时：根据KUPL配置（KUPL\_EXECUTOR\_COUNT环境变量）、CPU核数与当前线程亲缘性计算得到的最大可用并发度，该值与初始化后的executor数量相同，至少为1
+-   在并行域内调用：返回1
+-   已初始化且不在并行域内：返回当前的算子并发度（与kupl\_get\_kernel\_concurrency的值一致）
+
+**示例<a id="section2557134318552"></a>**
+
+```cpp
+#include <stdio.h>
+#include "kupl.h"
+
+int main()
+{
+    kupl_set_kernel_concurrency(2);
+    int max_concurrency = kupl_get_max_concurrency();
+    printf("kupl max concurrency = %d\n", max_concurrency);
+    return 0;
+}
+```
+
+运行结果如下。
+
+```
+kupl max concurrency = 2
+```
+
+>![](public_sys-resources/icon-note.gif) **说明：**<br>
+>-   上述示例设置全局算子并发度为2后获取kupl parallel for将使用的最大线程数。
+>-   已初始化且不在并行域内时，kupl\_get\_max\_concurrency返回当前的算子并发度，与kupl\_get\_kernel\_concurrency的值一致；未初始化时返回根据KUPL配置、CPU核数与线程亲缘性计算得到的最大可用并发度；在并行域内调用返回1。
 
 ##### kupl\_parallel\_for<a id="ZH-CN_TOPIC_0000002075945594"></a>
 
@@ -1573,6 +1614,8 @@ int main()
 
 -   **[kupl\_graph\_wait](#ZH-CN_TOPIC_0000002111464753)**
 
+-   **[kupl\_graph\_test](#ZH-CN_TOPIC_0000002111504759)**
+
 -   **[kupl\_sgraph\_create](#ZH-CN_TOPIC_0000002076100322)**
 
 -   **[kupl\_sgraph\_destroy](#ZH-CN_TOPIC_0000002111579729)**
@@ -2041,6 +2084,81 @@ graph task test.
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
 >上述示例演示了向graph图提交task、并等待直到graph图的全部task执行完成的流程。上述 kupl\_graph\_wait函数等待graph图中所有task都执行完成，才继续往下执行。
+
+##### kupl\_graph\_test<a id="ZH-CN_TOPIC_0000002111504759"></a>
+
+非阻塞地测试kupl图中是否所有task都已完成。与kupl\_graph\_wait不同，该函数不会阻塞等待，而是尝试执行一次就绪的task后立即返回图中剩余的task数量，调用方可在轮询间隙执行其他工作。
+
+**接口定义<a id="section2111504751"></a>**
+
+int kupl\_graph\_test\(kupl\_graph\_h graph\);
+
+**参数<a id="section2111504752"></a>**
+
+**表 1**  参数定义
+
+|参数名|类型|描述|输入/输出|
+|--|--|--|--|
+|graph|kupl_graph_h|需要测试的kupl graph|输入|
+
+
+**返回值<a id="section2111504753"></a>**
+
+-   成功：返回图中剩余未完成的task数量，返回0表示所有task已完成
+-   graph为nullptr时：返回KUPL_ERROR
+
+**示例<a id="section2111504754"></a>**
+
+```cpp
+#include <stdio.h>
+#include "kupl.h"
+#include <assert.h>
+
+static inline void task_str(void *args)
+{
+    printf("graph task test.\n");
+}
+
+int main()
+{
+    int executor_num = kupl_get_num_executors();
+    int executors[executor_num];
+    for (int i = 0; i < executor_num; i++) {
+        executors[i] = i;
+    }
+    kupl_egroup_h egroup = kupl_egroup_create(executors, executor_num);
+    kupl_graph_h graph = kupl_graph_create(egroup);
+    kupl_task_desc_t task_desc = {
+        .field_mask = KUPL_TASK_DESC_FIELD_FLAG,
+        .func = task_str,
+        .args = NULL,
+        .flag = KUPL_TASK_FLAG_IMM,
+    };
+    kupl_task_info_t info = {
+        .type = KUPL_TASK_TYPE_SINGLE,
+        .desc = &task_desc,
+    };
+
+    int ret = kupl_graph_submit(graph, &info);
+    assert(ret == KUPL_OK);
+
+    while (kupl_graph_test(graph) > 0) {
+    }
+    kupl_graph_destroy(graph);
+    kupl_egroup_destroy(egroup);
+    return 0;
+}
+```
+
+运行结果如下。
+
+```
+graph task test.
+```
+
+>![](public_sys-resources/icon-note.gif) **说明：**<br>
+>-   上述示例向graph图提交task后，通过kupl\_graph\_test轮询图中剩余task数量，返回0即表示全部task执行完成。
+>-   与kupl\_graph\_wait阻塞等待不同，kupl\_graph\_test不会阻塞，每次调用仅尝试执行一次就绪的task并立即返回剩余数量，调用方可在轮询间隙执行其他工作。
 
 ##### kupl\_sgraph\_create<a id="ZH-CN_TOPIC_0000002076100322"></a>
 
