@@ -3,7 +3,6 @@
 .idea
 .codemate
 .opencode
-docs
 AGENTS.md
 build
 lcov
