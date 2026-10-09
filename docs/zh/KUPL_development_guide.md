@@ -22,7 +22,7 @@
 
 当前版本除了通过线程调度、任务分配等优化对数学库直接法求解器进行加速实现加速效果，还直接对外提供KUPL API进行使用从而提供并行加速能力。KML直接求解法ksolver已采用KUPL动态伸缩的能力对矩阵的部分求解过程进行加速优化，只需要在使用ksolver时通过环境变量的配置即可使能KUPL加速能力，具体使用方式如下。
 
-1.  节点上安装HPCKit，依据《Kunpeng HPCKit 26.2.0 开发指南》编写ksolver\_testcase，编译ksolver\_testcase的时候链接HPCKit中的libksolver.so 。
+1.  节点上安装HPCKit，依据[《Kunpeng HPCKit 26.2.0 开发指南》](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/kunpengaccel_kml_0821.html)编写ksolver\_testcase，编译ksolver\_testcase的时候链接HPCKit中的libksolver.so 。
 2.  执行ksolver\_testcase二进制，设置环境变量KML\_DSS\_SCHE\_MODE=KUPL使能KUPL动态伸缩能力，该环境变量默认值为static，表示走静态调度策略，即不进行负载均衡优化。
 
     命令举例如下：
@@ -55,9 +55,11 @@ KUPL sample的根目录包含4个顶层目录，分别对应众核并行模块�
 2.  通过source setvars.sh加载毕昇版本KUPL动态链接库及其他所需环境变量。
 3.  Git拉取KUPL sample代码仓代码至本地服务器上。
 
-    **git clone https://gitcode.com/kunpengcompute/hpckit-sample.git**
+    ```
+    git clone https://gitcode.com/kunpengcompute/hpckit-sample.git
 
-    **cd kupl**
+    cd kupl
+    ```
 
 4.  编译运行KUPL sample代码仓代码，当前支持两种方式：
     -   一键式全量编译安装。
@@ -103,8 +105,8 @@ KUPL对外提供profile和trace两个工具，来提供运行时的时序统计�
 |sched_get_taskbase|从KUPL底层Sched中获取任务耗时|
 
 
-    >![](public_sys-resources/icon-note.gif) **说明：**<br>
-    >通过网页观看可视化版本报告建议使用Chrome浏览器。
+> ![](public_sys-resources/icon-note.gif) **说明：**<br>
+> 通过网页观看可视化版本报告建议使用Chrome浏览器。
 
 ## KUPL库函数说明<a id="ZH-CN_TOPIC_0000002043915589"></a>
 
@@ -335,8 +337,8 @@ kupl\_egroup\_h kupl\_egroup\_create\(int \*executors, int executors\_num\);
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
-|executors|int *|组成egroup的executor，具体参数传入方式为将需要构成集合的执行器的编号赋值给该数组约束：0≤executors[i]≤kupl_get_num_executors()|输入|
-|executors_num|int|egroup中executor数量约束：0≤executors_num≤kupl_get_num_executors()|输入|
+|executors|int *|组成egroup的executor，具体参数传入方式为将需要构成集合的执行器的编号赋值给该数组<br>约束：<br>0≤executors[i]≤kupl_get_num_executors()|输入|
+|executors_num|int|egroup中executor数量<br>约束：<br>0≤executors_num≤kupl_get_num_executors()|输入|
 
 
 **返回值<a id="section76021111175810"></a>**
@@ -1077,13 +1079,13 @@ int kupl\_parallel\_for\(kupl\_parallel\_for\_desc\_t \*desc, kupl\_pf\_func\_t 
 |参数名|类型|描述|
 |--|--|--|
 |field_mask|uint64_t|结构体中有效字段的掩码，使用kupl_parallel_for_desc_field中的位标识。此掩码中未指定的字段将被忽略。当前所有字段都为必填项。|
-|range|kupl_nd_range_t *|parallel for范围，指向kupl_nd_range_t结构体的指针，请参见表3|
+|range|kupl_nd_range_t *|parallel for范围，指向kupl_nd_range_t结构体的指针，请参见[表 3](#table_kupl_nd_range_t)|
 |egroup|kupl_egroup_h|执行for循环任务的egroup，即能在哪个egroup中的executor执行器上执行；可设置为空指针，即不指定egroup|
 |concurrency|int|for循环任务的并发度；可设置为KUPL_CONCURRENCY_DEFAULT，即不指定并发度|
 |policy|kupl_loop_policy_type_t|parallel for任务遵循的切分策略，当前可设置为<ul><li>KUPL_LOOP_POLICY_STATIC，表示静态切分策略：平均切</li><li>KUPL_LOOP_POLICY_DYNAMIC，表示动态切分策略</li><li>KUPL_LOOP_POLICY_TASK，表示所有任务会被静态切分但会被以task形式提交用于动态调度</li></ul>|
 
 
-**表 3**  kupl\_nd\_range\_t的数据结构定义
+**表 3**  kupl\_nd\_range\_t的数据结构定义<a id="table_kupl_nd_range_t"></a>
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1109,12 +1111,12 @@ int kupl\_parallel\_for\(kupl\_parallel\_for\_desc\_t \*desc, kupl\_pf\_func\_t 
 
 |宏|描述|
 |--|--|
-|KUPL_1D_RANGE_INIT(_range, _col_begin, _col_end)|配置维度为1、步长为1的parallel for范围具体功能：将_range的维度设置为1；将(_range).nd_range[0]的下限，上限，步长，块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT|
-|KUPL_STRIDE_1D_RANGE_INIT(_range, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为1的parallel for范围具体功能：将_range的维度设置为1；将(_range).nd_range[0]的下限，上限，步长，块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize|
-|KUPL_2D_RANGE_INIT(_range, _row_begin, _row_end, _col_begin, _col_end)|配置维度为2、步长为1的parallel for范围具体功能：将_range的维度设置为2；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[1]的上限、下限、步长、块大小分别设置为_row_begin、_row_end、1、KUPL_BLOCKSIZE_DEFAULT|
-|KUPL_STRIDE_2D_RANGE_INIT(_range, _row_begin, _row_end, _row_step, _row_blocksize, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为2的parallel for范围具体功能：将_range的维度设置为2；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize；将(_range).nd_range[1]的上限、下限、步长、块大小分别设置为_row_begin、_row_end、_row_step、_row_blocksize|
-|KUPL_3D_RANGE_INIT(_range, _page_begin, _page_end, _row_begin, _row_end, _col_begin, _col_end)|配置维度为3、步长为1的parallel for范围具体功能：将_range的维度设置为3；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[1]的下限、上限、步长、块大小分别设置为_row_begin、_row_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[2]的下限、上限、步长、块大小分别设置为_page_begin、_page_end、1、KUPL_BLOCKSIZE_DEFAULT|
-|KUPL_STRIDE_3D_RANGE_INIT(_range, _page_begin, _page_end, _page_step, _page_blocksize, _row_begin, _row_end, _row_step, _row_blocksize, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为3的parallel for范围具体功能：将_range的维度设置为3；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize;  将(_range).nd_range[1]的下限、上限、步长、块大小分别设置为_row_begin、_row_end、_row_step、_row_blocksize; 将(_range).nd_range[2]的下限、上限、步长、块大小分别设置为_page_begin、_page_end、_page_step、_page_blocksize|
+|KUPL_1D_RANGE_INIT(_range, _col_begin, _col_end)|配置维度为1、步长为1的parallel for范围<br>具体功能：<br>将_range的维度设置为1；将(_range).nd_range[0]的下限，上限，步长，块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT|
+|KUPL_STRIDE_1D_RANGE_INIT(_range, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为1的parallel for范围<br>具体功能：<br>将_range的维度设置为1；将(_range).nd_range[0]的下限，上限，步长，块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize|
+|KUPL_2D_RANGE_INIT(_range, _row_begin, _row_end, _col_begin, _col_end)|配置维度为2、步长为1的parallel for范围<br>具体功能：<br>将_range的维度设置为2；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[1]的上限、下限、步长、块大小分别设置为_row_begin、_row_end、1、KUPL_BLOCKSIZE_DEFAULT|
+|KUPL_STRIDE_2D_RANGE_INIT(_range, _row_begin, _row_end, _row_step, _row_blocksize, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为2的parallel for范围<br>具体功能：<br>将_range的维度设置为2；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize；将(_range).nd_range[1]的上限、下限、步长、块大小分别设置为_row_begin、_row_end、_row_step、_row_blocksize|
+|KUPL_3D_RANGE_INIT(_range, _page_begin, _page_end, _row_begin, _row_end, _col_begin, _col_end)|配置维度为3、步长为1的parallel for范围<br>具体功能：<br>将_range的维度设置为3；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[1]的下限、上限、步长、块大小分别设置为_row_begin、_row_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[2]的下限、上限、步长、块大小分别设置为_page_begin、_page_end、1、KUPL_BLOCKSIZE_DEFAULT|
+|KUPL_STRIDE_3D_RANGE_INIT(_range, _page_begin, _page_end, _page_step, _page_blocksize, _row_begin, _row_end, _row_step, _row_blocksize, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为3的parallel for范围<br>具体功能：<br>将_range的维度设置为3；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize;  将(_range).nd_range[1]的下限、上限、步长、块大小分别设置为_row_begin、_row_end、_row_step、_row_blocksize; 将(_range).nd_range[2]的下限、上限、步长、块大小分别设置为_page_begin、_page_end、_page_step、_page_blocksize|
 
 
 **返回值<a id="section114781591571"></a>**
@@ -1342,7 +1344,7 @@ using pf\_lambda = std::function<void\(const kupl\_nd\_range\_t \*nd\_range, con
 |lower|int64_t|parallel for循环的起始值，即范围的下限|
 |upper|int64_t|parallel for循环的结束值，即范围的上限|
 |step|int64_t|parallel for循环的步长，即每次循环增大的值|
-|blocksize|int64_t|。任务拆分后，每次执行一个block，每个block包含的最小迭代次数是blocksize，可以使用KUPL_BLOCKSIZE_DEFAULT表示默认blocksize。当前静态切分策略下blocksize不生效，kupl会按线程数均分数据。只有动态切分和task切分策略下生效，blocksize默认值为1。|
+|blocksize|int64_t|任务拆分后，每次执行一个block，每个block包含的最小迭代次数是blocksize，可以使用KUPL_BLOCKSIZE_DEFAULT表示默认blocksize。当前静态切分策略下blocksize不生效，kupl会按线程数均分数据。只有动态切分和task切分策略下生效，blocksize默认值为1。|
 
 
 由于kupl\_nd\_range\_t的数据结构较为复杂，因此在允许用户自行配置数据结构的同时，也提供了相应的宏，以供用户便捷地配置维度为1的kupl\_nd\_range\_t。具体的宏如[表 kupl\_nd\_range\_t的宏定义](#table185621811174414)所示。
@@ -1353,12 +1355,12 @@ using pf\_lambda = std::function<void\(const kupl\_nd\_range\_t \*nd\_range, con
 
 |宏|描述|
 |--|--|
-|KUPL_1D_RANGE_INIT(_range, _col_begin, _col_end)|配置维度为1、步长为1的parallel for范围具体功能：将_range的维度设置为1；将(_range).nd_range[0]的下限，上限，步长，块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT|
-|KUPL_STRIDE_1D_RANGE_INIT(_range, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为1的parallel for范围具体功能：将_range的维度设置为1；将(_range).nd_range[0]的下限，上限，步长，块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize|
-|KUPL_2D_RANGE_INIT(_range, _row_begin, _row_end, _col_begin, _col_end)|配置维度为2、步长为1的parallel for范围具体功能：将_range的维度设置为2；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[1]的上限、下限、步长、块大小分别设置为_row_begin、_row_end、1、KUPL_BLOCKSIZE_DEFAULT|
-|KUPL_STRIDE_2D_RANGE_INIT(_range, _row_begin, _row_end, _row_step, _row_blocksize, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为2的parallel for范围具体功能：将_range的维度设置为2；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize；将(_range).nd_range[1]的上限、下限、步长、块大小分别设置为_row_begin、_row_end、_row_step、_row_blocksize|
-|KUPL_3D_RANGE_INIT(_range, _page_begin, _page_end, _row_begin, _row_end, _col_begin, _col_end)|配置维度为3、步长为1的parallel for范围具体功能：将_range的维度设置为3；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[1]的下限、上限、步长、块大小分别设置为_row_begin、_row_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[2]的下限、上限、步长、块大小分别设置为_page_begin、_page_end、1、KUPL_BLOCKSIZE_DEFAULT|
-|KUPL_STRIDE_3D_RANGE_INIT(_range, _page_begin, _page_end, _page_step, _page_blocksize, _row_begin, _row_end, _row_step, _row_blocksize, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为3的parallel for范围具体功能：将_range的维度设置为3；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize;  将(_range).nd_range[1]的下限、上限、步长、块大小分别设置为_row_begin、_row_end、_row_step、_row_blocksize; 将(_range).nd_range[2]的下限、上限、步长、块大小分别设置为_page_begin、_page_end、_page_step、_page_blocksize|
+|KUPL_1D_RANGE_INIT(_range, _col_begin, _col_end)|配置维度为1、步长为1的parallel for范围<br>具体功能：<br>将_range的维度设置为1；将(_range).nd_range[0]的下限，上限，步长，块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT|
+|KUPL_STRIDE_1D_RANGE_INIT(_range, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为1的parallel for范围<br>具体功能：<br>将_range的维度设置为1；将(_range).nd_range[0]的下限，上限，步长，块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize|
+|KUPL_2D_RANGE_INIT(_range, _row_begin, _row_end, _col_begin, _col_end)|配置维度为2、步长为1的parallel for范围<br>具体功能：<br>将_range的维度设置为2；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[1]的上限、下限、步长、块大小分别设置为_row_begin、_row_end、1、KUPL_BLOCKSIZE_DEFAULT|
+|KUPL_STRIDE_2D_RANGE_INIT(_range, _row_begin, _row_end, _row_step, _row_blocksize, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为2的parallel for范围<br>具体功能：<br>将_range的维度设置为2；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize；将(_range).nd_range[1]的上限、下限、步长、块大小分别设置为_row_begin、_row_end、_row_step、_row_blocksize|
+|KUPL_3D_RANGE_INIT(_range, _page_begin, _page_end, _row_begin, _row_end, _col_begin, _col_end)|配置维度为3、步长为1的parallel for范围<br>具体功能：<br>将_range的维度设置为3；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[1]的下限、上限、步长、块大小分别设置为_row_begin、_row_end、1、KUPL_BLOCKSIZE_DEFAULT；将(_range).nd_range[2]的下限、上限、步长、块大小分别设置为_page_begin、_page_end、1、KUPL_BLOCKSIZE_DEFAULT|
+|KUPL_STRIDE_3D_RANGE_INIT(_range, _page_begin, _page_end, _page_step, _page_blocksize, _row_begin, _row_end, _row_step, _row_blocksize, _col_begin, _col_end, _col_step, _col_blocksize)|配置维度为3的parallel for范围<br>具体功能：<br>将_range的维度设置为3；将(_range).nd_range[0]的下限、上限、步长、块大小分别设置为_col_begin、_col_end、_col_step、_col_blocksize;  将(_range).nd_range[1]的下限、上限、步长、块大小分别设置为_row_begin、_row_end、_row_step、_row_blocksize; 将(_range).nd_range[2]的下限、上限、步长、块大小分别设置为_page_begin、_page_end、_page_step、_page_blocksize|
 
 
 **返回值<a id="section114781591571"></a>**
@@ -4395,12 +4397,12 @@ int kupl\_shm\_comm\_create\(int size, int rank, int pid, kupl\_shm\_oob\_cb\_h 
 |size|int|需要创建的kupl通信域大小|输入|
 |rank|int|当前进程的进程编号（从0开始的相对编码）|输入|
 |pid|int|当前进程的pid|输入|
-|oob_cbs|kupl_shm_oob_cb_h|带外函数指针，详见表2 shm带外函数的结构体定义|输入|
+|oob_cbs|kupl_shm_oob_cb_h|带外函数指针，详见[表 2](#table_shm_oob_cb)|输入|
 |group|void *|带外函数指针依赖的参数|输入|
 |comm|kupl_shm_comm_h|需要创建的kupl通信域|输出|
 
 
-**表 2**  shm带外函数的结构体定义
+**表 2**  shm带外函数的结构体定义<a id="table_shm_oob_cb"></a>
 
 |参数名|类型|描述|
 |--|--|--|
@@ -6928,7 +6930,7 @@ int main()
     auto ret3 = ret2(coord3);
 
     // Tensor对象逐元素相加操作如下所述
-    tensor_c = tensor_a + tensor_b;    
+    tensor_c = tensor_a + tensor_b;
 
     // Tensor对象标量乘操作如下所述
     tensor_c = tensor_b * 2.0;
