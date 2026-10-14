@@ -43,7 +43,7 @@ KUPL当前对外优化特性分为三大模块，具体为众核并行、数据�
 
 - 众核并行模块对外提供了包含egroup、多线程编程、计算图编程、多队列多流编程等KUPL API用以多线程并行计算加速。
 - 数据管理模块对外提供了包含内存管理、共享内存通信等KUPL API用以数据拷贝或通信加速。
-- 矩阵编程模块对外提供了张量定义、张量计算等KUPL API用以加速矩阵乘计算
+- 矩阵编程模块对外提供了张量定义、张量计算等KUPL API用以加速矩阵乘计算。
 
 具体上述KUPL特性模块的优化使能方式，可以参考[KUPL sample代码仓](https://gitcode.com/kunpengcompute/hpckit-sample/tree/main/kupl)。
 
