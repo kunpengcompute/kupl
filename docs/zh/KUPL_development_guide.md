@@ -3682,7 +3682,7 @@ int kupl_memcpy2d(void *dst, size_t dpitch, const void *src, size_t spitch, size
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
 >- 当前kupl memcpy2d支持的最大宽、高、搬运间隔均不超过UINT32_MAX，即width、spitch-width、dpitch-width、height上限为UINT32_MAX。
->- 需分别满足spitch*height小于 src 所指向内存的真实大小，且dpitch*height 小于 dst 所指向内存的真实大小。
+>- 需分别满足spitch\*height小于 src 所指向内存的真实大小，且dpitch\*height 小于 dst 所指向内存的真实大小。
 
 **环境变量<a id="section132891826133710"></a>**
 
@@ -3839,7 +3839,7 @@ int kupl_memcpy2d_async(void *dst, size_t dpitch, const void *src, size_t spitch
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
 >- 当前kupl memcpy2d_async支持的最大宽、高、搬运间隔均不超过UINT32_MAX，即width、spitch-width、dpitch-width、height上限为UINT32_MAX。
->- spitch*height 与dpitch*height 需要分别小于 src 和 dst 所指向内存的真实大小。
+>- spitch\*height 与 dpitch\*height 需要分别小于 src 和 dst 所指向内存的真实大小。
 
 **环境变量<a id="section132891826133710"></a>**
 
@@ -7062,7 +7062,7 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了基于32*16*512_F64F64F64矩阵形状的mma流程，其中通过make_tensor创建矩阵对象tensor，作为后续mma/store接口参数。
+>上述示例演示了基于32\*16\*512_F64F64F64矩阵形状的mma流程，其中通过make_tensor创建矩阵对象tensor，作为后续mma/store接口参数。
 
 ##### make_coord<a id="ZH-CN_TOPIC_0000002235386969"></a>
 
@@ -7193,7 +7193,7 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了基于32*16*512_F64F64F64矩阵形状的mma流程，其中通过make_shape创建shape，用于规定矩阵形状或计算尺寸。
+>上述示例演示了基于32\*16\*512_F64F64F64矩阵形状的mma流程，其中通过make_shape创建shape，用于规定矩阵形状或计算尺寸。
 
 ##### make_stride<a id="ZH-CN_TOPIC_0000002200186886"></a>
 
@@ -7266,7 +7266,7 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了基于32*16*512_F64F64F64矩阵形状的mma流程，其中通过make_stride创建stride，用于规定矩阵行/列方向的元素跨度。
+>上述示例演示了基于32\*16\*512_F64F64F64矩阵形状的mma流程，其中通过make_stride创建stride，用于规定矩阵行/列方向的元素跨度。
 
 ##### make_layout<a id="ZH-CN_TOPIC_0000002200346698"></a>
 
@@ -7350,7 +7350,7 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了基于32*16*512_F64F64F64矩阵形状的mma流程，其中通过make_layout创建矩阵布局。
+>上述示例演示了基于32\*16\*512_F64F64F64矩阵形状的mma流程，其中通过make_layout创建矩阵布局。
 
 ##### make_tensor<a id="ZH-CN_TOPIC_0000002235267121"></a>
 
@@ -7448,7 +7448,7 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了基于32*16*512_F64F64F64矩阵形状的mma流程，其中通过make_tensor创建内存类型tensor和二维寄存器类型tensor，作为后续mma/copy接口参数。
+>上述示例演示了基于32\*16\*512_F64F64F64矩阵形状的mma流程，其中通过make_tensor创建内存类型tensor和二维寄存器类型tensor，作为后续mma/copy接口参数。
 
 **示例2<a id="section183418483610"></a>**
 
@@ -7567,7 +7567,7 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了基于32*16*512_F64F64F64矩阵形状的mma流程，其中通过make_tiled_mma创建mma tile策略。
+>上述示例演示了基于32\*16\*512_F64F64F64矩阵形状的mma流程，其中通过make_tiled_mma创建mma tile策略。
 
 ##### make_tiled_copy<a id="ZH-CN_TOPIC_0000002423842636"></a>
 
@@ -7748,7 +7748,7 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了基于32*16*512_F64F64F64矩阵形状的mma流程，其中通过mma接收Tensor对象进行矩阵乘法计算。
+>上述示例演示了基于32\*16\*512_F64F64F64矩阵形状的mma流程，其中通过mma接收Tensor对象进行矩阵乘法计算。
 
 ##### copy(Trans)<a id="ZH-CN_TOPIC_0000002457521233"></a>
 
@@ -7988,7 +7988,7 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了基于32*16*512_F64F64F64矩阵形状的mma流程，其中通过make_tiled_store创建store tile策略。
+>上述示例演示了基于32\*16\*512_F64F64F64矩阵形状的mma流程，其中通过make_tiled_store创建store tile策略。
 
 ##### copy(Vector)<a id="ZH-CN_TOPIC_0000002735593684"></a>
 
