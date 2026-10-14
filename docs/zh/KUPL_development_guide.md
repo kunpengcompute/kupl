@@ -79,9 +79,9 @@ KUPL对外提供profile和trace两个工具，来提供运行时的时序统计�
 1. 节点上安装[HPCkit](https://www.hikunpeng.com/developer/hpc/hpckit-download)，HPCKit安装指导请参见《Kunpeng HPCKit 26.2.0 安装指南》
 2. 通过setvars.sh --kupl_mode=prof链接到prof动态链接库。
 3. 运行程序时额外配置环境变量KUPL_PROF_LEVEL=statistic来开启特定的函数累计计时，KUPL_PROF_LEVEL=trace来开启全量的函数时序统计。
-4. 程序运行结束时，如果配置了KUPL_PROF_LEVEL=statistic或 KUPL_PROF_LEVEL=trace则会在程序运行打印结尾生成函数累计计时profile报告（报告表头字段详情见[表1 函数累计计时profile报告的表头字段说明](#table23040407177)），如果配置了KUPL_PROF_LEVEL=trace还可以在程序运行目录下生成ptrace文件，其中包含各个进程中各个线程运行情况的统计文件（以.json文件保存），该文件可以通过chrome://tracing网页（请使用chrome 94以上版本的Chrome浏览器运行）来观看可视化版本报告（即把想要观看的文件导入进网页）。
+4. 程序运行结束时，如果配置了KUPL_PROF_LEVEL=statistic或 KUPL_PROF_LEVEL=trace则会在程序运行打印结尾生成函数累计计时profile报告（报告表头字段详情见[表1](#table23040407177)），如果配置了KUPL_PROF_LEVEL=trace还可以在程序运行目录下生成ptrace文件，其中包含各个进程中各个线程运行情况的统计文件（以.json文件保存），该文件可以通过chrome://tracing网页（请使用chrome 94以上版本的Chrome浏览器运行）来观看可视化版本报告（即把想要观看的文件导入进网页）。
 
-**表 1** 函数累计计时profile报告的表头字段说明<a id="table23040407177"></a>
+**表1** 函数累计计时profile报告的表头字段说明<a id="table23040407177"></a>
 
 |信息名称|描述|
 |--|--|
@@ -95,7 +95,7 @@ KUPL对外提供profile和trace两个工具，来提供运行时的时序统计�
 |min(ns)|函数单次最小耗时（纳秒）|
 
 
-**表 2** 函数累计计时profile报告的msg字段支持种类含义说明
+**表2** 函数累计计时profile报告的msg字段支持种类含义说明
 
 |msg信息名称|函数行为|
 |--|--|
@@ -122,7 +122,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 
 ### 环境变量<a id="ZH-CN_TOPIC_0000002724392989"></a>
 
-**表 1** 系统配置相关
+**表3** 系统配置相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -135,7 +135,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 |KUPL_DISPLAY_AFFINITY|是否打印亲和性配置信息。该环境变量默认值为0，表示不打印亲和性信息；该环境变量设置为1时，打印亲和性信息。具体的，将在初始化时以及亲和性发生变化时打印亲和性信息。|0，1|0|
 
 
-**表 2** 调度相关
+**表4** 调度相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -146,7 +146,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 |KUPL_EXECUTOR_WAIT_POLICY|控制executor空闲时的线程行为。KUPL当前支持active与passive两种task机制，active表示空闲线程保持活跃状态，持续轮询任务队列，准备立即执行新任务；passive表示空闲线程主动让出CPU资源，进入休眠状态，等待调度唤醒。该环境变量默认值为active。|active，passive|active|
 
 
-**表 3** 多线程编程相关
+**表5** 多线程编程相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -154,7 +154,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 |KUPL_KERNEL_CONCURRENCY|KUPL并行域的默认并发度。最小值为0，最大值为1024。该环境变量默认值为0，表示并行域的默认并发度将由系统自动设置为KUPL executor的数量。|0 - 1024|0|
 
 
-**表 4** 内存相关
+**表6** 内存相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -168,7 +168,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 |KUPL_ENABLE_MPOOL|是否开启内部mpool。该环境变量默认值为n，表示内部不开启mpool；该环境变量设置为y时，表示内部开启mpool。|y，n|n|
 
 
-**表 5** profiling相关
+**表7** profiling相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -199,7 +199,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 
 #### 返回值定义<a id="ZH-CN_TOPIC_0000002111579697"></a>
 
-**表 1** 返回值定义
+**表8** 返回值定义
 
 |ReturnCode|类型|值|描述|
 |--|--|--|--|
@@ -333,7 +333,7 @@ kupl_egroup_h kupl_egroup_create(int *executors, int executors_num);
 
 **参数<a id="section9299145175312"></a>**
 
-**表 1** 参数定义
+**表9** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -378,7 +378,7 @@ void kupl_egroup_destroy(kupl_egroup_h group);
 
 **参数<a id="section5102122492418"></a>**
 
-**表 1** 参数定义
+**表10** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -417,7 +417,7 @@ int kupl_egroup_borrow(kupl_egroup_h dest, kupl_egroup_h src);
 
 **参数<a id="section204781457142717"></a>**
 
-**表 1** 参数定义
+**表11** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -587,7 +587,7 @@ void kupl_egroup_barrier(kupl_egroup_h group);
 
 **参数<a id="section1373194016264"></a>**
 
-**表 1** 参数定义
+**表12** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -659,7 +659,7 @@ void kupl_egroup_fork_barrier(kupl_egroup_h group);
 
 **参数<a id="section1373194016264"></a>**
 
-**表 1** 参数定义
+**表13** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -729,7 +729,7 @@ void kupl_egroup_join_barrier(kupl_egroup_h group);
 
 **参数<a id="section1373194016264"></a>**
 
-**表 1** 参数定义
+**表14** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -947,7 +947,7 @@ void kupl_set_kernel_concurrency_local(int num);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表15** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1106,7 +1106,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 
 **参数<a id="section14867475300"></a>**
 
-**表 1** 参数定义
+**表16** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1115,18 +1115,18 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 |args|void *|func函数需要传入的参数|输入|
 
 
-**表 2** kupl_parallel_for_desc_t的数据结构定义
+**表17** kupl_parallel_for_desc_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
 |field_mask|uint64_t|结构体中有效字段的掩码，使用kupl_parallel_for_desc_field中的位标识。此掩码中未指定的字段将被忽略。当前所有字段都为必填项。|
-|range|kupl_nd_range_t *|parallel for范围，指向kupl_nd_range_t结构体的指针，请参见[表 3](#table_kupl_nd_range_t)|
+|range|kupl_nd_range_t *|parallel for范围，指向kupl_nd_range_t结构体的指针，请参见[表18](#table_kupl_nd_range_t)|
 |egroup|kupl_egroup_h|执行for循环任务的egroup，即能在哪个egroup中的executor执行器上执行；可设置为空指针，即不指定egroup|
 |concurrency|int|for循环任务的并发度；可设置为KUPL_CONCURRENCY_DEFAULT，即不指定并发度|
 |policy|kupl_loop_policy_type_t|parallel for任务遵循的切分策略，当前可设置为<ul><li>KUPL_LOOP_POLICY_STATIC，表示静态切分策略：平均切</li><li>KUPL_LOOP_POLICY_DYNAMIC，表示动态切分策略</li><li>KUPL_LOOP_POLICY_TASK，表示所有任务会被静态切分但会被以task形式提交用于动态调度</li></ul>|
 
 
-**表 3** kupl_nd_range_t的数据结构定义<a id="table_kupl_nd_range_t"></a>
+**表18** kupl_nd_range_t的数据结构定义<a id="table_kupl_nd_range_t"></a>
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1134,7 +1134,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 |nd_range|kupl_range_t[]|每个维度的具体范围，例如nd_range[0]表示维度0的范围；nd_range数组大小为KUPL_MAX_DIM_SIZE；kupl_range_t数据结构说明具体见下表|
 
 
-**表 4** kupl_range_t的数据结构定义
+**表19** kupl_range_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1148,7 +1148,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 
 注：大于一维的任务总数要保证小于int上限，即总blocks < 2^31 - 1
 
-**表 5** kupl_nd_range_t的宏定义<a id="table185621811174414"></a>
+**表20** kupl_nd_range_t的宏定义<a id="table185621811174414"></a>
 
 |宏|描述|
 |--|--|
@@ -1343,7 +1343,7 @@ kupl::parallel_for(kupl_parallel_for_desc_t *desc, const pf_lambda &func);
 
 using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int tid, const int tnum)>;
 
-**表 1** 参数定义
+**表21** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1351,7 +1351,7 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 |func|pf_lambda|parallel for循环任务的函数，该函数必须定义为如下形式：std::function<void(const kupl_nd_range_t *nd_range, const int tid, const int tnum)>；其中nd_range表示经过kupl_parallel_for内部处理后该函数实际执行的循环区域，tid与tnum表示当前函数执行所在线程编号与总线程数|输入|
 
 
-**表 2** kupl_parallel_for_desc_t的数据结构定义
+**表22** kupl_parallel_for_desc_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1362,7 +1362,7 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 |policy|kupl_loop_policy_type_t|parallel for任务遵循的切分策略，当前可设置为<ul><li>KUPL_LOOP_POLICY_STATIC，表示静态切分策略：平均切。</li><li>KUPL_LOOP_POLICY_DYNAMIC，表示动态切分策略。</li><li>KUPL_LOOP_POLICY_TASK，表示所有任务会被静态切分但会被以task形式提交用于动态调度。</li></ul>|
 
 
-**表 3** kupl_nd_range_t的数据结构定义
+**表23** kupl_nd_range_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1370,7 +1370,7 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 |nd_range|kupl_range_t[]|每个维度的具体范围，例如nd_range[0]表示维度0的范围；nd_range数组大小为KUPL_MAX_DIM_SIZE；kupl_range_t数据结构说明具体见下表|
 
 
-**表 4** kupl_nd_range_t的数据结构定义
+**表24** kupl_nd_range_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1378,7 +1378,7 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 |nd_range|kupl_range_t[]|每个维度的具体范围，例如nd_range[0]表示维度0的范围；nd_range数组大小为KUPL_MAX_DIM_SIZE；kupl_range_t数据结构说明具体见下表|
 
 
-**表 5** kupl_range_t的数据结构定义
+**表25** kupl_range_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1392,7 +1392,7 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 
 注：大于一维的任务总数要保证小于int上限，即总blocks < 2^31 - 1
 
-**表 6** kupl_nd_range_t的宏定义
+**表26** kupl_nd_range_t的宏定义
 
 |宏|描述|
 |--|--|
@@ -1472,7 +1472,7 @@ kupl_reduce_args_t *rd_args);
 
 **参数<a id="section186531026124014"></a>**
 
-**表 1** 参数定义
+**表27** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1482,7 +1482,7 @@ kupl_reduce_args_t *rd_args);
 |rd_args|kupl_reduce_args_t *|规约参数，定义了总的规约操作数，具体规约操作的数据类型，规约操作类型，以及规约数据地址。|输入输出|
 
 
-**表 2** kupl_reduce_args_t的数据结构定义
+**表28** kupl_reduce_args_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1490,7 +1490,7 @@ kupl_reduce_args_t *rd_args);
 |items|kupl_reduce_item_t *|指向具体规约操作定义的指针，详细定义请参见下方|
 
 
-**表 3** kupl_reduce_item_t的数据结构定义
+**表29** kupl_reduce_item_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1646,7 +1646,7 @@ kupl_graph_h kupl_graph_create(kupl_egroup_h egroup);
 
 **参数<a id="section123097258516"></a>**
 
-**表 1** 参数定义
+**表30** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1692,7 +1692,7 @@ void kupl_graph_destroy(kupl_graph_h graph);
 
 **参数<a id="section1750065017314"></a>**
 
-**表 1** 参数定义
+**表31** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1733,7 +1733,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 
 **参数<a id="section15224133031714"></a>**
 
-**表 1** 参数定义
+**表32** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1741,7 +1741,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |info|kupl_task_info_t *|需要添加的task的信息，具体见下表|输入|
 
 
-**表 2** kupl_task_info_t 的数据结构
+**表33** kupl_task_info_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1749,7 +1749,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |desc|void *|task 类型所对应的描述，可以设置为：<ul><li>kupl_task_desc_t *：动态图 task 对应的描述，具体见下表</li><li>kupl_sgraph_task_desc_t *：静态图 task 对应的描述，具体见下表</li><li>kupl_taskloop_desc_t *: taskloop 对应的描述，具体见下表</li></ul>|
 
 
-**表 3** kupl_task_desc_t的数据结构
+**表34** kupl_task_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1763,7 +1763,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |flag|uint32_t|需要配置掩码KUPL_TASK_DESC_FIELD_FLAG后才生效；task任务的flag，可设置为KUPL_TASK_FLAG_IMM，表示直接执行task，不需要调度|
 
 
-**表 4** kupl_task_dep_t的数据结构
+**表35** kupl_task_dep_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1771,7 +1771,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |type|kupl_task_dep_type_t|dep的具体类型，可以设置为：<ul><li>KUPL_TASK_DEP_TYPE_IN：作为任务的输入参数</li><li>KUPL_TASK_DEP_TYPE_OUT：作为任务的输出参数</li><li>KUPL_TASK_DEP_TYPE_INOUT：作为任务的输入输出参数</li><li>KUPL_TASK_DEP_TYPE_ALL：该参数依赖之前的所有任务</li></ul>|
 
 
-**表 5** kupl_sgraph_task_desc_t的数据结构
+**表36** kupl_sgraph_task_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1782,7 +1782,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |field_mask|uint64_t|掩码，用于指定结构体中哪些值有效，不设置掩码情况下仅sgraph参数生效，其他需要设置掩码。具体可设置的掩码：<ul><li>KUPL_SGRAPH_TASK_DESC_FIELD_NAME：name生效</li><li>KUPL_SGRAPH_TASK_DESC_FIELD_PRIORITY：priority生效</li><li>KUPL_SGRAPH_TASK_DESC_FIELD_FLAG：flag生效</li></ul>|
 
 
-**表 6** kupl_taskloop_desc_t 的数据结构
+**表37** kupl_taskloop_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1861,7 +1861,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_task_desc_t *desc, const std::fu
 
 **参数<a id="section15224133031714"></a>**
 
-**表 1** 参数定义
+**表38** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1870,7 +1870,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_task_desc_t *desc, const std::fu
 |func|std::function<void(void)>|task的函数，task任务需要执行的具体函数|输入|
 
 
-**表 2** kupl_task_desc_t的数据结构
+**表39** kupl_task_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1882,7 +1882,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_task_desc_t *desc, const std::fu
 |flag|uint32_t|需要配置掩码KUPL_TASK_DESC_FIELD_FLAG后才生效；task任务的flag，可设置为KUPL_TASK_FLAG_IMM，表示直接执行task，不需要调度|
 
 
-**表 3** kupl_task_dep_t的数据结构
+**表40** kupl_task_dep_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1950,7 +1950,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_taskloop_desc_t* desc, const std
 
 **参数<a id="section15224133031714"></a>**
 
-**表 1** 参数定义
+**表41** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1959,7 +1959,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_taskloop_desc_t* desc, const std
 |func|std::function<void(const kupl_nd_range_t *)>|taskloop的函数，taskloop任务需要执行的具体函数|输入|
 
 
-**表 2** kupl_taskloop_desc_t 的数据结构
+**表42** kupl_taskloop_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -2029,7 +2029,7 @@ void kupl_graph_wait(kupl_graph_h graph);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1** 参数定义
+**表43** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2097,7 +2097,7 @@ int kupl_graph_test(kupl_graph_h graph);
 
 **参数<a id="section2111504752"></a>**
 
-**表 1** 参数定义
+**表44** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2206,7 +2206,7 @@ void kupl_sgraph_destroy(kupl_sgraph_h sgraph);
 
 **参数<a id="section7579162317528"></a>**
 
-**表 1** 参数定义
+**表45** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2240,7 +2240,7 @@ kupl_sgraph_node_h kupl_sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_d
 
 **参数<a id="section8762533153517"></a>**
 
-**表 1** 参数定义
+**表46** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2248,7 +2248,7 @@ kupl_sgraph_node_h kupl_sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_d
 |desc|kupl_sgraph_node_desc_t *|需要添加的sgraph node的描述，具体见下表|输入|
 
 
-**表 2** kupl_sgraph_node_desc_t的数据结构
+**表47** kupl_sgraph_node_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -2323,7 +2323,7 @@ kupl_sgraph_node_h sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_desc_t
 
 **参数<a id="section8762533153517"></a>**
 
-**表 1** 参数定义
+**表48** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2332,7 +2332,7 @@ kupl_sgraph_node_h sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_desc_t
 |func|std::function<void(void)>|sgraph node节点的函数，该节点提交执行后需要执行的具体函数|输入|
 
 
-**表 2** kupl_sgraph_gnode_desc_t的数据结构
+**表49** kupl_sgraph_gnode_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -2402,7 +2402,7 @@ int kupl_sgraph_add_dep(kupl_sgraph_node_h precede, kupl_sgraph_node_h succeed);
 
 **参数<a id="section1730182518414"></a>**
 
-**表 1** 参数定义
+**表50** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2685,7 +2685,7 @@ int kupl_queue_wait(kupl_queue_h queue);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1** 参数定义
+**表51** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2746,7 +2746,7 @@ int kupl_queue_wait_event(kupl_queue_h queue, kupl_event_h event);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1** 参数定义
+**表52** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2815,7 +2815,7 @@ int kupl_queue_submit(kupl_queue_h queue, kupl_queue_item_desc_t *desc);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1** 参数定义
+**表53** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2823,7 +2823,7 @@ int kupl_queue_submit(kupl_queue_h queue, kupl_queue_item_desc_t *desc);
 |desc|kupl_queue_item_desc_t|queue_item 的描述|输入|
 
 
-**表 2** kupl_queue_item_desc_t 的数据结构
+**表54** kupl_queue_item_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -2893,7 +2893,7 @@ int queue_submit(kupl_queue_h queue, kupl_queue_item_desc_t *desc, const std::fu
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1** 参数定义
+**表55** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2902,7 +2902,7 @@ int queue_submit(kupl_queue_h queue, kupl_queue_item_desc_t *desc, const std::fu
 |func|const std::function<void(void)>|queue_item 的函数指针|输入|
 
 
-**表 2** kupl_queue_item_desc_t 的数据结构
+**表56** kupl_queue_item_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -2965,7 +2965,7 @@ int kupl::queue_submit(kupl_queue_h queue, kupl_queue_kernel_desc_t *desc, const
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1** 参数定义
+**表57** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2974,7 +2974,7 @@ int kupl::queue_submit(kupl_queue_h queue, kupl_queue_kernel_desc_t *desc, const
 |kernel|const std::function<void(const kupl_nd_range_t *)>|kernel 的内容，一般是 lambda 表达式|输入|
 
 
-**表 2** kupl_queue_kernel_desc_t 的数据结构
+**表58** kupl_queue_kernel_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -3171,7 +3171,7 @@ int kupl_event_wait(kupl_event_h event);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1** 参数定义
+**表59** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3280,7 +3280,7 @@ kupl_queue_h kupl_queue_acquire(int index);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1** 参数定义
+**表60** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3415,7 +3415,7 @@ void* kupl_malloc(kupl_mem_kind_t kind, size_t size);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表61** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3423,7 +3423,7 @@ void* kupl_malloc(kupl_mem_kind_t kind, size_t size);
 |size|size_t|需要申请的内存大小|输入|
 
 
-**表 2** kupl_mem_kind_t的枚举数据结构定义
+**表62** kupl_mem_kind_t的枚举数据结构定义
 
 |枚举值|描述|
 |--|--|
@@ -3471,7 +3471,7 @@ void kupl_free(kupl_mem_kind_t kind, void *ptr);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表63** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3513,7 +3513,7 @@ int kupl_mlock(void *buffer, size_t count);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表64** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3562,7 +3562,7 @@ int kupl_munlock(void *buffer, size_t count);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表65** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3623,7 +3623,7 @@ kupl memcpy共实现3种memcpy方法：单线程glibc memcpy方法、sdma memcpy
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表66** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3694,7 +3694,7 @@ kupl memcpy2d共实现3种memcpy方法：单线程glibc memcpy方法、sdma memc
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表67** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3770,7 +3770,7 @@ kupl异步memcpy共实现3种memcpy方法：单线程glibc memcpy方法、sdma m
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表68** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3851,7 +3851,7 @@ kupl二维异步memcpy共实现3种memcpy方法：单线程glibc memcpy方法、
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表69** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3928,7 +3928,7 @@ void* kupl_hbw_malloc(size_t size);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表70** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3975,7 +3975,7 @@ void kupl_hbw_free(void *ptr);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表71** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4016,7 +4016,7 @@ int kupl_hbw_verify(void *addr, size_t size, int flags);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表72** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4107,7 +4107,7 @@ kupl_hbw_policy_t kupl_hbw_get_policy();
 
 - 返回当前的OPM内存分配策略。具体的策略描述见下面的表格。
 
-**表 1** kupl_hbw_policy_t 的数据结构定义
+**表73** kupl_hbw_policy_t 的数据结构定义
 
 |值|描述|
 |--|--|
@@ -4145,7 +4145,7 @@ int kupl_hbw_set_policy(kupl_hbw_policy_t policy);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表74** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4188,7 +4188,7 @@ int kupl_mem_copyin(void *ddr_addr, size_t size, kupl_mem_copyin_flag_t flag, ku
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表75** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4258,7 +4258,7 @@ int kupl_mem_copyout(void *ddr_addr, size_t size, kupl_mem_copyout_flag_t flag, 
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表76** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4328,7 +4328,7 @@ void *kupl_mem_query(void *ddr_addr);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表77** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4395,7 +4395,7 @@ bool kupl_mem_is_present(void *ddr_addr);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表78** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4508,19 +4508,19 @@ int kupl_shm_comm_create(int size, int rank, int pid, kupl_shm_oob_cb_h oob_cbs,
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表79** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
 |size|int|需要创建的kupl通信域大小|输入|
 |rank|int|当前进程的进程编号（从0开始的相对编码）|输入|
 |pid|int|当前进程的pid|输入|
-|oob_cbs|kupl_shm_oob_cb_h|带外函数指针，详见[表 2](#table_shm_oob_cb)|输入|
+|oob_cbs|kupl_shm_oob_cb_h|带外函数指针，详见[表80](#table_shm_oob_cb)|输入|
 |group|void *|带外函数指针依赖的参数|输入|
 |comm|kupl_shm_comm_h|需要创建的kupl通信域|输出|
 
 
-**表 2** shm带外函数的结构体定义<a id="table_shm_oob_cb"></a>
+**表80** shm带外函数的结构体定义<a id="table_shm_oob_cb"></a>
 
 |参数名|类型|描述|
 |--|--|--|
@@ -4601,7 +4601,7 @@ int kupl_shm_comm_destroy(kupl_shm_comm_h comm);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表81** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4681,7 +4681,7 @@ int kupl_shm_comm_rank(kupl_shm_comm_h comm, int *rank);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表82** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4767,7 +4767,7 @@ int kupl_shm_comm_size(kupl_shm_comm_h comm, int *size);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表83** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4867,7 +4867,7 @@ KUPL_SHM_ON_PACKAGE，默认值为n，代表不启用高带宽内存分配；y�
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表84** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4997,7 +4997,7 @@ int kupl_shm_win_query(kupl_shm_win_h win, int remote_rank, void **baseptr);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表85** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5126,7 +5126,7 @@ int kupl_shm_win_free(kupl_shm_win_h win);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表86** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5252,7 +5252,7 @@ void* kupl_shm_attach(struct kupl_shm_addr_t addr, size_t size);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表87** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5260,7 +5260,7 @@ void* kupl_shm_attach(struct kupl_shm_addr_t addr, size_t size);
 |size|size_t|需要映射的内存大小|输入|
 
 
-**表 2** 映射内存信息结构体kupl_shm_addr_t定义
+**表88** 映射内存信息结构体kupl_shm_addr_t定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5392,7 +5392,7 @@ int kupl_shm_detach(void *ptr)
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表89** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5533,7 +5533,7 @@ int kupl_shm_fence(kupl_shm_win_h win);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表90** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5633,7 +5633,7 @@ int kupl_shm_peer_fence(kupl_shm_win_h win, int remote_rank);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表91** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5753,7 +5753,7 @@ allreduce 可以使用环境变量指定算法。
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表92** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5923,7 +5923,7 @@ bcast 可以使用环境变量指定算法。
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表93** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6076,7 +6076,7 @@ alltoall 可以使用环境变量指定算法。
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表94** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6233,7 +6233,7 @@ int kupl_shm_request_start(kupl_shm_request_h request);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表95** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6383,7 +6383,7 @@ int kupl_shm_request_wait(kupl_shm_request_h request);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表96** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6533,7 +6533,7 @@ int kupl_shm_request_free(kupl_shm_request_h request);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表97** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6683,7 +6683,7 @@ int kupl_shm_allreduce_batch_init(void **sendbuf, void **recvbuf, int *count, ku
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表98** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6836,7 +6836,7 @@ int kupl_shm_info_set(kupl_info_flag_t info_flag, uint32_t value);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1** 参数定义
+**表99** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6973,7 +6973,7 @@ class Tensor;
 
 **类成员变量<a id="section3135164512513"></a>**
 
-**表 1** 类成员变量定义
+**表100** 类成员变量定义
 
 |成员变量名|成员变量类型|描述|
 |--|--|--|
@@ -6985,7 +6985,7 @@ class Tensor;
 
 一、Tensor对象取下标及切片能力：Tensor(coord)
 
-**表 2** 类成员函数Tensor()输入输出定义
+**表101** 类成员函数Tensor()输入输出定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6995,7 +6995,7 @@ class Tensor;
 
 二、Tensor对象逐元素相加能力：TensorC = TensorA + TensorB
 
-**表 3** 类成员函数Tensor operator+输入输出定义
+**表102** 类成员函数Tensor operator+输入输出定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7006,7 +7006,7 @@ class Tensor;
 
 三、Tensor对象标量乘能力：TensorC = A * TensorB / TensorC = TensorB * A
 
-**表 4** 类成员函数Tensor operator*输入输出定义
+**表103** 类成员函数Tensor operator*输入输出定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7076,7 +7076,7 @@ Coord<Args...> make_coord(Args ... args);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表104** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7134,7 +7134,7 @@ Shape<Args...> make_shape(Args ... args);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表105** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7207,7 +7207,7 @@ Stride<Args...> make_stride(Args ... args);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1** 参数定义
+**表106** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7280,7 +7280,7 @@ Layout<Shape, Stride> make_layout(Shape shape, Stride stride);
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表107** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7290,7 +7290,7 @@ Layout<Shape, Stride> make_layout(Shape shape, Stride stride);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表108** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7378,7 +7378,7 @@ Tensor<MatrixEngine<dtype>, Layout> make_tensor(Layout layout)
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表109** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7388,7 +7388,7 @@ Tensor<MatrixEngine<dtype>, Layout> make_tensor(Layout layout)
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表110** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7497,7 +7497,7 @@ TiledMma<MmaAtom, Shape> make_tiled_mma(MmaAtom mma_atom, Shape atom_shape);
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表111** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7507,7 +7507,7 @@ TiledMma<MmaAtom, Shape> make_tiled_mma(MmaAtom mma_atom, Shape atom_shape);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表112** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7573,7 +7573,7 @@ int main()
 
 创建tiled_copy策略。其中对于转置Copy操作而言，CopyAtom Ops转置矩阵大小与atom_shape相应m和n相乘所得乘积表示实际转置矩阵大小；对于预取Copy操作而言，CopyAtom Ops预取矩阵大小与atom_shape相应m相乘所得乘积表示实际预取矩阵大小。
 
-当前atom_shape中m/n不支持任意扩展，对于不同的CopyAtom Ops存在不同的限制，具体见下表2参数定义中描述。
+当前atom_shape中m/n不支持任意扩展，对于不同的CopyAtom Ops存在不同的限制，具体见[表113](#table_make_tiled_copy_params)参数定义中描述。
 
 **接口定义<a id="section42571622152515"></a>**
 
@@ -7583,7 +7583,7 @@ TiledCopy<CopyAtom, Shape> make_tiled_copy( CopyAtom copy_atom, Shape atom_shape
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表113** 模板参数定义<a id="table_make_tiled_copy_params"></a>
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7593,7 +7593,7 @@ TiledCopy<CopyAtom, Shape> make_tiled_copy( CopyAtom copy_atom, Shape atom_shape
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表114** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7673,7 +7673,7 @@ void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> 
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表115** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7684,7 +7684,7 @@ void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> 
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表116** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7764,7 +7764,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表117** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7775,7 +7775,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表118** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7848,7 +7848,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineS, LayoutS> src);
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表119** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7859,7 +7859,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineS, LayoutS> src);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表120** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7916,7 +7916,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表121** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7927,7 +7927,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表122** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -8002,7 +8002,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表123** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -8013,7 +8013,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表124** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -8099,7 +8099,7 @@ inline auto exp2f(Tensor<Engine, Layout> x);
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1** 模板参数定义
+**表125** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -8109,7 +8109,7 @@ inline auto exp2f(Tensor<Engine, Layout> x);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2** 参数定义
+**表126** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
