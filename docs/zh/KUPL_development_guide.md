@@ -1,10 +1,10 @@
 # KUPL开发指南<a id="ZH-CN_TOPIC_0000001889949310"></a>
 
--   **[概念介绍](#ZH-CN_TOPIC_0000001967070205)**
+- **[概念介绍](#ZH-CN_TOPIC_0000001967070205)**
 
--   **[使用指导](#ZH-CN_TOPIC_0000001933989017)**
+- **[使用指导](#ZH-CN_TOPIC_0000001933989017)**
 
--   **[KUPL库函数说明](#ZH-CN_TOPIC_0000002043915589)**
+- **[KUPL库函数说明](#ZH-CN_TOPIC_0000002043915589)**
 
 ## 概念介绍<a id="ZH-CN_TOPIC_0000001967070205"></a>
 
@@ -12,18 +12,18 @@
 
 ## 使用指导<a id="ZH-CN_TOPIC_0000001933989017"></a>
 
--   **[使用KUPL加速KML直接求解法](#ZH-CN_TOPIC_0000002076263470)**
+- **[使用KUPL加速KML（Kunpeng Math Library，鲲鹏数学库）直接求解法](#ZH-CN_TOPIC_0000002076263470)**
 
--   **[使用KUPL API进行并行计算加速](#ZH-CN_TOPIC_0000002111902621)**
+- **[使用KUPL API进行并行计算加速](#ZH-CN_TOPIC_0000002111902621)**
 
--   **[使用KUPL PROF进行全量的函数时序统计](#ZH-CN_TOPIC_0000002195783633)**
+- **[使用KUPL PROF进行全量的函数时序统计](#ZH-CN_TOPIC_0000002195783633)**
 
 ### 使用KUPL加速KML直接求解法<a id="ZH-CN_TOPIC_0000002076263470"></a>
 
 当前版本除了通过线程调度、任务分配等优化对数学库直接法求解器进行加速实现加速效果，还直接对外提供KUPL API进行使用从而提供并行加速能力。KML直接求解法ksolver已采用KUPL动态伸缩的能力对矩阵的部分求解过程进行加速优化，只需要在使用ksolver时通过环境变量的配置即可使能KUPL加速能力，具体使用方式如下。
 
-1.  节点上安装HPCKit，依据[《Kunpeng HPCKit 26.2.0 开发指南》](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/kunpengaccel_kml_0821.html)编写ksolver_testcase，编译ksolver_testcase的时候链接HPCKit中的libksolver.so 。
-2.  执行ksolver_testcase二进制，设置环境变量KML_DSS_SCHE_MODE=KUPL使能KUPL动态伸缩能力，该环境变量默认值为static，表示走静态调度策略，即不进行负载均衡优化。
+1. 节点上安装HPCKit，依据[《Kunpeng HPCKit 26.2.0 开发指南》](https://www.hikunpeng.com/document/detail/zh/kunpenghpcs/hpckit/devg/kunpengaccel_kml_0821.html)编写ksolver_testcase，编译ksolver_testcase的时候链接HPCKit中的libksolver.so 。
+2. 执行ksolver_testcase二进制，设置环境变量KML_DSS_SCHE_MODE=KUPL使能KUPL动态伸缩能力，该环境变量默认值为static，表示走静态调度策略，即不进行负载均衡优化。
 
     命令举例如下：
 
@@ -41,9 +41,9 @@
 
 KUPL当前对外优化特性分为三大模块，具体为众核并行、数据管理和矩阵编程：
 
--   众核并行模块对外提供了包含egroup、多线程编程、计算图编程、多队列多流编程等KUPL API用以多线程并行计算加速；
--   数据管理模块对外提供了包含内存管理、共享内存通信等KUPL API用以数据拷贝或通信加速；
--   矩阵编程模块对外提供了张量定义、张量计算等KUPL API用以加速矩阵乘计算。
+- 众核并行模块对外提供了包含egroup、多线程编程、计算图编程、多队列多流编程等KUPL API用以多线程并行计算加速。
+- 数据管理模块对外提供了包含内存管理、共享内存通信等KUPL API用以数据拷贝或通信加速。
+- 矩阵编程模块对外提供了张量定义、张量计算等KUPL API用以加速矩阵乘计算
 
 具体上述KUPL特性模块的优化使能方式，可以参考[KUPL sample代码仓](https://gitcode.com/kunpengcompute/hpckit-sample/tree/main/kupl)。
 
@@ -51,9 +51,9 @@ KUPL sample代码仓中提供了一组使用KUPL优化特性的示例代码及�
 
 KUPL sample的根目录包含4个顶层目录，分别对应众核并行模块、数据管理模块、矩阵编程模块及KUPL综合用例，每个模块的顶层目录再包含模块对应重点特性的用例目录，最终用例目录下挂载具体特性用例的sample代码、makefile及readme说明介绍。具体sample运行方式如下。
 
-1.  节点上安装[HPCKit](https://www.hikunpeng.com/developer/hpc/hpckit-download)，HPCKit安装指导请参见《Kunpeng HPCKit 26.2.0 安装指南》。
-2.  通过source setvars.sh加载毕昇版本KUPL动态链接库及其他所需环境变量。
-3.  Git拉取KUPL sample代码仓代码至本地服务器上。
+1. 节点上安装[HPCKit](https://www.hikunpeng.com/developer/hpc/hpckit-download)，HPCKit安装指导请参见《Kunpeng HPCKit 26.2.0 安装指南》。
+2. 通过source setvars.sh加载毕昇版本KUPL动态链接库及其他所需环境变量。
+3. Git拉取KUPL sample代码仓代码至本地服务器上。
 
     ```
     git clone https://gitcode.com/kunpengcompute/hpckit-sample.git
@@ -61,27 +61,27 @@ KUPL sample的根目录包含4个顶层目录，分别对应众核并行模块�
     cd kupl
     ```
 
-4.  编译运行KUPL sample代码仓代码，当前支持两种方式：
-    -   一键式全量编译安装。
-        1.  kupl目录下执行sh build.sh，在所有特性的目录下生成对应特性的可执行二进制。
-        2.  根目录下执行如cd mt/graph/到KUPL某一具体特性的目录下。
-        3.  执行make run运行生成的二进制得到运行结果。
+4. 编译运行KUPL sample代码仓代码，当前支持两种方式：
+    - 一键式全量编译安装。
+        1. kupl目录下执行sh build.sh，在所有特性的目录下生成对应特性的可执行二进制。
+        2. 根目录下执行如cd mt/graph/到KUPL某一具体特性的目录下。
+        3. 执行make run运行生成的二进制得到运行结果。
 
-    -   按需编译安装。
-        1.  kupl目录下执行如cd mt/graph/到KUPL某一具体特性的目录下。
-        2.  执行make命令令编译生成该特性对应的二进制文件。
-        3.  执行make run命令运行生成的二进制得到运行结果。
+    - 按需编译安装。
+        1. kupl目录下执行如cd mt/graph/到KUPL某一具体特性的目录下。
+        2. 执行make命令令编译生成该特性对应的二进制文件。
+        3. 执行make run命令运行生成的二进制得到运行结果。
 
 ### 使用KUPL PROF进行全量的函数时序统计<a id="ZH-CN_TOPIC_0000002195783633"></a>
 
 KUPL对外提供profile和trace两个工具，来提供运行时的时序统计，通过动态链接到prof对应的动态链接库来使能profile和trace功能。
 
-1.  节点上安装[HPCkit](https://www.hikunpeng.com/developer/hpc/hpckit-download)，HPCKit安装指导请参见《Kunpeng HPCKit 26.2.0 安装指南》
-2.  通过setvars.sh --kupl_mode=prof链接到prof动态链接库。
-3.  运行程序时额外配置环境变量KUPL_PROF_LEVEL=statistic来开启特定的函数累计计时，KUPL_PROF_LEVEL=trace来开启全量的函数时序统计。
-4.  程序运行结束时，如果配置了KUPL_PROF_LEVEL=statistic或 KUPL_PROF_LEVEL=trace则会在程序运行打印结尾生成函数累计计时profile报告（报告表头字段详情见[表1 函数累计计时profile报告的表头字段说明](#table23040407177)），如果配置了KUPL_PROF_LEVEL=trace还可以在程序运行目录下生成ptrace文件，其中包含各个进程中各个线程运行情况的统计文件（以.json文件保存），该文件可以通过chrome://tracing网页（请使用chrome 94以上版本的Chrome浏览器运行）来观看可视化版本报告（即把想要观看的文件导入进网页）。
+1. 节点上安装[HPCkit](https://www.hikunpeng.com/developer/hpc/hpckit-download)，HPCKit安装指导请参见《Kunpeng HPCKit 26.2.0 安装指南》
+2. 通过setvars.sh --kupl_mode=prof链接到prof动态链接库。
+3. 运行程序时额外配置环境变量KUPL_PROF_LEVEL=statistic来开启特定的函数累计计时，KUPL_PROF_LEVEL=trace来开启全量的函数时序统计。
+4. 程序运行结束时，如果配置了KUPL_PROF_LEVEL=statistic或 KUPL_PROF_LEVEL=trace则会在程序运行打印结尾生成函数累计计时profile报告（报告表头字段详情见[表1 函数累计计时profile报告的表头字段说明](#table23040407177)），如果配置了KUPL_PROF_LEVEL=trace还可以在程序运行目录下生成ptrace文件，其中包含各个进程中各个线程运行情况的统计文件（以.json文件保存），该文件可以通过chrome://tracing网页（请使用chrome 94以上版本的Chrome浏览器运行）来观看可视化版本报告（即把想要观看的文件导入进网页）。
 
-**表 1**  函数累计计时profile报告的表头字段说明<a id="table23040407177"></a>
+**表 1** 函数累计计时profile报告的表头字段说明<a id="table23040407177"></a>
 
 |信息名称|描述|
 |--|--|
@@ -95,7 +95,7 @@ KUPL对外提供profile和trace两个工具，来提供运行时的时序统计�
 |min(ns)|函数单次最小耗时（纳秒）|
 
 
-**表 2**  函数累计计时profile报告的msg字段支持种类含义说明
+**表 2** 函数累计计时profile报告的msg字段支持种类含义说明
 
 |msg信息名称|函数行为|
 |--|--|
@@ -110,11 +110,11 @@ KUPL对外提供profile和trace两个工具，来提供运行时的时序统计�
 
 ## KUPL库函数说明<a id="ZH-CN_TOPIC_0000002043915589"></a>
 
--   **[函数说明](#ZH-CN_TOPIC_0000002111464725)**
+- **[函数说明](#ZH-CN_TOPIC_0000002111464725)**
 
--   **[环境变量](#ZH-CN_TOPIC_0000002724392989)**
+- **[环境变量](#ZH-CN_TOPIC_0000002724392989)**
 
--   **[函数定义](#ZH-CN_TOPIC_0000002076100294)**
+- **[函数定义](#ZH-CN_TOPIC_0000002076100294)**
 
 ### 函数说明<a id="ZH-CN_TOPIC_0000002111464725"></a>
 
@@ -122,7 +122,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 
 ### 环境变量<a id="ZH-CN_TOPIC_0000002724392989"></a>
 
-**表 1**  系统配置相关
+**表 1** 系统配置相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -135,7 +135,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 |KUPL_DISPLAY_AFFINITY|是否打印亲和性配置信息。该环境变量默认值为0，表示不打印亲和性信息；该环境变量设置为1时，打印亲和性信息。具体的，将在初始化时以及亲和性发生变化时打印亲和性信息。|0，1|0|
 
 
-**表 2**  调度相关
+**表 2** 调度相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -146,7 +146,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 |KUPL_EXECUTOR_WAIT_POLICY|控制executor空闲时的线程行为。KUPL当前支持active与passive两种task机制，active表示空闲线程保持活跃状态，持续轮询任务队列，准备立即执行新任务；passive表示空闲线程主动让出CPU资源，进入休眠状态，等待调度唤醒。该环境变量默认值为active。|active，passive|active|
 
 
-**表 3**  多线程编程相关
+**表 3** 多线程编程相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -154,7 +154,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 |KUPL_KERNEL_CONCURRENCY|KUPL并行域的默认并发度。最小值为0，最大值为1024。该环境变量默认值为0，表示并行域的默认并发度将由系统自动设置为KUPL executor的数量。|0 - 1024|0|
 
 
-**表 4**  内存相关
+**表 4** 内存相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -168,7 +168,7 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 |KUPL_ENABLE_MPOOL|是否开启内部mpool。该环境变量默认值为n，表示内部不开启mpool；该环境变量设置为y时，表示内部开启mpool。|y，n|n|
 
 
-**表 5**  profiling相关
+**表 5** profiling相关
 
 |环境变量名|变量意义|有效值|默认值|
 |--|--|--|--|
@@ -179,27 +179,27 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 
 ### 函数定义<a id="ZH-CN_TOPIC_0000002076100294"></a>
 
--   **[返回值定义](#ZH-CN_TOPIC_0000002111579697)**
+- **[返回值定义](#ZH-CN_TOPIC_0000002111579697)**
 
--   **[executor相关函数](#ZH-CN_TOPIC_0000002075945582)**
+- **[executor相关函数](#ZH-CN_TOPIC_0000002075945582)**
 
--   **[多线程编程函数](#ZH-CN_TOPIC_0000002076100310)**
+- **[多线程编程函数](#ZH-CN_TOPIC_0000002076100310)**
 
--   **[计算图编程函数](#ZH-CN_TOPIC_0000002111464745)**
+- **[计算图编程函数](#ZH-CN_TOPIC_0000002111464745)**
 
--   **[多队列多流编程函数](#ZH-CN_TOPIC_0000002205175113)**
+- **[多队列多流编程函数](#ZH-CN_TOPIC_0000002205175113)**
 
--   **[内存管理函数](#ZH-CN_TOPIC_0000002111579733)**
+- **[内存管理函数](#ZH-CN_TOPIC_0000002111579733)**
 
--   **[共享内存通信函数](#ZH-CN_TOPIC_0000002111579741)**
+- **[共享内存通信函数](#ZH-CN_TOPIC_0000002111579741)**
 
--   **[矩阵编程接口函数](#ZH-CN_TOPIC_0000002200346694)**
+- **[矩阵编程接口函数](#ZH-CN_TOPIC_0000002200346694)**
 
--   **[公共函数](#ZH-CN_TOPIC_0000002045421225)**
+- **[公共函数](#ZH-CN_TOPIC_0000002045421225)**
 
 #### 返回值定义<a id="ZH-CN_TOPIC_0000002111579697"></a>
 
-**表 1**  返回值定义
+**表 1** 返回值定义
 
 |ReturnCode|类型|值|描述|
 |--|--|--|--|
@@ -209,29 +209,29 @@ KUPL提供了基于鲲鹏平台优化的并行加速基础库函数，所有接�
 
 #### executor相关函数<a id="ZH-CN_TOPIC_0000002075945582"></a>
 
--   **[概念说明](#ZH-CN_TOPIC_0000002111464733)**
+- **[概念说明](#ZH-CN_TOPIC_0000002111464733)**
 
--   **[kupl_get_num_executors](#ZH-CN_TOPIC_0000002076100302)**
+- **[kupl_get_num_executors](#ZH-CN_TOPIC_0000002076100302)**
 
--   **[kupl_get_executor_num](#ZH-CN_TOPIC_0000002111579705)**
+- **[kupl_get_executor_num](#ZH-CN_TOPIC_0000002111579705)**
 
--   **[kupl_egroup_create](#ZH-CN_TOPIC_0000002075945586)**
+- **[kupl_egroup_create](#ZH-CN_TOPIC_0000002075945586)**
 
--   **[kupl_egroup_destroy](#ZH-CN_TOPIC_0000002111464737)**
+- **[kupl_egroup_destroy](#ZH-CN_TOPIC_0000002111464737)**
 
--   **[kupl_egroup_borrow](#ZH-CN_TOPIC_0000002076100306)**
+- **[kupl_egroup_borrow](#ZH-CN_TOPIC_0000002076100306)**
 
--   **[kupl_egroup_return](#ZH-CN_TOPIC_0000002111579713)**
+- **[kupl_egroup_return](#ZH-CN_TOPIC_0000002111579713)**
 
--   **[kupl_egroup_reset](#ZH-CN_TOPIC_0000002075945590)**
+- **[kupl_egroup_reset](#ZH-CN_TOPIC_0000002075945590)**
 
--   **[kupl_egroup_barrier](#ZH-CN_TOPIC_0000002111464741)**
+- **[kupl_egroup_barrier](#ZH-CN_TOPIC_0000002111464741)**
 
--   **[kupl_egroup_fork_barrier](#ZH-CN_TOPIC_0000002512237486)**
+- **[kupl_egroup_fork_barrier](#ZH-CN_TOPIC_0000002512237486)**
 
--   **[kupl_egroup_join_barrier](#ZH-CN_TOPIC_0000002512397466)**
+- **[kupl_egroup_join_barrier](#ZH-CN_TOPIC_0000002512397466)**
 
--   **[kupl_push_proc_bind](#ZH-CN_TOPIC_0000002750408503)**
+- **[kupl_push_proc_bind](#ZH-CN_TOPIC_0000002750408503)**
 
 ##### 概念说明<a id="ZH-CN_TOPIC_0000002111464733"></a>
 
@@ -239,9 +239,9 @@ KUPL中多线程执行操作行为均由执行器executor来运行。该章节�
 
 相关概念定义如下：
 
--   executor，表示执行器，可对应业界多线程编程中的线程概念。
--   egroup，表示executor的集合，即执行器的集合。
--   kupl_egroup_h，表示egroup数据结构的句柄。
+- executor，表示执行器，可对应业界多线程编程中的线程概念。
+- egroup，表示executor的集合，即执行器的集合。
+- kupl_egroup_h，表示egroup数据结构的句柄。
 
 本章内容涉及KUPL_EXECUTOR_BACKEND环境变量，具体说明见[环境变量](#ZH-CN_TOPIC_0000002724392989)。下述接口demo均为pthread后端下KUPL实现，因此需显式配置KUPL_EXECUTOR_BACKEND=pthread方可执行。
 
@@ -333,7 +333,7 @@ kupl_egroup_h kupl_egroup_create(int *executors, int executors_num);
 
 **参数<a id="section9299145175312"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -343,8 +343,8 @@ kupl_egroup_h kupl_egroup_create(int *executors, int executors_num);
 
 **返回值<a id="section76021111175810"></a>**
 
--   成功：返回创建的egroup
--   失败：返回nullptr
+- 成功：返回创建的egroup
+- 失败：返回nullptr
 
 **示例<a id="section8369192515588"></a>**
 
@@ -378,7 +378,7 @@ void kupl_egroup_destroy(kupl_egroup_h group);
 
 **参数<a id="section5102122492418"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -417,7 +417,7 @@ int kupl_egroup_borrow(kupl_egroup_h dest, kupl_egroup_h src);
 
 **参数<a id="section204781457142717"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -427,8 +427,8 @@ int kupl_egroup_borrow(kupl_egroup_h dest, kupl_egroup_h src);
 
 **返回值<a id="section158659159291"></a>**
 
--   成功：返回取用executor后的dest egroup大小
--   失败：返回KUPL_ERROR
+- 成功：返回取用executor后的dest egroup大小
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section1199604018414"></a>**
 
@@ -487,8 +487,8 @@ int kupl_egroup_return(kupl_egroup_h dest, kupl_egroup_h src);
 
 **返回值<a id="section1165710184915"></a>**
 
--   成功：返回被归还executor后的dest egroup大小
--   失败：返回KUPL_ERROR
+- 成功：返回被归还executor后的dest egroup大小
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section1281317229494"></a>**
 
@@ -587,7 +587,7 @@ void kupl_egroup_barrier(kupl_egroup_h group);
 
 **参数<a id="section1373194016264"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -659,7 +659,7 @@ void kupl_egroup_fork_barrier(kupl_egroup_h group);
 
 **参数<a id="section1373194016264"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -729,7 +729,7 @@ void kupl_egroup_join_barrier(kupl_egroup_h group);
 
 **参数<a id="section1373194016264"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -821,32 +821,32 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了设置KUPL places绑定策略的流程。
->-   上述kupl_push_proc_bind函数设置places绑定策略，先后将绑定策略设置为spread、master与close。在环境变量KUPL_DISPLAY_AFFINITY=1且KUPL_PROC_BIND不设置为false的情况下，能够通过打印获取不同绑定策略下的亲和性绑定信息。
+>- 上述示例演示了设置KUPL places绑定策略的流程。
+>- 上述kupl_push_proc_bind函数设置places绑定策略，先后将绑定策略设置为spread、master与close。在环境变量KUPL_DISPLAY_AFFINITY=1且KUPL_PROC_BIND不设置为false的情况下，能够通过打印获取不同绑定策略下的亲和性绑定信息。
 
 #### 多线程编程函数<a id="ZH-CN_TOPIC_0000002076100310"></a>
 
--   **[概念说明](#ZH-CN_TOPIC_0000002111579717)**
+- **[概念说明](#ZH-CN_TOPIC_0000002111579717)**
 
--   **[kupl_get_thread_num](#ZH-CN_TOPIC_0000002723327847)**
+- **[kupl_get_thread_num](#ZH-CN_TOPIC_0000002723327847)**
 
--   **[kupl_get_kernel_concurrency_local](#ZH-CN_TOPIC_0000002750322747)**
+- **[kupl_get_kernel_concurrency_local](#ZH-CN_TOPIC_0000002750322747)**
 
--   **[kupl_set_kernel_concurrency_local](#ZH-CN_TOPIC_0000002750402823)**
+- **[kupl_set_kernel_concurrency_local](#ZH-CN_TOPIC_0000002750402823)**
 
--   **[kupl_get_kernel_concurrency](#ZH-CN_TOPIC_0000002720762958)**
+- **[kupl_get_kernel_concurrency](#ZH-CN_TOPIC_0000002720762958)**
 
--   **[kupl_set_kernel_concurrency](#ZH-CN_TOPIC_0000002720922876)**
+- **[kupl_set_kernel_concurrency](#ZH-CN_TOPIC_0000002720922876)**
 
--   **[kupl_get_max_concurrency](#ZH-CN_TOPIC_0000002750502827)**
+- **[kupl_get_max_concurrency](#ZH-CN_TOPIC_0000002750502827)**
 
--   **[kupl_parallel_for](#ZH-CN_TOPIC_0000002075945594)**
+- **[kupl_parallel_for](#ZH-CN_TOPIC_0000002075945594)**
 
--   **[kupl::parallel_for](#ZH-CN_TOPIC_0000002373565418)**
+- **[kupl::parallel_for](#ZH-CN_TOPIC_0000002373565418)**
 
--   **[kupl_parallel_for_reduce](#ZH-CN_TOPIC_0000002593755455)**
+- **[kupl_parallel_for_reduce](#ZH-CN_TOPIC_0000002593755455)**
 
--   **[kupl_in_parallel](#ZH-CN_TOPIC_0000002601709429)**
+- **[kupl_in_parallel](#ZH-CN_TOPIC_0000002601709429)**
 
 ##### 概念说明<a id="ZH-CN_TOPIC_0000002111579717"></a>
 
@@ -866,8 +866,8 @@ int kupl_get_thread_num();
 
 **返回值<a id="section208247117255"></a>**
 
--   在并行域内：在当前并行域中的线程编号
--   不在并行域内：返回0
+- 在并行域内：在当前并行域中的线程编号
+- 不在并行域内：返回0
 
 **示例<a id="section14476164812254"></a>**
 
@@ -896,8 +896,8 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了开启并行域并获取在当前在并行域中的线程编号的流程。
->-   上述在并行域内调用kupl_get_thread_num函数，因此得到的线程编号与tid的值相同。
+>- 上述示例演示了开启并行域并获取当前在并行域中的线程编号的流程。
+>- 上述在并行域内调用kupl_get_thread_num函数，因此得到的线程编号与tid的值相同。
 
 ##### kupl_get_kernel_concurrency_local<a id="ZH-CN_TOPIC_0000002750322747"></a>
 
@@ -909,8 +909,8 @@ int kupl_get_kernel_concurrency_local();
 
 **返回值<a id="section631015463517"></a>**
 
--   返回当前线程的算子并发度的值
--   算子并发度值未设置时返回kupl_get_kernel_concurrency();
+- 返回当前线程的算子并发度的值。
+- 算子并发度值未设置时返回kupl_get_kernel_concurrency()。
 
 **示例<a id="section119591136815"></a>**
 
@@ -934,8 +934,8 @@ local kupl kernel concurrency = 2
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例设置并打印了当前线程的算子并发度的值。
->-   上述kupl_get_kernel_concurrency_local函数获取了当前线程的算子并发度。
+>- 上述示例设置并打印了当前线程的算子并发度的值。
+>- 上述kupl_get_kernel_concurrency_local函数获取了当前线程的算子并发度。
 
 ##### kupl_set_kernel_concurrency_local<a id="ZH-CN_TOPIC_0000002750402823"></a>
 
@@ -947,7 +947,7 @@ void kupl_set_kernel_concurrency_local(int num);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -976,8 +976,8 @@ local kupl kernel concurrency = 2
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例设置并打印了当前线程的算子并发度的值。
->-   上述kupl_set_kernel_concurrency_local函数将算子并发度设置为2。
+>- 上述示例设置并打印了当前线程的算子并发度的值。
+>- 上述kupl_set_kernel_concurrency_local函数将算子并发度设置为2。
 
 ##### kupl_get_kernel_concurrency<a id="ZH-CN_TOPIC_0000002720762958"></a>
 
@@ -1054,8 +1054,8 @@ kupl kernel concurrency = 2
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例设置并打印了全局算子并发度的值。上述kupl_set_kernel_concurrency函数将算子并发度设置为2。
->-   除了通过kupl_set_kernel_concurrency函数接口设置算子并发度外，还可以通过环境变量KUPL_KERNEL_CONCURRENCY来设置算子并发度。
+>- 上述示例设置并打印了全局算子并发度的值。上述kupl_set_kernel_concurrency函数将算子并发度设置为2。
+>- 除了通过kupl_set_kernel_concurrency函数接口设置算子并发度外，还可以通过环境变量KUPL_KERNEL_CONCURRENCY来设置算子并发度。
 
 ##### kupl_get_max_concurrency<a id="ZH-CN_TOPIC_0000002750502827"></a>
 
@@ -1067,9 +1067,9 @@ int kupl_get_max_concurrency();
 
 **返回值<a id="section2557134318551"></a>**
 
--   未初始化时：根据KUPL配置（KUPL_EXECUTOR_COUNT环境变量）、CPU核数与当前线程亲缘性计算得到的最大可用并发度，该值与初始化后的executor数量相同，至少为1
--   在并行域内调用：返回1
--   已初始化且不在并行域内：返回当前的算子并发度（与kupl_get_kernel_concurrency的值一致）
+- 未初始化时：根据KUPL配置（KUPL_EXECUTOR_COUNT环境变量）、CPU核数与当前线程亲缘性计算得到的最大可用并发度，该值与初始化后的executor数量相同，至少为1
+- 在并行域内调用：返回1
+- 已初始化且不在并行域内：返回当前的算子并发度（与kupl_get_kernel_concurrency的值一致）
 
 **示例<a id="section2557134318552"></a>**
 
@@ -1093,8 +1093,8 @@ kupl max concurrency = 2
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例设置全局算子并发度为2后获取kupl parallel for将使用的最大线程数。
->-   已初始化且不在并行域内时，kupl_get_max_concurrency返回当前的算子并发度，与kupl_get_kernel_concurrency的值一致；未初始化时返回根据KUPL配置、CPU核数与线程亲缘性计算得到的最大可用并发度；在并行域内调用返回1。
+>- 上述示例设置全局算子并发度为2后获取kupl parallel for将使用的最大线程数。
+>- 已初始化且不在并行域内时，kupl_get_max_concurrency返回当前的算子并发度，与kupl_get_kernel_concurrency的值一致；未初始化时返回根据KUPL配置、CPU核数与线程亲缘性计算得到的最大可用并发度；在并行域内调用返回1。
 
 ##### kupl_parallel_for<a id="ZH-CN_TOPIC_0000002075945594"></a>
 
@@ -1106,7 +1106,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 
 **参数<a id="section14867475300"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1115,7 +1115,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 |args|void *|func函数需要传入的参数|输入|
 
 
-**表 2**  kupl_parallel_for_desc_t的数据结构定义
+**表 2** kupl_parallel_for_desc_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1126,7 +1126,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 |policy|kupl_loop_policy_type_t|parallel for任务遵循的切分策略，当前可设置为<ul><li>KUPL_LOOP_POLICY_STATIC，表示静态切分策略：平均切</li><li>KUPL_LOOP_POLICY_DYNAMIC，表示动态切分策略</li><li>KUPL_LOOP_POLICY_TASK，表示所有任务会被静态切分但会被以task形式提交用于动态调度</li></ul>|
 
 
-**表 3**  kupl_nd_range_t的数据结构定义<a id="table_kupl_nd_range_t"></a>
+**表 3** kupl_nd_range_t的数据结构定义<a id="table_kupl_nd_range_t"></a>
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1134,7 +1134,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 |nd_range|kupl_range_t[]|每个维度的具体范围，例如nd_range[0]表示维度0的范围；nd_range数组大小为KUPL_MAX_DIM_SIZE；kupl_range_t数据结构说明具体见下表|
 
 
-**表 4**  kupl_range_t的数据结构定义
+**表 4** kupl_range_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1148,7 +1148,7 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 
 注：大于一维的任务总数要保证小于int上限，即总blocks < 2^31 - 1
 
-**表 5**  kupl_nd_range_t的宏定义<a id="table185621811174414"></a>
+**表 5** kupl_nd_range_t的宏定义<a id="table185621811174414"></a>
 
 |宏|描述|
 |--|--|
@@ -1162,8 +1162,8 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
 
 **返回值<a id="section114781591571"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section191932517582"></a>**
 
@@ -1333,7 +1333,7 @@ pthread 281473535960192: tid: 1 task_in_loop exe 1 job
 
 ##### kupl::parallel_for<a id="ZH-CN_TOPIC_0000002373565418"></a>
 
-创建parallel for并行循环。相较于[kupl_parallel_for](#ZH-CN_TOPIC_0000002075945594)接口而言，该接口通过lambda函数特性捕获parallel for回调函数的入参， 避免用户入参封装行为，提高接口易用性。
+创建parallel for并行循环。相较于[kupl_parallel_for](#ZH-CN_TOPIC_0000002075945594)接口而言，该接口通过lambda函数特性捕获parallel for回调函数的入参，避免用户入参封装行为，提高接口易用性。
 
 **接口定义<a id="section78161936337"></a>**
 
@@ -1343,15 +1343,15 @@ kupl::parallel_for(kupl_parallel_for_desc_t *desc, const pf_lambda &func);
 
 using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int tid, const int tnum)>;
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
 |desc|kupl_parallel_for_desc_t *|parallel for循环任务的描述，指向kupl_parallel_for_desc_t结构体的指针，具体见下方kupl_parallel_for_desc_t数据结构表|输入|
-|func|pf_lambda|parallel for循环任务的函数，该函数必须定义为如下形式： std::function<void(const kupl_nd_range_t *nd_range, const int tid, const int tnum)>；其中nd_range表示经过kupl_parallel_for内部处理后该函数实际执行的循环区域，tid与tnum表示当前函数执行所在线程编号与总线程数|输入|
+|func|pf_lambda|parallel for循环任务的函数，该函数必须定义为如下形式：std::function<void(const kupl_nd_range_t *nd_range, const int tid, const int tnum)>；其中nd_range表示经过kupl_parallel_for内部处理后该函数实际执行的循环区域，tid与tnum表示当前函数执行所在线程编号与总线程数|输入|
 
 
-**表 2**  kupl_parallel_for_desc_t的数据结构定义
+**表 2** kupl_parallel_for_desc_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1362,7 +1362,7 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 |policy|kupl_loop_policy_type_t|parallel for任务遵循的切分策略，当前可设置为<ul><li>KUPL_LOOP_POLICY_STATIC，表示静态切分策略：平均切。</li><li>KUPL_LOOP_POLICY_DYNAMIC，表示动态切分策略。</li><li>KUPL_LOOP_POLICY_TASK，表示所有任务会被静态切分但会被以task形式提交用于动态调度。</li></ul>|
 
 
-**表 3**  kupl_nd_range_t的数据结构定义
+**表 3** kupl_nd_range_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1370,7 +1370,7 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 |nd_range|kupl_range_t[]|每个维度的具体范围，例如nd_range[0]表示维度0的范围；nd_range数组大小为KUPL_MAX_DIM_SIZE；kupl_range_t数据结构说明具体见下表|
 
 
-**表 4**  kupl_nd_range_t的数据结构定义
+**表 4** kupl_nd_range_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1378,7 +1378,7 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 |nd_range|kupl_range_t[]|每个维度的具体范围，例如nd_range[0]表示维度0的范围；nd_range数组大小为KUPL_MAX_DIM_SIZE；kupl_range_t数据结构说明具体见下表|
 
 
-**表 5**  kupl_range_t的数据结构定义
+**表 5** kupl_range_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1392,7 +1392,7 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 
 注：大于一维的任务总数要保证小于int上限，即总blocks < 2^31 - 1
 
-**表 6**  kupl_nd_range_t的宏定义
+**表 6** kupl_nd_range_t的宏定义
 
 |宏|描述|
 |--|--|
@@ -1406,8 +1406,8 @@ using pf_lambda = std::function<void(const kupl_nd_range_t *nd_range, const int 
 
 **返回值<a id="section114781591571"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section19164103419230"></a>**
 
@@ -1472,7 +1472,7 @@ kupl_reduce_args_t *rd_args);
 
 **参数<a id="section186531026124014"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1482,7 +1482,7 @@ kupl_reduce_args_t *rd_args);
 |rd_args|kupl_reduce_args_t *|规约参数，定义了总的规约操作数，具体规约操作的数据类型，规约操作类型，以及规约数据地址。|输入输出|
 
 
-**表 2**  kupl_reduce_args_t的数据结构定义
+**表 2** kupl_reduce_args_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1490,7 +1490,7 @@ kupl_reduce_args_t *rd_args);
 |items|kupl_reduce_item_t *|指向具体规约操作定义的指针，详细定义请参见下方|
 
 
-**表 3**  kupl_reduce_item_t的数据结构定义
+**表 3** kupl_reduce_item_t的数据结构定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1501,8 +1501,8 @@ kupl_reduce_args_t *rd_args);
 
 **返回值<a id="section114781591571"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section14677201959"></a>**
 
@@ -1567,8 +1567,8 @@ bool kupl_in_parallel();
 
 **返回值<a id="section208247117255"></a>**
 
--   在并行域内：返回true
--   不在并行域内：返回false
+- 在并行域内：返回true
+- 不在并行域内：返回false
 
 **示例<a id="section14476164812254"></a>**
 
@@ -1597,36 +1597,36 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了开启并行域并判断当前是否在并行域内的流程。
->-   上述在并行域内调用kupl_in_parallel函数，因此得到true的结果。
+>- 上述示例演示了开启并行域并判断当前是否在并行域内的流程。
+>- 上述在并行域内调用kupl_in_parallel函数，因此得到true的结果。
 
 #### 计算图编程函数<a id="ZH-CN_TOPIC_0000002111464745"></a>
 
--   **[概念说明](#ZH-CN_TOPIC_0000002076100314)**
+- **[概念说明](#ZH-CN_TOPIC_0000002076100314)**
 
--   **[kupl_graph_create](#ZH-CN_TOPIC_0000002076100318)**
+- **[kupl_graph_create](#ZH-CN_TOPIC_0000002076100318)**
 
--   **[kupl_graph_destroy](#ZH-CN_TOPIC_0000002111579725)**
+- **[kupl_graph_destroy](#ZH-CN_TOPIC_0000002111579725)**
 
--   **[kupl_graph_submit](#ZH-CN_TOPIC_0000002075945602)**
+- **[kupl_graph_submit](#ZH-CN_TOPIC_0000002075945602)**
 
--   **[kupl::graph_submit(task)](#ZH-CN_TOPIC_0000002483082669)**
+- **[kupl::graph_submit(task)](#ZH-CN_TOPIC_0000002483082669)**
 
--   **[kupl::graph_submit(taskloop)](#ZH-CN_TOPIC_0000002450002788)**
+- **[kupl::graph_submit(taskloop)](#ZH-CN_TOPIC_0000002450002788)**
 
--   **[kupl_graph_wait](#ZH-CN_TOPIC_0000002111464753)**
+- **[kupl_graph_wait](#ZH-CN_TOPIC_0000002111464753)**
 
--   **[kupl_graph_test](#ZH-CN_TOPIC_0000002111504759)**
+- **[kupl_graph_test](#ZH-CN_TOPIC_0000002111504759)**
 
--   **[kupl_sgraph_create](#ZH-CN_TOPIC_0000002076100322)**
+- **[kupl_sgraph_create](#ZH-CN_TOPIC_0000002076100322)**
 
--   **[kupl_sgraph_destroy](#ZH-CN_TOPIC_0000002111579729)**
+- **[kupl_sgraph_destroy](#ZH-CN_TOPIC_0000002111579729)**
 
--   **[kupl_sgraph_add_node](#ZH-CN_TOPIC_0000002075945606)**
+- **[kupl_sgraph_add_node](#ZH-CN_TOPIC_0000002075945606)**
 
--   **[kupl::sgraph_add_node](#ZH-CN_TOPIC_0000002483122685)**
+- **[kupl::sgraph_add_node](#ZH-CN_TOPIC_0000002483122685)**
 
--   **[kupl_sgraph_add_dep](#ZH-CN_TOPIC_0000002111464757)**
+- **[kupl_sgraph_add_dep](#ZH-CN_TOPIC_0000002111464757)**
 
 ##### 概念说明<a id="ZH-CN_TOPIC_0000002076100314"></a>
 
@@ -1634,7 +1634,7 @@ int main()
 
 具体地说，动态图和静态图的主要区别在于是否可复用，往动态图中添加task任务，KUPL底层executor会基于sched动态执行task任务实现尽可能的负载均衡效果；而静态图则是一张可复用的图，可以通过向其中添加sgraph node并添加sgraph node之间的依赖关系定义一张静态图，将静态图提交给动态图后静态图中的节点任务才能够被KUPL执行，且执行完后静态图不会被销毁。
 
-另外， kupl_graph_h表示graph数据结构的句柄，kupl_task_h表示task数据结构的句柄，kupl_sgraph_h表示static graph数据结构的句柄，kupl_sgraph_node_h表示sgraph node数据结构的句柄。
+另外，kupl_graph_h表示graph数据结构的句柄，kupl_task_h表示task数据结构的句柄，kupl_sgraph_h表示static graph数据结构的句柄，kupl_sgraph_node_h表示sgraph node数据结构的句柄。
 
 ##### kupl_graph_create<a id="ZH-CN_TOPIC_0000002076100318"></a>
 
@@ -1646,7 +1646,7 @@ kupl_graph_h kupl_graph_create(kupl_egroup_h egroup);
 
 **参数<a id="section123097258516"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1655,8 +1655,8 @@ kupl_graph_h kupl_graph_create(kupl_egroup_h egroup);
 
 **返回值<a id="section13671114114537"></a>**
 
--   成功：返回创建的kupl图
--   失败：返回nullptr
+- 成功：返回创建的kupl图
+- 失败：返回nullptr
 
 **示例<a id="section18869114105416"></a>**
 
@@ -1692,7 +1692,7 @@ void kupl_graph_destroy(kupl_graph_h graph);
 
 **参数<a id="section1750065017314"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1733,7 +1733,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 
 **参数<a id="section15224133031714"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1741,7 +1741,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |info|kupl_task_info_t *|需要添加的task的信息，具体见下表|输入|
 
 
-**表 2**  kupl_task_info_t 的数据结构
+**表 2** kupl_task_info_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1749,7 +1749,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |desc|void *|task 类型所对应的描述，可以设置为：<ul><li>kupl_task_desc_t *：动态图 task 对应的描述，具体见下表</li><li>kupl_sgraph_task_desc_t *：静态图 task 对应的描述，具体见下表</li><li>kupl_taskloop_desc_t *: taskloop 对应的描述，具体见下表</li></ul>|
 
 
-**表 3**  kupl_task_desc_t的数据结构
+**表 3** kupl_task_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1763,7 +1763,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |flag|uint32_t|需要配置掩码KUPL_TASK_DESC_FIELD_FLAG后才生效；task任务的flag，可设置为KUPL_TASK_FLAG_IMM，表示直接执行task，不需要调度|
 
 
-**表 4**  kupl_task_dep_t的数据结构
+**表 4** kupl_task_dep_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1771,7 +1771,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |type|kupl_task_dep_type_t|dep的具体类型，可以设置为：<ul><li>KUPL_TASK_DEP_TYPE_IN：作为任务的输入参数</li><li>KUPL_TASK_DEP_TYPE_OUT：作为任务的输出参数</li><li>KUPL_TASK_DEP_TYPE_INOUT：作为任务的输入输出参数</li><li>KUPL_TASK_DEP_TYPE_ALL：该参数依赖之前的所有任务</li></ul>|
 
 
-**表 5**  kupl_sgraph_task_desc_t的数据结构
+**表 5** kupl_sgraph_task_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1782,7 +1782,7 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 |field_mask|uint64_t|掩码，用于指定结构体中哪些值有效，不设置掩码情况下仅sgraph参数生效，其他需要设置掩码。具体可设置的掩码：<ul><li>KUPL_SGRAPH_TASK_DESC_FIELD_NAME：name生效</li><li>KUPL_SGRAPH_TASK_DESC_FIELD_PRIORITY：priority生效</li><li>KUPL_SGRAPH_TASK_DESC_FIELD_FLAG：flag生效</li></ul>|
 
 
-**表 6**  kupl_taskloop_desc_t 的数据结构
+**表 6** kupl_taskloop_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1795,8 +1795,8 @@ int kupl_graph_submit(kupl_graph_h graph, kupl_task_info_t *info);
 
 **返回值<a id="section131422442014"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section892814522018"></a>**
 
@@ -1853,7 +1853,7 @@ graph task test.
 
 向kupl图中添加动态图task，即提交执行task任务。
 
-相较于[kupl_graph_submit](#ZH-CN_TOPIC_0000002075945602)接口而言，该接口通过lambda函数特性捕获kupl_graph_submit提交任务回调函数的入参， 避免用户入参封装行为，提高接口易用性。
+相较于[kupl_graph_submit](#ZH-CN_TOPIC_0000002075945602)接口而言，该接口通过lambda函数特性捕获kupl_graph_submit提交任务回调函数的入参，避免用户入参封装行为，提高接口易用性。
 
 **接口定义<a id="section4457553176"></a>**
 
@@ -1861,7 +1861,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_task_desc_t *desc, const std::fu
 
 **参数<a id="section15224133031714"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1870,7 +1870,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_task_desc_t *desc, const std::fu
 |func|std::function<void(void)>|task的函数，task任务需要执行的具体函数|输入|
 
 
-**表 2**  kupl_task_desc_t的数据结构
+**表 2** kupl_task_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1882,7 +1882,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_task_desc_t *desc, const std::fu
 |flag|uint32_t|需要配置掩码KUPL_TASK_DESC_FIELD_FLAG后才生效；task任务的flag，可设置为KUPL_TASK_FLAG_IMM，表示直接执行task，不需要调度|
 
 
-**表 3**  kupl_task_dep_t的数据结构
+**表 3** kupl_task_dep_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1892,8 +1892,8 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_task_desc_t *desc, const std::fu
 
 **返回值<a id="section131422442014"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section892814522018"></a>**
 
@@ -1940,7 +1940,7 @@ graph task test
 
 向kupl图中添加taskloop，即提交执行taskloop任务。
 
-相较于[kupl_graph_submit](#ZH-CN_TOPIC_0000002075945602)接口而言，该接口通过lambda函数特性捕获kupl_graph_submit提交任务回调函数的入参， 避免用户入参封装行为，提高接口易用性。
+相较于[kupl_graph_submit](#ZH-CN_TOPIC_0000002075945602)接口而言，该接口通过lambda函数特性捕获kupl_graph_submit提交任务回调函数的入参，避免用户入参封装行为，提高接口易用性。
 
 相较于[kupl::graph_submit(task)](#ZH-CN_TOPIC_0000002483082669)接口而言，该接口提交任务为taskloop类型。两者的差异主要在函数接口的入参上，采用C++函数重载的能力进行实现。
 
@@ -1950,7 +1950,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_taskloop_desc_t* desc, const std
 
 **参数<a id="section15224133031714"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -1959,7 +1959,7 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_taskloop_desc_t* desc, const std
 |func|std::function<void(const kupl_nd_range_t *)>|taskloop的函数，taskloop任务需要执行的具体函数|输入|
 
 
-**表 2**  kupl_taskloop_desc_t 的数据结构
+**表 2** kupl_taskloop_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -1970,8 +1970,8 @@ int kupl::graph_submit(kupl_graph_h graph, kupl_taskloop_desc_t* desc, const std
 
 **返回值<a id="section131422442014"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section892814522018"></a>**
 
@@ -2029,7 +2029,7 @@ void kupl_graph_wait(kupl_graph_h graph);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2097,7 +2097,7 @@ int kupl_graph_test(kupl_graph_h graph);
 
 **参数<a id="section2111504752"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2106,8 +2106,8 @@ int kupl_graph_test(kupl_graph_h graph);
 
 **返回值<a id="section2111504753"></a>**
 
--   成功：返回图中剩余未完成的task数量，返回0表示所有task已完成
--   graph为nullptr时：返回KUPL_ERROR
+- 成功：返回图中剩余未完成的task数量，返回0表示所有task已完成
+- graph为nullptr时：返回KUPL_ERROR
 
 **示例<a id="section2111504754"></a>**
 
@@ -2159,8 +2159,8 @@ graph task test.
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例向graph图提交task后，通过kupl_graph_test轮询图中剩余task数量，返回0即表示全部task执行完成。
->-   与kupl_graph_wait阻塞等待不同，kupl_graph_test不会阻塞，每次调用仅尝试执行一次就绪的task并立即返回剩余数量，调用方可在轮询间隙执行其他工作。
+>- 上述示例向graph图提交task后，通过kupl_graph_test轮询图中剩余task数量，返回0即表示全部task执行完成。
+>- 与kupl_graph_wait阻塞等待不同，kupl_graph_test不会阻塞，每次调用仅尝试执行一次就绪的task并立即返回剩余数量，调用方可在轮询间隙执行其他工作。
 
 ##### kupl_sgraph_create<a id="ZH-CN_TOPIC_0000002076100322"></a>
 
@@ -2176,8 +2176,8 @@ kupl_sgraph_h kupl_sgraph_create();
 
 **返回值<a id="section728383193619"></a>**
 
--   成功：返回创建的静态图
--   失败：返回nullptr
+- 成功：返回创建的静态图
+- 失败：返回nullptr
 
 **示例<a id="section7591055193615"></a>**
 
@@ -2206,7 +2206,7 @@ void kupl_sgraph_destroy(kupl_sgraph_h sgraph);
 
 **参数<a id="section7579162317528"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2240,7 +2240,7 @@ kupl_sgraph_node_h kupl_sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_d
 
 **参数<a id="section8762533153517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2248,7 +2248,7 @@ kupl_sgraph_node_h kupl_sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_d
 |desc|kupl_sgraph_node_desc_t *|需要添加的sgraph node的描述，具体见下表|输入|
 
 
-**表 2**  kupl_sgraph_node_desc_t的数据结构
+**表 2** kupl_sgraph_node_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -2263,8 +2263,8 @@ kupl_sgraph_node_h kupl_sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_d
 
 **返回值<a id="section639171113914"></a>**
 
--   成功：返回添加的 sgraph node节点
--   失败：返回nullptr
+- 成功：返回添加的 sgraph node节点
+- 失败：返回nullptr
 
 **示例<a id="section9505919163910"></a>**
 
@@ -2315,7 +2315,7 @@ static graph task test.
 
 ##### kupl::sgraph_add_node<a id="ZH-CN_TOPIC_0000002483122685"></a>
 
-向kupl静态图中添加 sgraph node节点，即添加任务节点。相较于[kupl_sgraph_add_node](#ZH-CN_TOPIC_0000002075945606)接口而言，该接口通过lambda函数特性捕获kupl_sgraph_add_node提交任务节点回调函数的入参， 避免用户入参封装行为，提高接口易用性。
+向kupl静态图中添加 sgraph node节点，即添加任务节点。相较于[kupl_sgraph_add_node](#ZH-CN_TOPIC_0000002075945606)接口而言，该接口通过lambda函数特性捕获kupl_sgraph_add_node提交任务节点回调函数的入参，避免用户入参封装行为，提高接口易用性。
 
 **接口定义<a id="section395201693518"></a>**
 
@@ -2323,7 +2323,7 @@ kupl_sgraph_node_h sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_desc_t
 
 **参数<a id="section8762533153517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2332,7 +2332,7 @@ kupl_sgraph_node_h sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_desc_t
 |func|std::function<void(void)>|sgraph node节点的函数，该节点提交执行后需要执行的具体函数|输入|
 
 
-**表 2**  kupl_sgraph_gnode_desc_t的数据结构
+**表 2** kupl_sgraph_gnode_desc_t的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -2345,8 +2345,8 @@ kupl_sgraph_node_h sgraph_add_node(kupl_sgraph_h sgraph, kupl_sgraph_node_desc_t
 
 **返回值<a id="section639171113914"></a>**
 
--   成功：返回添加的 sgraph node节点
--   失败：返回nullptr
+- 成功：返回添加的 sgraph node节点
+- 失败：返回nullptr
 
 **示例<a id="section9505919163910"></a>**
 
@@ -2402,7 +2402,7 @@ int kupl_sgraph_add_dep(kupl_sgraph_node_h precede, kupl_sgraph_node_h succeed);
 
 **参数<a id="section1730182518414"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2477,39 +2477,39 @@ gnode2 task finished
 
 #### 多队列多流编程函数<a id="ZH-CN_TOPIC_0000002205175113"></a>
 
--   **[概念说明](#ZH-CN_TOPIC_0000002205140725)**
+- **[概念说明](#ZH-CN_TOPIC_0000002205140725)**
 
--   **[kupl_queue_create](#ZH-CN_TOPIC_0000002169894248)**
+- **[kupl_queue_create](#ZH-CN_TOPIC_0000002169894248)**
 
--   **[kupl_get_queue_priority_range](#ZH-CN_TOPIC_0000002473091789)**
+- **[kupl_get_queue_priority_range](#ZH-CN_TOPIC_0000002473091789)**
 
--   **[kupl_queue_create_with_priority](#ZH-CN_TOPIC_0000002439611912)**
+- **[kupl_queue_create_with_priority](#ZH-CN_TOPIC_0000002439611912)**
 
--   **[kupl_queue_destroy](#ZH-CN_TOPIC_0000002169734472)**
+- **[kupl_queue_destroy](#ZH-CN_TOPIC_0000002169734472)**
 
--   **[kupl_queue_wait](#ZH-CN_TOPIC_0000002205175117)**
+- **[kupl_queue_wait](#ZH-CN_TOPIC_0000002205175117)**
 
--   **[kupl_queue_wait_event](#ZH-CN_TOPIC_0000002205140729)**
+- **[kupl_queue_wait_event](#ZH-CN_TOPIC_0000002205140729)**
 
--   **[kupl_queue_submit](#ZH-CN_TOPIC_0000002169894252)**
+- **[kupl_queue_submit](#ZH-CN_TOPIC_0000002169894252)**
 
--   **[kupl::queue_submit(item)](#ZH-CN_TOPIC_0000002449843180)**
+- **[kupl::queue_submit(item)](#ZH-CN_TOPIC_0000002449843180)**
 
--   **[kupl::queue_submit(kernel)](#ZH-CN_TOPIC_0000002300859105)**
+- **[kupl::queue_submit(kernel)](#ZH-CN_TOPIC_0000002300859105)**
 
--   **[kupl_event_create](#ZH-CN_TOPIC_0000002169734480)**
+- **[kupl_event_create](#ZH-CN_TOPIC_0000002169734480)**
 
--   **[kupl_event_destroy](#ZH-CN_TOPIC_0000002205175121)**
+- **[kupl_event_destroy](#ZH-CN_TOPIC_0000002205175121)**
 
--   **[kupl_event_record](#ZH-CN_TOPIC_0000002205140733)**
+- **[kupl_event_record](#ZH-CN_TOPIC_0000002205140733)**
 
--   **[kupl_event_wait](#ZH-CN_TOPIC_0000002169894256)**
+- **[kupl_event_wait](#ZH-CN_TOPIC_0000002169894256)**
 
--   **[kupl_event_query](#ZH-CN_TOPIC_0000002169734484)**
+- **[kupl_event_query](#ZH-CN_TOPIC_0000002169734484)**
 
--   **[kupl_queue_acquire](#ZH-CN_TOPIC_0000002574754479)**
+- **[kupl_queue_acquire](#ZH-CN_TOPIC_0000002574754479)**
 
--   **[kupl_queue_wait_all](#ZH-CN_TOPIC_0000002544074270)**
+- **[kupl_queue_wait_all](#ZH-CN_TOPIC_0000002544074270)**
 
 ##### 概念说明<a id="ZH-CN_TOPIC_0000002205140725"></a>
 
@@ -2685,7 +2685,7 @@ int kupl_queue_wait(kupl_queue_h queue);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2746,7 +2746,7 @@ int kupl_queue_wait_event(kupl_queue_h queue, kupl_event_h event);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2815,7 +2815,7 @@ int kupl_queue_submit(kupl_queue_h queue, kupl_queue_item_desc_t *desc);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2823,7 +2823,7 @@ int kupl_queue_submit(kupl_queue_h queue, kupl_queue_item_desc_t *desc);
 |desc|kupl_queue_item_desc_t|queue_item 的描述|输入|
 
 
-**表 2**  kupl_queue_item_desc_t 的数据结构
+**表 2** kupl_queue_item_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -2893,7 +2893,7 @@ int queue_submit(kupl_queue_h queue, kupl_queue_item_desc_t *desc, const std::fu
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2902,7 +2902,7 @@ int queue_submit(kupl_queue_h queue, kupl_queue_item_desc_t *desc, const std::fu
 |func|const std::function<void(void)>|queue_item 的函数指针|输入|
 
 
-**表 2**  kupl_queue_item_desc_t 的数据结构
+**表 2** kupl_queue_item_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -2965,7 +2965,7 @@ int kupl::queue_submit(kupl_queue_h queue, kupl_queue_kernel_desc_t *desc, const
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -2974,7 +2974,7 @@ int kupl::queue_submit(kupl_queue_h queue, kupl_queue_kernel_desc_t *desc, const
 |kernel|const std::function<void(const kupl_nd_range_t *)>|kernel 的内容，一般是 lambda 表达式|输入|
 
 
-**表 2**  kupl_queue_kernel_desc_t 的数据结构
+**表 2** kupl_queue_kernel_desc_t 的数据结构
 
 |参数名|类型|描述|
 |--|--|--|
@@ -3171,7 +3171,7 @@ int kupl_event_wait(kupl_event_h event);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3224,7 +3224,7 @@ kernel exec.
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了向 queue 提交 kernel，并等待直到  kernel 执行完成的流程。上述 kupl_event_wait 函数等待 event 之前所有 kernel 都执行完成，才继续往下执行。
+>上述示例演示了向 queue 提交 kernel，并等待直到 kernel 执行完成的流程。上述 kupl_event_wait 函数等待 event 之前所有 kernel 都执行完成，才继续往下执行。
 
 ##### kupl_event_query<a id="ZH-CN_TOPIC_0000002169734484"></a>
 
@@ -3280,7 +3280,7 @@ kupl_queue_h kupl_queue_acquire(int index);
 
 **参数<a id="section0742447153314"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3361,43 +3361,43 @@ int main()
 
 #### 内存管理函数<a id="ZH-CN_TOPIC_0000002111579733"></a>
 
--   **[概念说明](#ZH-CN_TOPIC_0000002075945610)**
+- **[概念说明](#ZH-CN_TOPIC_0000002075945610)**
 
--   **[kupl_malloc](#ZH-CN_TOPIC_0000002179819768)**
+- **[kupl_malloc](#ZH-CN_TOPIC_0000002179819768)**
 
--   **[kupl_free](#ZH-CN_TOPIC_0000002179660040)**
+- **[kupl_free](#ZH-CN_TOPIC_0000002179660040)**
 
--   **[kupl_mlock](#ZH-CN_TOPIC_0000002215140369)**
+- **[kupl_mlock](#ZH-CN_TOPIC_0000002215140369)**
 
--   **[kupl_munlock](#ZH-CN_TOPIC_0000002215025961)**
+- **[kupl_munlock](#ZH-CN_TOPIC_0000002215025961)**
 
--   **[kupl_memcpy](#ZH-CN_TOPIC_0000002111464765)**
+- **[kupl_memcpy](#ZH-CN_TOPIC_0000002111464765)**
 
--   **[kupl_memcpy2d](#ZH-CN_TOPIC_0000002076100334)**
+- **[kupl_memcpy2d](#ZH-CN_TOPIC_0000002076100334)**
 
--   **[kupl_memcpy_async](#ZH-CN_TOPIC_0000002179819772)**
+- **[kupl_memcpy_async](#ZH-CN_TOPIC_0000002179819772)**
 
--   **[kupl_memcpy2d_async](#ZH-CN_TOPIC_0000002179660044)**
+- **[kupl_memcpy2d_async](#ZH-CN_TOPIC_0000002179660044)**
 
--   **[kupl_hbw_malloc](#ZH-CN_TOPIC_0000002245344504)**
+- **[kupl_hbw_malloc](#ZH-CN_TOPIC_0000002245344504)**
 
--   **[kupl_hbw_free](#ZH-CN_TOPIC_0000002280583357)**
+- **[kupl_hbw_free](#ZH-CN_TOPIC_0000002280583357)**
 
--   **[kupl_hbw_verify](#ZH-CN_TOPIC_0000002245504336)**
+- **[kupl_hbw_verify](#ZH-CN_TOPIC_0000002245504336)**
 
--   **[kupl_hbw_check_available](#ZH-CN_TOPIC_0000002280463417)**
+- **[kupl_hbw_check_available](#ZH-CN_TOPIC_0000002280463417)**
 
--   **[kupl_hbw_get_policy](#ZH-CN_TOPIC_0000002245344508)**
+- **[kupl_hbw_get_policy](#ZH-CN_TOPIC_0000002245344508)**
 
--   **[kupl_hbw_set_policy](#ZH-CN_TOPIC_0000002280583361)**
+- **[kupl_hbw_set_policy](#ZH-CN_TOPIC_0000002280583361)**
 
--   **[kupl_mem_copyin](#ZH-CN_TOPIC_0000002571065150)**
+- **[kupl_mem_copyin](#ZH-CN_TOPIC_0000002571065150)**
 
--   **[kupl_mem_copyout](#ZH-CN_TOPIC_0000002571224792)**
+- **[kupl_mem_copyout](#ZH-CN_TOPIC_0000002571224792)**
 
--   **[kupl_mem_query](#ZH-CN_TOPIC_0000002601904285)**
+- **[kupl_mem_query](#ZH-CN_TOPIC_0000002601904285)**
 
--   **[kupl_mem_is_present](#ZH-CN_TOPIC_0000002601744339)**
+- **[kupl_mem_is_present](#ZH-CN_TOPIC_0000002601744339)**
 
 ##### 概念说明<a id="ZH-CN_TOPIC_0000002075945610"></a>
 
@@ -3415,7 +3415,7 @@ void* kupl_malloc(kupl_mem_kind_t kind, size_t size);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3423,7 +3423,7 @@ void* kupl_malloc(kupl_mem_kind_t kind, size_t size);
 |size|size_t|需要申请的内存大小|输入|
 
 
-**表 2**  kupl_mem_kind_t的枚举数据结构定义
+**表 2** kupl_mem_kind_t的枚举数据结构定义
 
 |枚举值|描述|
 |--|--|
@@ -3434,8 +3434,8 @@ void* kupl_malloc(kupl_mem_kind_t kind, size_t size);
 
 **返回值<a id="section0985131317128"></a>**
 
--   成功：返回申请得到的内存的指针
--   失败：返回nullptr
+- 成功：返回申请得到的内存的指针
+- 失败：返回nullptr
 
 **示例<a id="section139721521623"></a>**
 
@@ -3457,9 +3457,9 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了申请锁住的内存并释放该内存的流程。
->-   上述kupl_malloc函数申请大小为len的内存空间并尽可能锁住，使用的内存分配策略为系统默认的分配策略。
->-   kupl_malloc函数会在条件允许的情况下锁住申请的内存；其中环境中包含SDMA设备是锁住申请的内存的必要条件。
+>- 上述示例演示了申请锁住的内存并释放该内存的流程。
+>- 上述kupl_malloc函数申请大小为len的内存空间并尽可能锁住，使用的内存分配策略为系统默认的分配策略。
+>- kupl_malloc函数会在条件允许的情况下锁住申请的内存；其中环境中包含SDMA设备是锁住申请的内存的必要条件。
 
 ##### kupl_free<a id="ZH-CN_TOPIC_0000002179660040"></a>
 
@@ -3471,7 +3471,7 @@ void kupl_free(kupl_mem_kind_t kind, void *ptr);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3499,9 +3499,9 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了申请锁住的内存并释放该内存的流程。
->-   上述kupl_free函数取消data指向的内存锁定并释放内存，使用的内存分配策略为系统默认的分配策略。
->-   kupl_free函数会在发现内存被锁住时取消锁定，并释放内存；否则直接释放内存。
+>- 上述示例演示了申请锁住的内存并释放该内存的流程。
+>- 上述kupl_free函数取消data指向的内存锁定并释放内存，使用的内存分配策略为系统默认的分配策略。
+>- kupl_free函数会在发现内存被锁住时取消锁定，并释放内存；否则直接释放内存。
 
 ##### kupl_mlock<a id="ZH-CN_TOPIC_0000002215140369"></a>
 
@@ -3513,7 +3513,7 @@ int kupl_mlock(void *buffer, size_t count);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3523,8 +3523,8 @@ int kupl_mlock(void *buffer, size_t count);
 
 **返回值<a id="section0985131317128"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section139721521623"></a>**
 
@@ -3548,9 +3548,9 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了申请内存、锁住内存、取消锁定并最终释放内存的流程。
->-   上述kupl_mlock函数用于锁住data指向的内存。
->-   kupl_mlock函数会锁住内存。其中环境中包含sdma设备是成功锁住内存的必要条件。
+>- 上述示例演示了申请内存、锁住内存、取消锁定并最终释放内存的流程。
+>- 上述kupl_mlock函数用于锁住data指向的内存。
+>- kupl_mlock函数会锁住内存。其中环境中包含sdma设备是成功锁住内存的必要条件。
 
 ##### kupl_munlock<a id="ZH-CN_TOPIC_0000002215025961"></a>
 
@@ -3562,7 +3562,7 @@ int kupl_munlock(void *buffer, size_t count);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3572,8 +3572,8 @@ int kupl_munlock(void *buffer, size_t count);
 
 **返回值<a id="section0985131317128"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section139721521623"></a>**
 
@@ -3597,9 +3597,9 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了申请内存、锁住内存、取消锁定并最终释放内存的流程。
->-   上述kupl_munlock函数用于取消锁定data指向的内存。
->-   kupl_munlock函数会取消锁定内存。其中环境中包含sdma设备是成功取消锁定的必要条件。
+>- 上述示例演示了申请内存、锁住内存、取消锁定并最终释放内存的流程。
+>- 上述kupl_munlock函数用于取消锁定data指向的内存。
+>- kupl_munlock函数会取消锁定内存。其中环境中包含sdma设备是成功取消锁定的必要条件。
 
 ##### kupl_memcpy<a id="ZH-CN_TOPIC_0000002111464765"></a>
 
@@ -3610,8 +3610,8 @@ int main()
 int kupl_memcpy(void *dst, const void *src, size_t count);
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   当前kupl memcpy支持的最大拷贝长度为UINT32_MAX，即count值不超过UINT32_MAX。
->-   count 需要小于 src 和 dst 所指向内存的真实大小。
+>- 当前kupl memcpy支持的最大拷贝长度为UINT32_MAX，即count值不超过UINT32_MAX。
+>- count 需要小于 src 和 dst 所指向内存的真实大小。
 
 **环境变量<a id="section132891826133710"></a>**
 
@@ -3623,7 +3623,7 @@ kupl memcpy共实现3种memcpy方法：单线程glibc memcpy方法、sdma memcpy
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3634,8 +3634,8 @@ kupl memcpy共实现3种memcpy方法：单线程glibc memcpy方法、sdma memcpy
 
 **返回值<a id="section83987161014"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section139721521623"></a>**
 
@@ -3667,8 +3667,8 @@ error:
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了内存拷贝的流程。
->-   上述kupl_memcpy函数将src数组中的内容复制到dest数组，其中复制的内存大小为len。
+>- 上述示例演示了内存拷贝的流程。
+>- 上述kupl_memcpy函数将src数组中的内容复制到dest数组，其中复制的内存大小为len。
 
 ##### kupl_memcpy2d<a id="ZH-CN_TOPIC_0000002076100334"></a>
 
@@ -3681,8 +3681,8 @@ error:
 int kupl_memcpy2d(void *dst, size_t dpitch, const void *src, size_t spitch, size_t width, size_t height);
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   当前kupl memcpy2d支持的最大宽、高、搬运间隔均不超过UINT32_MAX，即width、spitch-width、dpitch-width、height上限为UINT32_MAX。
->-   需分别满足spitch*height小于 src 所指向内存的真实大小，且dpitch*height 小于 dst 所指向内存的真实大小。
+>- 当前kupl memcpy2d支持的最大宽、高、搬运间隔均不超过UINT32_MAX，即width、spitch-width、dpitch-width、height上限为UINT32_MAX。
+>- 需分别满足spitch*height小于 src 所指向内存的真实大小，且dpitch*height 小于 dst 所指向内存的真实大小。
 
 **环境变量<a id="section132891826133710"></a>**
 
@@ -3694,7 +3694,7 @@ kupl memcpy2d共实现3种memcpy方法：单线程glibc memcpy方法、sdma memc
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3708,8 +3708,8 @@ kupl memcpy2d共实现3种memcpy方法：单线程glibc memcpy方法、sdma memc
 
 **返回值<a id="section0985131317128"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section139721521623"></a>**
 
@@ -3743,10 +3743,10 @@ error:
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了二维内存拷贝的流程。
->-   上述kupl_memcpy2d函数将src数组中的内容复制到dest数组，其中src位置的数据每取出width数据的偏移量为300。
->-   dest位置的数据每存储width数据的偏移量为400。
->-   拷贝数据的宽和高分别为200和2。
+>- 上述示例演示了二维内存拷贝的流程。
+>- 上述kupl_memcpy2d函数将src数组中的内容复制到dest数组，其中src位置的数据每取出width数据的偏移量为300。
+>- dest位置的数据每存储width数据的偏移量为400。
+>- 拷贝数据的宽和高分别为200和2。
 
 ##### kupl_memcpy_async<a id="ZH-CN_TOPIC_0000002179819772"></a>
 
@@ -3757,8 +3757,8 @@ error:
 int kupl_memcpy_async(void *dst, const void *src, size_t count, kupl_queue_h queue, kupl_event_h event);
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   当前kupl memcpy_async支持的最大拷贝长度为UINT32_MAX，即count值不超过UINT32_MAX。
->-   count 需要小于 src 和 dst 所指向内存的真实大小。
+>- 当前kupl memcpy_async支持的最大拷贝长度为UINT32_MAX，即count值不超过UINT32_MAX。
+>- count 需要小于 src 和 dst 所指向内存的真实大小。
 
 **环境变量<a id="section132891826133710"></a>**
 
@@ -3770,7 +3770,7 @@ kupl异步memcpy共实现3种memcpy方法：单线程glibc memcpy方法、sdma m
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3783,8 +3783,8 @@ kupl异步memcpy共实现3种memcpy方法：单线程glibc memcpy方法、sdma m
 
 **返回值<a id="section83987161014"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section139721521623"></a>**
 
@@ -3825,9 +3825,9 @@ malloc_error:
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了异步内存拷贝的流程。
->-   上述kupl_memcpy_async函数将src数组中的内容异步地复制到dest数组，其中复制的内存大小为len，其中event用于异步拷贝、后续的同步。
->-   由于实际上只有sdma memcpy实现了真正的异步memcpy，因此在执行其余memcpy方法时，将打印warning信息。
+>- 上述示例演示了异步内存拷贝的流程。
+>- 上述kupl_memcpy_async函数将src数组中的内容异步地复制到dest数组，其中复制的内存大小为len，其中event用于异步拷贝、后续的同步。
+>- 由于实际上只有sdma memcpy实现了真正的异步memcpy，因此在执行其余memcpy方法时，将打印warning信息。
 
 ##### kupl_memcpy2d_async<a id="ZH-CN_TOPIC_0000002179660044"></a>
 
@@ -3838,8 +3838,8 @@ malloc_error:
 int kupl_memcpy2d_async(void *dst, size_t dpitch, const void *src, size_t spitch, size_t width, size_t height, kupl_queue_h queue, kupl_event_h event);
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   当前kupl memcpy2d_async支持的最大宽、高、搬运间隔均不超过UINT32_MAX，即width、spitch-width、dpitch-width、height上限为UINT32_MAX。。
->-   spitch*height 与dpitch*height 需要分别小于 src 和 dst 所指向内存的真实大小。
+>- 当前kupl memcpy2d_async支持的最大宽、高、搬运间隔均不超过UINT32_MAX，即width、spitch-width、dpitch-width、height上限为UINT32_MAX。
+>- spitch*height 与dpitch*height 需要分别小于 src 和 dst 所指向内存的真实大小。
 
 **环境变量<a id="section132891826133710"></a>**
 
@@ -3851,7 +3851,7 @@ kupl二维异步memcpy共实现3种memcpy方法：单线程glibc memcpy方法、
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3867,8 +3867,8 @@ kupl二维异步memcpy共实现3种memcpy方法：单线程glibc memcpy方法、
 
 **返回值<a id="section83987161014"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section139721521623"></a>**
 
@@ -3911,12 +3911,12 @@ malloc_error:
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了异步二维内存拷贝的流程。
->-   上述kupl_memcpy2d_async函数异步地将src数组中的内容复制到dest数组，其中src位置的数据每取出width数据的偏移量为300。
->-   dest位置的数据每存储width数据的偏移量为400。
->-   拷贝数据的宽和高分别为200和2。
->-   上述kupl_memcpy_async函数将src数组中的内容异步地复制到dest数组，其中复制的内存大小为len，其中event用于异步拷贝、后续的同步。
->-   由于实际上只有sdma memcpy实现了真正的异步memcpy，因此在执行其余memcpy方法时，将打印warning信息。
+>- 上述示例演示了异步二维内存拷贝的流程。
+>- 上述kupl_memcpy2d_async函数异步地将src数组中的内容复制到dest数组，其中src位置的数据每取出width数据的偏移量为300。
+>- dest位置的数据每存储width数据的偏移量为400。
+>- 拷贝数据的宽和高分别为200和2。
+>- 上述kupl_memcpy_async函数将src数组中的内容异步地复制到dest数组，其中复制的内存大小为len，其中event用于异步拷贝、后续的同步。
+>- 由于实际上只有sdma memcpy实现了真正的异步memcpy，因此在执行其余memcpy方法时，将打印warning信息。
 
 ##### kupl_hbw_malloc<a id="ZH-CN_TOPIC_0000002245344504"></a>
 
@@ -3928,7 +3928,7 @@ void* kupl_hbw_malloc(size_t size);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -3937,8 +3937,8 @@ void* kupl_hbw_malloc(size_t size);
 
 **返回值<a id="section83987161014"></a>**
 
--   成功：返回申请得到的内存指针
--   失败：返回nullptr
+- 成功：返回申请得到的内存指针
+- 失败：返回nullptr
 
 **示例<a id="section139721521623"></a>**
 
@@ -3960,10 +3960,10 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了申请锁住的OPM内存并释放该内存的流程。
->-   上述kupl_hbw_malloc函数申请大小为len的内存空间并尽可能锁住。
->-   kupl_hbw_malloc函数会在条件允许的情况下通过内存锁定机制防止被交换到磁盘。其中环境中包含sdma设备是锁定申请的内存的必要条件。
->-   kupl_hbw_malloc在无法申请到指定的OPM内存时，会返回nullptr。
+>- 上述示例演示了申请锁住的OPM内存并释放该内存的流程。
+>- 上述kupl_hbw_malloc函数申请大小为len的内存空间并尽可能锁住。
+>- kupl_hbw_malloc函数会在条件允许的情况下通过内存锁定机制防止被交换到磁盘。其中环境中包含sdma设备是锁定申请的内存的必要条件。
+>- kupl_hbw_malloc在无法申请到指定的OPM内存时，会返回nullptr。
 
 ##### kupl_hbw_free<a id="ZH-CN_TOPIC_0000002280583357"></a>
 
@@ -3975,7 +3975,7 @@ void kupl_hbw_free(void *ptr);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4002,9 +4002,9 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了申请锁住的OPM内存并释放该内存的流程。
->-   上述kupl_hbw_free函数取消data指向的内存锁定并释放内存。
->-   kupl_hbw_free函数会在发现内存被内存锁定机制锁定时取消锁定，并释放内存；否则直接释放内存。
+>- 上述示例演示了申请锁住的OPM内存并释放该内存的流程。
+>- 上述kupl_hbw_free函数取消data指向的内存锁定并释放内存。
+>- kupl_hbw_free函数会在发现内存被内存锁定机制锁定时取消锁定，并释放内存；否则直接释放内存。
 
 ##### kupl_hbw_verify<a id="ZH-CN_TOPIC_0000002245504336"></a>
 
@@ -4016,7 +4016,7 @@ int kupl_hbw_verify(void *addr, size_t size, int flags);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4029,9 +4029,9 @@ KUPL_HBW_TOUCH_PAGES：表示在验证前会按照操作系统的分页，依次
 
 **返回值<a id="section83987161014"></a>**
 
--   若整块内存都在OPM中，返回KUPL_IS_HBW_MEMORY。
--   若给定的内存空间中有不属于OPM的部分则返回KUPL_IS_NOT_HBW_MEMORY。
--   若处理过程中出错返回KUPL_HBW_VERIFY_ERROR。
+- 若整块内存都在OPM中，返回KUPL_IS_HBW_MEMORY。
+- 若给定的内存空间中有不属于OPM的部分则返回KUPL_IS_NOT_HBW_MEMORY。
+- 若处理过程中出错返回KUPL_HBW_VERIFY_ERROR。
 
 **示例<a id="section139721521623"></a>**
 
@@ -4057,9 +4057,9 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了申请OPM内存并验证申请的内存是否全部在OPM上的流程。
->-   上述kupl_hbw_verify验证的指针的起始地址为kupl_hbw_malloc申请得到的地址的起始地址，验证的大小也与申请大小保持一致。
->-   在设置了HBW_TOUCH_PAGES后，kupl_hbw_verify在验证前会按照操作系统的分页，依次读写所需验证内存空间中的每一页。
+>- 上述示例演示了申请OPM内存并验证申请的内存是否全部在OPM上的流程。
+>- 上述kupl_hbw_verify验证的指针的起始地址为kupl_hbw_malloc申请得到的地址的起始地址，验证的大小也与申请大小保持一致。
+>- 在设置了HBW_TOUCH_PAGES后，kupl_hbw_verify在验证前会按照操作系统的分页，依次读写所需验证内存空间中的每一页。
 
 ##### kupl_hbw_check_available<a id="ZH-CN_TOPIC_0000002280463417"></a>
 
@@ -4071,8 +4071,8 @@ int kupl_hbw_check_available();
 
 **返回值<a id="section83987161014"></a>**
 
--   系统中存在OPM：返回1
--   系统中不存在OPM：返回0
+- 系统中存在OPM：返回1
+- 系统中不存在OPM：返回0
 
 **示例<a id="section139721521623"></a>**
 
@@ -4092,8 +4092,8 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了判断系统中是否存在OPM的流程。
->-   上述示例中，若系统中存在OPM，则会打印"High Band-Width Memory is available in the system."; 若不存在OPM， 则会打印"Cannot detect High Band-Width Memory in the system."。
+>- 上述示例演示了判断系统中是否存在OPM的流程。
+>- 上述示例中，若系统中存在OPM，则会打印"High Band-Width Memory is available in the system."; 若不存在OPM，则会打印"Cannot detect High Band-Width Memory in the system."。
 
 ##### kupl_hbw_get_policy<a id="ZH-CN_TOPIC_0000002245344508"></a>
 
@@ -4105,9 +4105,9 @@ kupl_hbw_policy_t kupl_hbw_get_policy();
 
 **返回值<a id="section83987161014"></a>**
 
--   返回当前的OPM内存分配策略。具体的策略描述见下面的表格。
+- 返回当前的OPM内存分配策略。具体的策略描述见下面的表格。
 
-**表 1**  kupl_hbw_policy_t 的数据结构定义
+**表 1** kupl_hbw_policy_t 的数据结构定义
 
 |值|描述|
 |--|--|
@@ -4132,8 +4132,8 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了设置当前的OPM内存分配策略并获取当前的OPM内存分配策略的流程。
->-   设置和获取的KUPL_HBW_POLICY_BIND表示当前的策略为从最近的NUMA OPM Node上申请内存，如果OPM内存不足，则分配返回nullptr并报错。
+>- 上述示例演示了设置当前的OPM内存分配策略并获取当前的OPM内存分配策略的流程。
+>- 设置和获取的KUPL_HBW_POLICY_BIND表示当前的策略为从最近的NUMA OPM Node上申请内存，如果OPM内存不足，则分配返回nullptr并报错。
 
 ##### kupl_hbw_set_policy<a id="ZH-CN_TOPIC_0000002280583361"></a>
 
@@ -4145,7 +4145,7 @@ int kupl_hbw_set_policy(kupl_hbw_policy_t policy);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4154,8 +4154,8 @@ int kupl_hbw_set_policy(kupl_hbw_policy_t policy);
 
 **返回值<a id="section83987161014"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section14452924174413"></a>**
 
@@ -4175,8 +4175,8 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了设置当前的OPM内存分配策略并获取当前的OPM内存分配策略的流程。
->-   设置和获取的KUPL_HBW_POLICY_BIND表示当前的策略为从最近的NUMA OPM Node上申请内存，如果OPM内存不足，则分配返回nullptr并报错。
+>- 上述示例演示了设置当前的OPM内存分配策略并获取当前的OPM内存分配策略的流程。
+>- 设置和获取的KUPL_HBW_POLICY_BIND表示当前的策略为从最近的NUMA OPM Node上申请内存，如果OPM内存不足，则分配返回nullptr并报错。
 
 ##### kupl_mem_copyin<a id="ZH-CN_TOPIC_0000002571065150"></a>
 
@@ -4188,7 +4188,7 @@ int kupl_mem_copyin(void *ddr_addr, size_t size, kupl_mem_copyin_flag_t flag, ku
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4200,8 +4200,8 @@ int kupl_mem_copyin(void *ddr_addr, size_t size, kupl_mem_copyin_flag_t flag, ku
 
 **返回值<a id="section83987161014"></a>**
 
--   成功：返回 KUPL_OK
--   失败：返回 KUPL_ERROR
+- 成功：返回 KUPL_OK
+- 失败：返回 KUPL_ERROR
 
 **示例<a id="section81801830142612"></a>**
 
@@ -4246,7 +4246,7 @@ a: 2
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了 ddr 内存和 hbw 内存完整的换入换出流程。首先使用 kupl_mem_copyin 将内存从 ddr 拷贝至 hbw，然后使用 kupl_mem_is_present 判断内存的可访问性，接着提交一个异步任务使用 kupl_mem_query 查询 ddr 对应的 hbw 的地址然后修改，最后使用 kupl_mem_copyout 将 hbw 上的地址再拷贝回 ddr。
+>- 上述示例演示了 ddr 内存和 hbw 内存完整的换入换出流程。首先使用 kupl_mem_copyin 将内存从 ddr 拷贝至 hbw，然后使用 kupl_mem_is_present 判断内存的可访问性，接着提交一个异步任务使用 kupl_mem_query 查询 ddr 对应的 hbw 的地址然后修改，最后使用 kupl_mem_copyout 将 hbw 上的地址再拷贝回 ddr。
 
 ##### kupl_mem_copyout<a id="ZH-CN_TOPIC_0000002571224792"></a>
 
@@ -4258,7 +4258,7 @@ int kupl_mem_copyout(void *ddr_addr, size_t size, kupl_mem_copyout_flag_t flag, 
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4270,8 +4270,8 @@ int kupl_mem_copyout(void *ddr_addr, size_t size, kupl_mem_copyout_flag_t flag, 
 
 **返回值<a id="section83987161014"></a>**
 
--   成功：返回 KUPL_OK
--   失败：返回 KUPL_ERROR
+- 成功：返回 KUPL_OK
+- 失败：返回 KUPL_ERROR
 
 **示例<a id="section81801830142612"></a>**
 
@@ -4316,7 +4316,7 @@ a: 2
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了 ddr 内存和 hbw 内存完整的换入换出流程。首先使用 kupl_mem_copyin 将内存从 ddr 拷贝至 hbw，然后使用 kupl_mem_is_present 判断内存的可访问性，接着提交一个异步任务使用 kupl_mem_query 查询 ddr 对应的 hbw 的地址然后修改，最后使用 kupl_mem_copyout 将 hbw 上的地址再拷贝回 ddr。
+>- 上述示例演示了 ddr 内存和 hbw 内存完整的换入换出流程。首先使用 kupl_mem_copyin 将内存从 ddr 拷贝至 hbw，然后使用 kupl_mem_is_present 判断内存的可访问性，接着提交一个异步任务使用 kupl_mem_query 查询 ddr 对应的 hbw 的地址然后修改，最后使用 kupl_mem_copyout 将 hbw 上的地址再拷贝回 ddr。
 
 ##### kupl_mem_query<a id="ZH-CN_TOPIC_0000002601904285"></a>
 
@@ -4328,7 +4328,7 @@ void *kupl_mem_query(void *ddr_addr);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4337,8 +4337,8 @@ void *kupl_mem_query(void *ddr_addr);
 
 **返回值<a id="section83987161014"></a>**
 
--   成功：返回 hbw 的地址
--   失败：返回空指针
+- 成功：返回 hbw 的地址
+- 失败：返回空指针
 
 **示例<a id="section81801830142612"></a>**
 
@@ -4383,7 +4383,7 @@ a: 2
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了 ddr 内存和 hbw 内存完整的换入换出流程。首先使用 kupl_mem_copyin 将内存从 ddr 拷贝至 hbw，然后使用 kupl_mem_is_present 判断内存的可访问性，接着提交一个异步任务使用 kupl_mem_query 查询 ddr 对应的 hbw 的地址然后修改，最后使用 kupl_mem_copyout 将 hbw 上的地址再拷贝回 ddr。
+>- 上述示例演示了 ddr 内存和 hbw 内存完整的换入换出流程。首先使用 kupl_mem_copyin 将内存从 ddr 拷贝至 hbw，然后使用 kupl_mem_is_present 判断内存的可访问性，接着提交一个异步任务使用 kupl_mem_query 查询 ddr 对应的 hbw 的地址然后修改，最后使用 kupl_mem_copyout 将 hbw 上的地址再拷贝回 ddr。
 
 ##### kupl_mem_is_present<a id="ZH-CN_TOPIC_0000002601744339"></a>
 
@@ -4395,7 +4395,7 @@ bool kupl_mem_is_present(void *ddr_addr);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4404,8 +4404,8 @@ bool kupl_mem_is_present(void *ddr_addr);
 
 **返回值<a id="section83987161014"></a>**
 
--   成功：返回 true
--   失败：返回 false
+- 成功：返回 true
+- 失败：返回 false
 
 **示例<a id="section81801830142612"></a>**
 
@@ -4450,49 +4450,49 @@ a: 2
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了 ddr 内存和 hbw 内存完整的换入换出流程。首先使用 kupl_mem_copyin 将内存从 ddr 拷贝至 hbw，然后使用 kupl_mem_is_present 判断内存的可访问性，接着提交一个异步任务使用 kupl_mem_query 查询 ddr 对应的 hbw 的地址然后修改，最后使用 kupl_mem_copyout 将 hbw 上的地址再拷贝回 ddr。
+>- 上述示例演示了 ddr 内存和 hbw 内存完整的换入换出流程。首先使用 kupl_mem_copyin 将内存从 ddr 拷贝至 hbw，然后使用 kupl_mem_is_present 判断内存的可访问性，接着提交一个异步任务使用 kupl_mem_query 查询 ddr 对应的 hbw 的地址然后修改，最后使用 kupl_mem_copyout 将 hbw 上的地址再拷贝回 ddr。
 
 #### 共享内存通信函数<a id="ZH-CN_TOPIC_0000002111579741"></a>
 
--   **[概念说明](#ZH-CN_TOPIC_0000002075945618)**
+- **[概念说明](#ZH-CN_TOPIC_0000002075945618)**
 
--   **[kupl_shm_comm_create](#ZH-CN_TOPIC_0000002111464769)**
+- **[kupl_shm_comm_create](#ZH-CN_TOPIC_0000002111464769)**
 
--   **[kupl_shm_comm_destroy](#ZH-CN_TOPIC_0000002076100338)**
+- **[kupl_shm_comm_destroy](#ZH-CN_TOPIC_0000002076100338)**
 
--   **[kupl_shm_comm_rank](#ZH-CN_TOPIC_0000002111579745)**
+- **[kupl_shm_comm_rank](#ZH-CN_TOPIC_0000002111579745)**
 
--   **[kupl_shm_comm_size](#ZH-CN_TOPIC_0000002075945622)**
+- **[kupl_shm_comm_size](#ZH-CN_TOPIC_0000002075945622)**
 
--   **[kupl_shm_win_alloc](#ZH-CN_TOPIC_0000002111464773)**
+- **[kupl_shm_win_alloc](#ZH-CN_TOPIC_0000002111464773)**
 
--   **[kupl_shm_win_query](#ZH-CN_TOPIC_0000002076100342)**
+- **[kupl_shm_win_query](#ZH-CN_TOPIC_0000002076100342)**
 
--   **[kupl_shm_win_free](#ZH-CN_TOPIC_0000002111579749)**
+- **[kupl_shm_win_free](#ZH-CN_TOPIC_0000002111579749)**
 
--   **[kupl_shm_attach](#ZH-CN_TOPIC_0000002544210465)**
+- **[kupl_shm_attach](#ZH-CN_TOPIC_0000002544210465)**
 
--   **[kupl_shm_detach](#ZH-CN_TOPIC_0000002544090475)**
+- **[kupl_shm_detach](#ZH-CN_TOPIC_0000002544090475)**
 
--   **[kupl_shm_fence](#ZH-CN_TOPIC_0000002075945626)**
+- **[kupl_shm_fence](#ZH-CN_TOPIC_0000002075945626)**
 
--   **[kupl_shm_peer_fence](#ZH-CN_TOPIC_0000002111464777)**
+- **[kupl_shm_peer_fence](#ZH-CN_TOPIC_0000002111464777)**
 
--   **[kupl_shm_allreduce_init](#ZH-CN_TOPIC_0000002076100346)**
+- **[kupl_shm_allreduce_init](#ZH-CN_TOPIC_0000002076100346)**
 
--   **[kupl_shm_bcast_init](#ZH-CN_TOPIC_0000002159103496)**
+- **[kupl_shm_bcast_init](#ZH-CN_TOPIC_0000002159103496)**
 
--   **[kupl_shm_alltoall_init](#ZH-CN_TOPIC_0000002194430285)**
+- **[kupl_shm_alltoall_init](#ZH-CN_TOPIC_0000002194430285)**
 
--   **[kupl_shm_request_start](#ZH-CN_TOPIC_0000002111579753)**
+- **[kupl_shm_request_start](#ZH-CN_TOPIC_0000002111579753)**
 
--   **[kupl_shm_request_wait](#ZH-CN_TOPIC_0000002075945630)**
+- **[kupl_shm_request_wait](#ZH-CN_TOPIC_0000002075945630)**
 
--   **[kupl_shm_request_free](#ZH-CN_TOPIC_0000002111464781)**
+- **[kupl_shm_request_free](#ZH-CN_TOPIC_0000002111464781)**
 
--   **[kupl_shm_allreduce_batch_init](#ZH-CN_TOPIC_0000002076100350)**
+- **[kupl_shm_allreduce_batch_init](#ZH-CN_TOPIC_0000002076100350)**
 
--   **[kupl_shm_info_set](#ZH-CN_TOPIC_0000002208678197)**
+- **[kupl_shm_info_set](#ZH-CN_TOPIC_0000002208678197)**
 
 ##### 概念说明<a id="ZH-CN_TOPIC_0000002075945618"></a>
 
@@ -4508,7 +4508,7 @@ int kupl_shm_comm_create(int size, int rank, int pid, kupl_shm_oob_cb_h oob_cbs,
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4520,7 +4520,7 @@ int kupl_shm_comm_create(int size, int rank, int pid, kupl_shm_oob_cb_h oob_cbs,
 |comm|kupl_shm_comm_h|需要创建的kupl通信域|输出|
 
 
-**表 2**  shm带外函数的结构体定义<a id="table_shm_oob_cb"></a>
+**表 2** shm带外函数的结构体定义<a id="table_shm_oob_cb"></a>
 
 |参数名|类型|描述|
 |--|--|--|
@@ -4530,8 +4530,8 @@ int kupl_shm_comm_create(int size, int rank, int pid, kupl_shm_oob_cb_h oob_cbs,
 
 **返回值<a id="section06771947112116"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section139721521623"></a>**
 
@@ -4601,7 +4601,7 @@ int kupl_shm_comm_destroy(kupl_shm_comm_h comm);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4610,8 +4610,8 @@ int kupl_shm_comm_destroy(kupl_shm_comm_h comm);
 
 **返回值<a id="section162261851162316"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section139721521623"></a>**
 
@@ -4681,7 +4681,7 @@ int kupl_shm_comm_rank(kupl_shm_comm_h comm, int *rank);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4767,7 +4767,7 @@ int kupl_shm_comm_size(kupl_shm_comm_h comm, int *size);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4777,8 +4777,8 @@ int kupl_shm_comm_size(kupl_shm_comm_h comm, int *size);
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -4856,8 +4856,8 @@ int kupl_shm_win_alloc(size_t size, kupl_shm_comm_h comm, void **baseptr, kupl_s
 
 可选值：
 
--   posix（默认）
--   sls
+- posix（默认）
+- sls
 
 当共享内存底层实现为sls的情况下，可以使用环境变量KUPL_SHM_ENABLE_HUGEPAGE和KUPL_SHM_ON_PACKAGE来控制是否使能共享内存申请大页和是否使能共享内存申请高带宽内存。
 
@@ -4867,7 +4867,7 @@ KUPL_SHM_ON_PACKAGE，默认值为n，代表不启用高带宽内存分配；y�
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -4879,8 +4879,8 @@ KUPL_SHM_ON_PACKAGE，默认值为n，代表不启用高带宽内存分配；y�
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -4997,7 +4997,7 @@ int kupl_shm_win_query(kupl_shm_win_h win, int remote_rank, void **baseptr);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5126,7 +5126,7 @@ int kupl_shm_win_free(kupl_shm_win_h win);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5135,8 +5135,8 @@ int kupl_shm_win_free(kupl_shm_win_h win);
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -5252,7 +5252,7 @@ void* kupl_shm_attach(struct kupl_shm_addr_t addr, size_t size);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5260,7 +5260,7 @@ void* kupl_shm_attach(struct kupl_shm_addr_t addr, size_t size);
 |size|size_t|需要映射的内存大小|输入|
 
 
-**表 2**  映射内存信息结构体kupl_shm_addr_t定义
+**表 2** 映射内存信息结构体kupl_shm_addr_t定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5271,8 +5271,8 @@ void* kupl_shm_attach(struct kupl_shm_addr_t addr, size_t size);
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回本进程申请并映射成功的内存指针ptr
--   失败：返回nullptr
+- 成功：返回本进程申请并映射成功的内存指针ptr
+- 失败：返回nullptr
 
 **示例<a id="section161681327132611"></a>**
 
@@ -5392,7 +5392,7 @@ int kupl_shm_detach(void *ptr)
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5401,8 +5401,8 @@ int kupl_shm_detach(void *ptr)
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -5528,12 +5528,12 @@ int kupl_shm_fence(kupl_shm_win_h win);
 
 可选值：
 
--   1：代表linear
--   2：代表rd（默认）
+- 1：代表linear
+- 2：代表rd（默认）
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5542,8 +5542,8 @@ int kupl_shm_fence(kupl_shm_win_h win);
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -5633,7 +5633,7 @@ int kupl_shm_peer_fence(kupl_shm_win_h win, int remote_rank);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5643,8 +5643,8 @@ int kupl_shm_peer_fence(kupl_shm_win_h win, int remote_rank);
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -5747,13 +5747,13 @@ allreduce 可以使用环境变量指定算法。
 
 环境变量名称为KUPL_SHM_ALLREDUCE_ALGORITHM，可选值：
 
--   0：代表auto_tuning（默认）
--   1：代表linear算法
--   2：代表 rb（rh_rd）算法
+- 0：代表auto_tuning（默认）
+- 1：代表linear算法
+- 2：代表 rb（rh_rd）算法
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5768,8 +5768,8 @@ allreduce 可以使用环境变量指定算法。
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -5913,17 +5913,17 @@ bcast 可以使用环境变量指定算法。
 
 环境变量名称为KUPL_SHM_BCAST_ALGORITHM，可选值：
 
--   0：代表auto_tuning（默认）
--   1：代表linear算法
--   2：代表linear_opt算法
--   3：代表topo_aware_linear算法
--   4：代表topo_aware_linear_opt算法
--   5：代表ring_pipeline算法
--   6：代表linear_scatter_linear_allgather算法
+- 0：代表auto_tuning（默认）
+- 1：代表linear算法
+- 2：代表linear_opt算法
+- 3：代表topo_aware_linear算法
+- 4：代表topo_aware_linear_opt算法
+- 5：代表ring_pipeline算法
+- 6：代表linear_scatter_linear_allgather算法
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -5937,8 +5937,8 @@ bcast 可以使用环境变量指定算法。
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -6070,13 +6070,13 @@ alltoall 可以使用环境变量指定算法。
 
 环境变量名称为KUPL_SHM_ALLTOALL_ALGORITHM，可选值：
 
--   0：代表auto_tuning（默认）
--   1：代表linear_read算法
--   2：代表linear_write算法
+- 0：代表auto_tuning（默认）
+- 1：代表linear_read算法
+- 2：代表linear_write算法
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6092,8 +6092,8 @@ alltoall 可以使用环境变量指定算法。
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -6233,7 +6233,7 @@ int kupl_shm_request_start(kupl_shm_request_h request);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6242,8 +6242,8 @@ int kupl_shm_request_start(kupl_shm_request_h request);
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -6383,7 +6383,7 @@ int kupl_shm_request_wait(kupl_shm_request_h request);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6392,8 +6392,8 @@ int kupl_shm_request_wait(kupl_shm_request_h request);
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -6533,7 +6533,7 @@ int kupl_shm_request_free(kupl_shm_request_h request);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6542,8 +6542,8 @@ int kupl_shm_request_free(kupl_shm_request_h request);
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -6683,7 +6683,7 @@ int kupl_shm_allreduce_batch_init(void **sendbuf, void **recvbuf, int *count, ku
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6699,8 +6699,8 @@ int kupl_shm_allreduce_batch_init(void **sendbuf, void **recvbuf, int *count, ku
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -6824,7 +6824,7 @@ check success
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->上述示例演示了kupl allreduce batch_init的流程。 kupl_shm_allreduce_batch_init批量创建request。
+>上述示例演示了kupl allreduce batch_init的流程。kupl_shm_allreduce_batch_init批量创建request。
 
 ##### kupl_shm_info_set<a id="ZH-CN_TOPIC_0000002208678197"></a>
 
@@ -6836,7 +6836,7 @@ int kupl_shm_info_set(kupl_info_flag_t info_flag, uint32_t value);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6846,8 +6846,8 @@ int kupl_shm_info_set(kupl_info_flag_t info_flag, uint32_t value);
 
 **返回值<a id="section830552192613"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section161681327132611"></a>**
 
@@ -6911,35 +6911,35 @@ int main(int argc, char *argv[])
 
 #### 矩阵编程接口函数<a id="ZH-CN_TOPIC_0000002200346694"></a>
 
--   **[概念说明](#ZH-CN_TOPIC_0000002235267117)**
+- **[概念说明](#ZH-CN_TOPIC_0000002235267117)**
 
--   **[Tensor](#ZH-CN_TOPIC_0000002619449213)**
+- **[Tensor](#ZH-CN_TOPIC_0000002619449213)**
 
--   **[make_coord](#ZH-CN_TOPIC_0000002235386969)**
+- **[make_coord](#ZH-CN_TOPIC_0000002235386969)**
 
--   **[make_shape](#ZH-CN_TOPIC_0000002589127120)**
+- **[make_shape](#ZH-CN_TOPIC_0000002589127120)**
 
--   **[make_stride](#ZH-CN_TOPIC_0000002200186886)**
+- **[make_stride](#ZH-CN_TOPIC_0000002200186886)**
 
--   **[make_layout](#ZH-CN_TOPIC_0000002200346698)**
+- **[make_layout](#ZH-CN_TOPIC_0000002200346698)**
 
--   **[make_tensor](#ZH-CN_TOPIC_0000002235267121)**
+- **[make_tensor](#ZH-CN_TOPIC_0000002235267121)**
 
--   **[make_tiled_mma](#ZH-CN_TOPIC_0000002235386973)**
+- **[make_tiled_mma](#ZH-CN_TOPIC_0000002235386973)**
 
--   **[make_tiled_copy](#ZH-CN_TOPIC_0000002423842636)**
+- **[make_tiled_copy](#ZH-CN_TOPIC_0000002423842636)**
 
--   **[mma](#ZH-CN_TOPIC_0000002200346702)**
+- **[mma](#ZH-CN_TOPIC_0000002200346702)**
 
--   **[copy(Trans)](#ZH-CN_TOPIC_0000002457521233)**
+- **[copy(Trans)](#ZH-CN_TOPIC_0000002457521233)**
 
--   **[copy(Prefetch)](#ZH-CN_TOPIC_0000002518739270)**
+- **[copy(Prefetch)](#ZH-CN_TOPIC_0000002518739270)**
 
--   **[copy(Store)](#ZH-CN_TOPIC_0000002200186890)**
+- **[copy(Store)](#ZH-CN_TOPIC_0000002200186890)**
 
--   **[copy(Vector)](#ZH-CN_TOPIC_0000002735593684)**
+- **[copy(Vector)](#ZH-CN_TOPIC_0000002735593684)**
 
--   **[exp2f](#ZH-CN_TOPIC_0000002738208418)**
+- **[exp2f](#ZH-CN_TOPIC_0000002738208418)**
 
 ##### 概念说明<a id="ZH-CN_TOPIC_0000002235267117"></a>
 
@@ -6947,15 +6947,15 @@ KUPL矩阵编程模块对外提供了Tensor概念及基于Tensor对象的一系�
 
 KUPL矩阵编程模块相关概念如下：
 
--   Int，整数包装类型，用于传递编译期整型常量。
--   Ops，枚举方法包装类型，用于传递编译期枚举常量。
--   Coord，表示矩阵下标，用于Tensor对象的取下标操作。
+- Int，整数包装类型，用于传递编译期整型常量。
+- Ops，枚举方法包装类型，用于传递编译期枚举常量。
+- Coord，表示矩阵下标，用于Tensor对象的取下标操作。
 
--   Shape，表示矩阵尺寸或计算尺寸。
+- Shape，表示矩阵尺寸或计算尺寸。
 
--   Stride，表示矩阵元素行/列跨度。
--   Layout，表示矩阵内存布局。
--   Tensor，表示矩阵对象，包含源数据与布局。
+- Stride，表示矩阵元素行/列跨度。
+- Layout，表示矩阵内存布局。
+- Tensor，表示矩阵对象，包含源数据与布局。
 
 使用KUPL矩阵编程模块的接口，需在支持Matrix computation指令的环境下安装HPCKit。
 
@@ -6973,7 +6973,7 @@ class Tensor;
 
 **类成员变量<a id="section3135164512513"></a>**
 
-**表 1**  类成员变量定义
+**表 1** 类成员变量定义
 
 |成员变量名|成员变量类型|描述|
 |--|--|--|
@@ -6985,7 +6985,7 @@ class Tensor;
 
 一、Tensor对象取下标及切片能力：Tensor(coord)
 
-**表 2**  类成员函数Tensor()输入输出定义
+**表 2** 类成员函数Tensor()输入输出定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -6995,7 +6995,7 @@ class Tensor;
 
 二、Tensor对象逐元素相加能力：TensorC = TensorA + TensorB
 
-**表 3**  类成员函数Tensor operator+输入输出定义
+**表 3** 类成员函数Tensor operator+输入输出定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7006,7 +7006,7 @@ class Tensor;
 
 三、Tensor对象标量乘能力：TensorC = A * TensorB / TensorC = TensorB * A
 
-**表 4**  类成员函数Tensor operator*输入输出定义
+**表 4** 类成员函数Tensor operator*输入输出定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7076,7 +7076,7 @@ Coord<Args...> make_coord(Args ... args);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7134,7 +7134,7 @@ Shape<Args...> make_shape(Args ... args);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7207,7 +7207,7 @@ Stride<Args...> make_stride(Args ... args);
 
 **参数<a id="section119591136815"></a>**
 
-**表 1**  参数定义
+**表 1** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7280,7 +7280,7 @@ Layout<Shape, Stride> make_layout(Shape shape, Stride stride);
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7290,7 +7290,7 @@ Layout<Shape, Stride> make_layout(Shape shape, Stride stride);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7378,7 +7378,7 @@ Tensor<MatrixEngine<dtype>, Layout> make_tensor(Layout layout)
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7388,7 +7388,7 @@ Tensor<MatrixEngine<dtype>, Layout> make_tensor(Layout layout)
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7497,7 +7497,7 @@ TiledMma<MmaAtom, Shape> make_tiled_mma(MmaAtom mma_atom, Shape atom_shape);
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7507,7 +7507,7 @@ TiledMma<MmaAtom, Shape> make_tiled_mma(MmaAtom mma_atom, Shape atom_shape);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7583,7 +7583,7 @@ TiledCopy<CopyAtom, Shape> make_tiled_copy( CopyAtom copy_atom, Shape atom_shape
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7593,7 +7593,7 @@ TiledCopy<CopyAtom, Shape> make_tiled_copy( CopyAtom copy_atom, Shape atom_shape
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7673,7 +7673,7 @@ void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> 
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7684,7 +7684,7 @@ void mma(TiledMma tiled_mma, Tensor<dtypeD, LayoutD> D, Tensor<dtypeA, LayoutA> 
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7764,7 +7764,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7775,7 +7775,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7848,7 +7848,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineS, LayoutS> src);
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7859,7 +7859,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineS, LayoutS> src);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -7916,7 +7916,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -7927,7 +7927,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -8002,7 +8002,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -8013,7 +8013,7 @@ void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, L
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -8099,7 +8099,7 @@ inline auto exp2f(Tensor<Engine, Layout> x);
 
 **模板参数<a id="section3135164512513"></a>**
 
-**表 1**  模板参数定义
+**表 1** 模板参数定义
 
 |参数名|类型|描述|
 |--|--|--|
@@ -8109,7 +8109,7 @@ inline auto exp2f(Tensor<Engine, Layout> x);
 
 **参数<a id="section34151935162517"></a>**
 
-**表 2**  参数定义
+**表 2** 参数定义
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
@@ -8155,9 +8155,9 @@ int main()
 
 #### 公共函数<a id="ZH-CN_TOPIC_0000002045421225"></a>
 
--   **[kupl_get_version](#ZH-CN_TOPIC_0000002009142270)**
+- **[kupl_get_version](#ZH-CN_TOPIC_0000002009142270)**
 
--   **[kupl_get_wtime](#ZH-CN_TOPIC_0000002571030280)**
+- **[kupl_get_wtime](#ZH-CN_TOPIC_0000002571030280)**
 
 ##### kupl_get_version<a id="ZH-CN_TOPIC_0000002009142270"></a>
 
@@ -8176,8 +8176,8 @@ int kupl_get_version(kupl_version_t *version)
 
 **返回值<a id="section208247117255"></a>**
 
--   成功：返回KUPL_OK
--   失败：返回KUPL_ERROR
+- 成功：返回KUPL_OK
+- 失败：返回KUPL_ERROR
 
 **示例<a id="section14476164812254"></a>**
 
@@ -8223,7 +8223,7 @@ double kupl_get_wtime();
 
 **返回值<a id="section208247117255"></a>**
 
--   返回当前的时间（秒）
+- 返回当前的时间（秒）
 
 **示例<a id="section14476164812254"></a>**
 
@@ -8244,6 +8244,6 @@ int main()
 ```
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
->-   上述示例演示了获取当前时间（秒）的流程。
->-   上述kupl_get_wtime函数获取当前的时间，通过两次调用该函数的返回值的差值得到时间间隔。
+>- 上述示例演示了获取当前时间（秒）的流程。
+>- 上述kupl_get_wtime函数获取当前的时间，通过两次调用该函数的返回值的差值得到时间间隔。
 
