@@ -13,9 +13,9 @@ project(kupl VERSION 1.0.0)
 
 # colored output
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-set(${COLOR_FLAGS} "-fdiagnostics-color=always")
+set(COLOR_FLAGS "-fdiagnostics-color=always")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-set(${COLOR_FLAGS} "-fcolor-diagnostics")
+set(COLOR_FLAGS "-fcolor-diagnostics")
 endif ()
 
 # Set library's name

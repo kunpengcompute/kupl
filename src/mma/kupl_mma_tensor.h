@@ -193,6 +193,60 @@ public:
         return *this;
     }
 
+    template <typename E = Engine, std::enable_if_t<is_vector_engine_v<E>, int> = 0>
+    Tensor &operator=(element_type scalar)
+    {
+        if constexpr (std::is_same_v<element_type, float>)
+            engine_ = VectorEngine<element_type>(svdup_f32(scalar));
+        else if constexpr (std::is_same_v<element_type, bfloat16_t>)
+            engine_ = VectorEngine<element_type>(svdup_bf16(scalar));
+        else
+            static_assert(dependent_false_v<element_type>, "Unsupported dtype for scalar broadcast");
+        return *this;
+    }
+
+    template <typename E = Engine, std::enable_if_t<is_vector_engine_v<E>, int> = 0>
+    auto operator+(const Tensor &other) const -> Tensor<Engine, Layout>
+    {
+        return Tensor(Engine(SvAdd::template apply_vec<element_type>(data(), other.data())), layout_);
+    }
+    template <typename E = Engine, std::enable_if_t<is_vector_engine_v<E>, int> = 0>
+    auto operator-(const Tensor &other) const -> Tensor<Engine, Layout>
+    {
+        return Tensor(Engine(SvSub::template apply_vec<element_type>(data(), other.data())), layout_);
+    }
+    template <typename E = Engine, std::enable_if_t<is_vector_engine_v<E>, int> = 0>
+    auto operator*(const Tensor &other) const -> Tensor<Engine, Layout>
+    {
+        return Tensor(Engine(SvMul::template apply_vec<element_type>(data(), other.data())), layout_);
+    }
+    template <typename E = Engine, std::enable_if_t<is_vector_engine_v<E>, int> = 0>
+    auto operator/(const Tensor &other) const -> Tensor<Engine, Layout>
+    {
+        return Tensor(Engine(SvDiv::template apply_vec<element_type>(data(), other.data())), layout_);
+    }
+
+    template <typename E = Engine, std::enable_if_t<is_vector_engine_v<E>, int> = 0>
+    auto operator+(element_type scalar) const -> Tensor<Engine, Layout>
+    {
+        return Tensor(Engine(SvAdd::template apply_scalar<element_type>(data(), scalar)), layout_);
+    }
+    template <typename E = Engine, std::enable_if_t<is_vector_engine_v<E>, int> = 0>
+    auto operator-(element_type scalar) const -> Tensor<Engine, Layout>
+    {
+        return Tensor(Engine(SvSub::template apply_scalar<element_type>(data(), scalar)), layout_);
+    }
+    template <typename E = Engine, std::enable_if_t<is_vector_engine_v<E>, int> = 0>
+    auto operator*(element_type scalar) const -> Tensor<Engine, Layout>
+    {
+        return Tensor(Engine(SvMul::template apply_scalar<element_type>(data(), scalar)), layout_);
+    }
+    template <typename E = Engine, std::enable_if_t<is_vector_engine_v<E>, int> = 0>
+    auto operator/(element_type scalar) const -> Tensor<Engine, Layout>
+    {
+        return Tensor(Engine(SvDiv::template apply_scalar<element_type>(data(), scalar)), layout_);
+    }
+
     template <typename E = Engine, std::enable_if_t<is_ptr_engine_v<E>, int> = 0>
     Tensor &operator=(const TensorAdd<Engine, Layout> &add)
     {
@@ -259,6 +313,53 @@ template <typename Engine, typename Layout, std::enable_if_t<is_ptr_engine_v<Eng
 TensorScalMul<Engine, Layout> operator*(const typename Engine::element_type &lhs, const Tensor<Engine, Layout> &rhs)
 {
     return TensorScalMul<Engine, Layout>{rhs, lhs};
+}
+
+template <typename Engine, typename Layout, std::enable_if_t<is_vector_engine_v<Engine>, int> = 0>
+kupl_always_inline Tensor<Engine, Layout> min(Tensor<Engine, Layout> a, Tensor<Engine, Layout> b) KUPL_MMA_COMP
+{
+    return Tensor<Engine, Layout>(Engine(SvMin::template apply_vec<typename Engine::element_type>(a.data(), b.data())),
+                                  a.layout());
+}
+
+template <typename Engine, typename Layout, std::enable_if_t<is_vector_engine_v<Engine>, int> = 0>
+kupl_always_inline Tensor<Engine, Layout> min(Tensor<Engine, Layout> a,
+                                              typename Engine::element_type scalar) KUPL_MMA_COMP
+{
+    return Tensor<Engine, Layout>(Engine(SvMin::template apply_scalar<typename Engine::element_type>(a.data(), scalar)),
+                                  a.layout());
+}
+
+template <typename Engine, typename Layout, std::enable_if_t<is_vector_engine_v<Engine>, int> = 0>
+kupl_always_inline Tensor<Engine, Layout> max(Tensor<Engine, Layout> a, Tensor<Engine, Layout> b) KUPL_MMA_COMP
+{
+    return Tensor<Engine, Layout>(Engine(SvMax::template apply_vec<typename Engine::element_type>(a.data(), b.data())),
+                                  a.layout());
+}
+
+template <typename Engine, typename Layout, std::enable_if_t<is_vector_engine_v<Engine>, int> = 0>
+kupl_always_inline Tensor<Engine, Layout> max(Tensor<Engine, Layout> a,
+                                              typename Engine::element_type scalar) KUPL_MMA_COMP
+{
+    return Tensor<Engine, Layout>(Engine(SvMax::template apply_scalar<typename Engine::element_type>(a.data(), scalar)),
+                                  a.layout());
+}
+
+template <typename dtypeD, typename EngineS, typename LayoutS>
+kupl_always_inline auto cvt(Tensor<EngineS, LayoutS> src0, Tensor<EngineS, LayoutS> src1) KUPL_MMA_COMP
+{
+    using dtypeS = typename EngineS::element_type;
+    static_assert(is_vector_engine_v<EngineS>, "cvt only for VectorEngine Tensor");
+    auto pg = svptrue_for<dtypeS>();
+    if constexpr (std::is_same_v<dtypeD, bfloat16_t> && std::is_same_v<dtypeS, float>) {
+        auto lower = svcvt_bf16_f32_x(pg, src0.data());
+        auto result = svcvtnt_bf16_f32_x(lower, pg, src1.data());
+        using DstLayout = Layout<Shape<Int<32>>, Stride<Int<1>>>;
+        DstLayout dst_layout(Shape<Int<32>>{}, Stride<Int<1>>{});
+        return Tensor<VectorEngine<dtypeD>, DstLayout>(VectorEngine<dtypeD>(result), dst_layout);
+    } else {
+        static_assert(dependent_false_v<dtypeD>, "Unsupported cvt conversion");
+    }
 }
 
 template <typename Engine, typename Layout>

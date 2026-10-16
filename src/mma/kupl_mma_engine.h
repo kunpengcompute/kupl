@@ -160,5 +160,151 @@ struct SvStore {
     }
 };
 
+struct SvStoreNT {
+    template <typename dtype, typename VecType>
+    kupl_always_inline static void apply(dtype *ptr, VecType vec) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            svstnt1_f32(pg, ptr, vec);
+        else if constexpr (std::is_same_v<VecType, vector_type_t<bfloat16_t>>)
+            svstnt1_bf16(pg, ptr, vec);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for SvStoreNT");
+    }
+};
+
+struct SvAdd {
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_vec(VecType a, VecType b) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svadd_f32_x(pg, a, b);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Add");
+    }
+
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_scalar(VecType a, dtype scalar) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svadd_n_f32_x(pg, a, scalar);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Add");
+    }
+};
+
+struct SvSub {
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_vec(VecType a, VecType b) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svsub_f32_x(pg, a, b);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Sub");
+    }
+
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_scalar(VecType a, dtype scalar) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svsub_n_f32_x(pg, a, scalar);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Sub");
+    }
+};
+
+struct SvMul {
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_vec(VecType a, VecType b) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svmul_f32_x(pg, a, b);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Mul");
+    }
+
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_scalar(VecType a, dtype scalar) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svmul_n_f32_x(pg, a, scalar);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Mul");
+    }
+};
+
+struct SvDiv {
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_vec(VecType a, VecType b) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svdiv_f32_x(pg, a, b);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Div");
+    }
+
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_scalar(VecType a, dtype scalar) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svdiv_n_f32_x(pg, a, scalar);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Div");
+    }
+};
+
+struct SvMin {
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_vec(VecType a, VecType b) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svmin_f32_x(pg, a, b);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Min");
+    }
+
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_scalar(VecType a, dtype scalar) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svmin_n_f32_x(pg, a, scalar);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Min");
+    }
+};
+
+struct SvMax {
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_vec(VecType a, VecType b) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svmax_f32_x(pg, a, b);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Max");
+    }
+
+    template <typename dtype, typename VecType>
+    kupl_always_inline static VecType apply_scalar(VecType a, dtype scalar) KUPL_MMA_COMP
+    {
+        auto pg = svptrue_for<dtype>();
+        if constexpr (std::is_same_v<VecType, vector_type_t<float>>)
+            return svmax_n_f32_x(pg, a, scalar);
+        else
+            static_assert(dependent_false_v<VecType>, "Unsupported VecType for Max");
+    }
+};
+
 } // namespace tensor
 } // namespace kupl
