@@ -6939,11 +6939,19 @@ int main(int argc, char *argv[])
 
 - **[copy(Vector)](#ZH-CN_TOPIC_0000002735593684)**
 
+- **[copy(StoreNT)](#ZH-CN_TOPIC_0000002735593694)**
+
 - **[exp2f](#ZH-CN_TOPIC_0000002738208418)**
+
+- **[min](#ZH-CN_TOPIC_0000002738208428)**
+
+- **[max](#ZH-CN_TOPIC_0000002738208438)**
+
+- **[cvt](#ZH-CN_TOPIC_0000002738208448)**
 
 ##### 概念说明<a id="ZH-CN_TOPIC_0000002235267117"></a>
 
-KUPL矩阵编程模块对外提供了Tensor概念及基于Tensor对象的一系列操作行为，从而便于用户在鲲鹏硬件平台上快速使能发挥Matrix computation能力加速矩阵乘相关算子。具体操作行为包含针对Tensor对象的取下标、相加、标量乘等operator操作，除此之外还有基于Tensor对象的KUPL MMA和Copy操作，其中MMA实现了D=A*B+C形式的矩阵乘kernel能力，Copy实现了不同内存空间排布的矩阵之间快速转置或者预取的能力。
+KUPL矩阵编程模块对外提供了Tensor概念及基于Tensor对象的一系列操作行为，从而便于用户在鲲鹏硬件平台上快速使能发挥Matrix computation能力加速矩阵乘相关算子。具体操作行为包含针对Tensor对象的取下标、相加、标量乘等operator操作，除此之外还有基于Tensor对象的KUPL MMA和Copy操作，其中MMA实现了D=A*B+C形式的矩阵乘kernel能力，Copy实现了不同内存空间排布的矩阵之间快速转置或者预取的能力。针对一维寄存器类型Tensor（VectorEngine），KUPL还提供了标量广播赋值、逐元素算术运算（加、减、乘、除）、min/max取值以及精度转换（cvt）等操作能力，便于用户在一维寄存器张量上快速实现element-wise计算。
 
 KUPL矩阵编程模块相关概念如下：
 
@@ -7015,7 +7023,39 @@ class Tensor;
 |tensorC|Tensor|Tensor标量乘操作的相乘结果输出C矩阵，其中B/C矩阵拥有相同的Layout排布|输出|
 
 
-**示例<a id="section161681327132611"></a>**
+四、一维寄存器Tensor对象标量广播赋值能力：tensor = A
+
+**表 5**  类成员函数Tensor operator=输入输出定义
+
+|参数名|类型|描述|输入/输出|
+|--|--|--|--|
+|A|dtype|需要广播赋值给当前一维寄存器Tensor的标量元素，当前支持float与bfloat16精度|输入|
+|tensor|Tensor|赋值结果输出，即一维寄存器Tensor中所有元素均被设置为标量A|输出|
+
+
+五、一维寄存器Tensor对象逐元素算术运算能力：tensorC = tensorA + tensorB（减法、乘法、除法运算同理）
+
+**表 6**  类成员函数Tensor operator+输入输出定义
+
+|参数名|类型|描述|输入/输出|
+|--|--|--|--|
+|tensorA|Tensor|逐元素算术运算的左操作数一维寄存器Tensor，当前仅支持float精度|输入|
+|tensorB|Tensor|逐元素算术运算的右操作数一维寄存器Tensor|输入|
+|tensorC|Tensor|逐元素算术运算的结果输出Tensor|输出|
+
+
+六、一维寄存器Tensor对象与标量算术运算能力：tensorC = tensorA + A（减法、乘法、除法运算同理）
+
+**表 7**  类成员函数Tensor operator+输入输出定义
+
+|参数名|类型|描述|输入/输出|
+|--|--|--|--|
+|tensorA|Tensor|与标量进行算术运算的一维寄存器Tensor，当前仅支持float精度|输入|
+|A|dtype|与一维寄存器Tensor进行算术运算的标量元素|输入|
+|tensorC|Tensor|算术运算的结果输出Tensor|输出|
+
+
+**示例1<a id="section161681327132611"></a>**
 
 ```cpp
 #include "stdlib.h"
@@ -7063,6 +7103,52 @@ int main()
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
 >上述示例演示了基于32\*16\*512_F64F64F64矩阵形状的mma流程，其中通过make_tensor创建矩阵对象tensor，作为后续mma/store接口参数。
+
+**示例2<a id="section183418483621"></a>**
+
+```cpp
+#include "stdlib.h"
+#include "kupl_mma.h"
+using namespace kupl::tensor;
+
+int main()
+{
+    const int N = 16;
+    float data_a[N];
+    float data_b[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(i * 2 + 1);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto b = make_tensor(data_b, layout);
+    auto c = make_tensor(data_c, layout);
+
+    // 将内存张量加载至一维寄存器张量
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // 逐元素算术运算：先相加再乘以标量
+    auto c_vec = a_vec + b_vec;
+    c_vec = c_vec * 2.0f;
+
+    // 标量广播赋值
+    auto d_vec = make_tensor<float>(layout);
+    d_vec = 1.0f;
+
+    // 写回内存张量
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, c_vec);
+    return 0;
+}
+```
+
+>![](public_sys-resources/icon-note.gif) **说明：**<br>
+>上述示例演示了一维寄存器张量（VectorEngine）的加载、逐元素算术运算、标量广播赋值及写回内存张量的流程。
 
 ##### make_coord<a id="ZH-CN_TOPIC_0000002235386969"></a>
 
@@ -7597,7 +7683,7 @@ TiledCopy<CopyAtom, Shape> make_tiled_copy( CopyAtom copy_atom, Shape atom_shape
 
 |参数名|类型|描述|输入/输出|
 |--|--|--|--|
-|copy_atom|CopyAtom，Ops<枚举copy_atom_t>|copy原子策略，当前copy_atom_t可设置为：<ul><li>KP36_32x1_F64_TRANS_RM2CM，表示转置原子尺寸为32 * 1、转置精度为float64的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<shape_n，1>；目的矩阵的排布为列主序，步幅可以描述为Stride<1，32>。约束：对于该原子方法，shape_n % 8 = 0</li><li>KP36_1x16_F64_TRANS_CM2RM，表示转置原子尺寸为1 * 16、转置精度为float64的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，shape_m>；目的矩阵的排布为行主序，步幅可以描述为Stride<16，1>。约束：对于该原子方法，shape_m % 8 = 0</li><li>KP36_16x2_BF16_TRANS_RM2ZZ，表示转置原子尺寸为16 * 2、转置精度为bfloat16的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<2 * shape_n，1>；目的矩阵的排布为ZZ峰形，步幅可以描述为Stride<2，Stride<1, 32>>。约束：对于该原子方法，shape_n % 16 = 0</li><li>KP36_2x64_BF16_TRANS_CM2NN，表示转置原子尺寸为2 * 64、转置精度为bfloat16的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，2 * shape_m>；目的矩阵的排布为NN峰形，步幅可以描述为Stride<Stride<1, 128>, 2>。约束：对于该原子方法，shape_m % 16 = 0</li><li>KP36_16x1_BF16_TRANS_RM2CM，表示转置原子尺寸为16 * 1、转置精度为bfloat16的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<shape_n，1>；目的矩阵的排布为列主序，步幅可以描述为Stride<1，16></li><li>KP36_1x64_BF16_TRANS_CM2RM，表示转置原子尺寸为1 * 64、转置精度为bfloat16的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，shape_m>；目的矩阵的排布为行主序，步幅可以描述为Stride<64，1></li><li>KP36_16x4_INT8_TRANS_RM2ZZ，表示转置原子尺寸为16 * 4、转置精度为int8的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<4 * shape_n，1>；目的矩阵的排布为ZZ峰形，步幅可以描述为Stride<4，Stride<1, 64>>。约束：对于该原子方法，shape_n % 16 = 0</li><li>KP36_4x64_INT8_TRANS_CM2NN，表示转置原子尺寸为4 * 64、转置精度为int8的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，4 * shape_m>；目的矩阵的排布为NN峰形，步幅可以描述为Stride<Stride<1, 256>, 4>。约束：对于该原子方法，shape_m % 16 = 0</li><li>KP36_32x4_INT8_TRANS_RM2ZZ，表示转置原子尺寸为32 * 4、转置精度为int8的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<4 * shape_n，1>；目的矩阵的排布为ZZ峰形，步幅可以描述为Stride<4，Stride<1, 128>>。约束：对于该原子方法，shape_n % 16 = 0</li><li>KP36_4x32_INT8_TRANS_CM2NN，表示转置原子尺寸为4 * 32、转置精度为int8的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，4 * shape_m>；目的矩阵的排布为NN峰形，步幅可以描述为Stride<Stride<1, 128>, 4>。约束：对于该原子方法，shape_m % 16 = 0</li><li>KP36_PREFETCH_L1STRM，表示针对tensor对象的L1 cache预取操作，且数据很快就会被使用，但通常只用一次。鲲鹏CPU中一次预取指令会处理64字节的内存，因此对于不同的精度tensor对象，对应不同的layout，例如针对double精度而言，处理形状为Shape<8>，处理步幅为Stride<1>；而针对bfloat16精度而言，处理形状为Shape<32>，处理步幅为Stride<1>。约束：对于该原子方式，atom shape_m无法扩展，始终为1</li><li>KP36_PREFETCH_L1KEEP，表示针对tensor对象的L1 cache预取操作，且数据接下来会被反复读取或修改。鲲鹏CPU中一次预取指令会处理64字节的内存，因此对于不同的精度tensor对象，对应不同的layout，例如针对double精度而言，处理形状为Shape<8>，处理步幅为Stride<1>；而针对bfloat16精度而言，处理形状为Shape<32>，处理步幅为Stride<1>。约束：对于该原子方式，atom shape_m无法扩展，始终为1</li><li>KP36_PREFETCH_L2STRM，表示针对tensor对象的L2 cache预取操作，且数据很快就会被使用，但通常只用一次。鲲鹏CPU中一次预取指令会处理64字节的内存，因此对于不同的精度tensor对象，对应不同的layout，例如针对double精度而言，处理形状为Shape<8>，处理步幅为Stride<1>；而针对bfloat16精度而言，处理形状为Shape<32>，处理步幅为Stride<1>。约束：对于该原子方式，atom shape_m无法扩展，始终为1</li><li>KP36_PREFETCH_L2KEEP，表示针对tensor对象的L2 cache预取操作，且数据接下来会被反复读取或修改。鲲鹏CPU中一次预取指令会处理64字节的内存，因此对于不同的精度tensor对象，对应不同的layout，例如针对double精度而言，处理形状为Shape<8>，处理步幅为Stride<1>；而针对bfloat16精度而言，处理形状为Shape<32>，处理步幅为Stride<1>。约束：对于该原子方式，atom shape_m无法扩展，始终为1</li><li>KP36_32x16_F64_STORE，表示写回尺寸为32 * 16，其中写回矩阵为行主序、计算步长为Stride<16, 1>，写回精度为float64的store原子行为</li><li>KP36_16x64_F32_STORE，表示写回尺寸为16 * 64，其中写回矩阵为行主序、计算步长为Stride<64, 1>，写回精度为float32的store原子行为</li><li>KP36_16x64_INT32_STORE，表示写回尺寸为16 * 64，其中写回矩阵为行主序、计算步长为Stride<64, 1>，写回精度为int32的store原子行为</li><li>KP36_32x32_INT32_STORE，表示写回尺寸为32 * 32，其中写回矩阵为行主序、计算步长为Stride<32, 1>，写回精度为int32的store原子行为</li><li>KP36_32x32_F32_STORE，表示写回尺寸为32 * 32，其中写回矩阵为行主序、计算步长为Stride<Stride<1, 1024>, 16>，写回精度为float32的store原子行为</li><li>KP36_VEC_LOAD，表示把数据从内存张量加载到一维寄存器张量</li><li>KP36_VEC_STORE，表示把数据从一维寄存器张量写回内存张量</li><li>KP36_VEC_COPY_HOR，表述把数据以按行形式在二维寄存器张量与一维寄存器张量之间进行拷贝</li></ul>|输入|
+|copy_atom|CopyAtom，Ops<枚举copy_atom_t>|copy原子策略，当前copy_atom_t可设置为：<ul><li>KP36_32x1_F64_TRANS_RM2CM，表示转置原子尺寸为32 * 1、转置精度为float64的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<shape_n，1>；目的矩阵的排布为列主序，步幅可以描述为Stride<1，32>。约束：对于该原子方法，shape_n % 8 = 0</li><li>KP36_1x16_F64_TRANS_CM2RM，表示转置原子尺寸为1 * 16、转置精度为float64的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，shape_m>；目的矩阵的排布为行主序，步幅可以描述为Stride<16，1>。约束：对于该原子方法，shape_m % 8 = 0</li><li>KP36_16x2_BF16_TRANS_RM2ZZ，表示转置原子尺寸为16 * 2、转置精度为bfloat16的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<2 * shape_n，1>；目的矩阵的排布为ZZ峰形，步幅可以描述为Stride<2，Stride<1, 32>>。约束：对于该原子方法，shape_n % 16 = 0</li><li>KP36_2x64_BF16_TRANS_CM2NN，表示转置原子尺寸为2 * 64、转置精度为bfloat16的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，2 * shape_m>；目的矩阵的排布为NN峰形，步幅可以描述为Stride<Stride<1, 128>, 2>。约束：对于该原子方法，shape_m % 16 = 0</li><li>KP36_16x1_BF16_TRANS_RM2CM，表示转置原子尺寸为16 * 1、转置精度为bfloat16的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<shape_n，1>；目的矩阵的排布为列主序，步幅可以描述为Stride<1，16></li><li>KP36_1x64_BF16_TRANS_CM2RM，表示转置原子尺寸为1 * 64、转置精度为bfloat16的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，shape_m>；目的矩阵的排布为行主序，步幅可以描述为Stride<64，1></li><li>KP36_16x4_INT8_TRANS_RM2ZZ，表示转置原子尺寸为16 * 4、转置精度为int8的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<4 * shape_n，1>；目的矩阵的排布为ZZ峰形，步幅可以描述为Stride<4，Stride<1, 64>>。约束：对于该原子方法，shape_n % 16 = 0</li><li>KP36_4x64_INT8_TRANS_CM2NN，表示转置原子尺寸为4 * 64、转置精度为int8的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，4 * shape_m>；目的矩阵的排布为NN峰形，步幅可以描述为Stride<Stride<1, 256>, 4>。约束：对于该原子方法，shape_m % 16 = 0</li><li>KP36_32x4_INT8_TRANS_RM2ZZ，表示转置原子尺寸为32 * 4、转置精度为int8的copy原子行为，其中源矩阵的排布为行主序，步幅可以描述为Stride<4 * shape_n，1>；目的矩阵的排布为ZZ峰形，步幅可以描述为Stride<4，Stride<1, 128>>。约束：对于该原子方法，shape_n % 16 = 0</li><li>KP36_4x32_INT8_TRANS_CM2NN，表示转置原子尺寸为4 * 32、转置精度为int8的copy原子行为，其中源矩阵的排布为列主序，步幅可以描述为Stride<1，4 * shape_m>；目的矩阵的排布为NN峰形，步幅可以描述为Stride<Stride<1, 128>, 4>。约束：对于该原子方法，shape_m % 16 = 0</li><li>KP36_PREFETCH_L1STRM，表示针对tensor对象的L1 cache预取操作，且数据很快就会被使用，但通常只用一次。鲲鹏CPU中一次预取指令会处理64字节的内存，因此对于不同的精度tensor对象，对应不同的layout，例如针对double精度而言，处理形状为Shape<8>，处理步幅为Stride<1>；而针对bfloat16精度而言，处理形状为Shape<32>，处理步幅为Stride<1>。约束：对于该原子方式，atom shape_m无法扩展，始终为1</li><li>KP36_PREFETCH_L1KEEP，表示针对tensor对象的L1 cache预取操作，且数据接下来会被反复读取或修改。鲲鹏CPU中一次预取指令会处理64字节的内存，因此对于不同的精度tensor对象，对应不同的layout，例如针对double精度而言，处理形状为Shape<8>，处理步幅为Stride<1>；而针对bfloat16精度而言，处理形状为Shape<32>，处理步幅为Stride<1>。约束：对于该原子方式，atom shape_m无法扩展，始终为1</li><li>KP36_PREFETCH_L2STRM，表示针对tensor对象的L2 cache预取操作，且数据很快就会被使用，但通常只用一次。鲲鹏CPU中一次预取指令会处理64字节的内存，因此对于不同的精度tensor对象，对应不同的layout，例如针对double精度而言，处理形状为Shape<8>，处理步幅为Stride<1>；而针对bfloat16精度而言，处理形状为Shape<32>，处理步幅为Stride<1>。约束：对于该原子方式，atom shape_m无法扩展，始终为1</li><li>KP36_PREFETCH_L2KEEP，表示针对tensor对象的L2 cache预取操作，且数据接下来会被反复读取或修改。鲲鹏CPU中一次预取指令会处理64字节的内存，因此对于不同的精度tensor对象，对应不同的layout，例如针对double精度而言，处理形状为Shape<8>，处理步幅为Stride<1>；而针对bfloat16精度而言，处理形状为Shape<32>，处理步幅为Stride<1>。约束：对于该原子方式，atom shape_m无法扩展，始终为1</li><li>KP36_32x16_F64_STORE，表示写回尺寸为32 * 16，其中写回矩阵为行主序、计算步长为Stride<16, 1>，写回精度为float64的store原子行为</li><li>KP36_16x64_F32_STORE，表示写回尺寸为16 * 64，其中写回矩阵为行主序、计算步长为Stride<64, 1>，写回精度为float32的store原子行为</li><li>KP36_16x64_INT32_STORE，表示写回尺寸为16 * 64，其中写回矩阵为行主序、计算步长为Stride<64, 1>，写回精度为int32的store原子行为</li><li>KP36_32x32_INT32_STORE，表示写回尺寸为32 * 32，其中写回矩阵为行主序、计算步长为Stride<32, 1>，写回精度为int32的store原子行为</li><li>KP36_32x32_F32_STORE，表示写回尺寸为32 * 32，其中写回矩阵为行主序、计算步长为Stride<Stride<1, 1024>, 16>，写回精度为float32的store原子行为</li><li>KP36_VEC_LOAD，表示把数据从内存张量加载到一维寄存器张量</li><li>KP36_VEC_STORE，表示把数据从一维寄存器张量写回内存张量</li><li>KP36_VEC_STORE_NT，表示把一维寄存器张量以非临时存储（non-temporal store）方式写回内存张量，即数据直接写入内存而不占用缓存，适用于写回后不再立即复用的场景；当前支持float与bfloat16精度</li><li>KP36_VEC_COPY_HOR，表述把数据以按行形式在二维寄存器张量与一维寄存器张量之间进行拷贝</li></ul>|输入|
 |atom_shape|Shape|原子策略在各维度执行次数，针对转置原子方法而言包含m和n两个数值，针对预取原子方法而言包含m一个数值prefetch, store, vector 类型的 copy_atom_t 使用 shape<1>作为占位|输入|
 
 
@@ -8087,6 +8173,75 @@ int main()
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
 >示例展示把二维寄存器张量的一行读到一维寄存器张量，做 element-wise 运算（exp2f），再写回二维寄存器张量。
 
+##### copy(StoreNT)<a id="ZH-CN_TOPIC_0000002735593694"></a>
+
+StoreNT类型的copy接口表示把一维寄存器张量以非临时存储（non-temporal store）方式写回内存张量的操作。
+
+非临时存储将数据直接写入内存而不占用缓存，适用于数据写回后不再立即复用的场景，可避免缓存污染、提升大规模写回的带宽利用率。当前支持float与bfloat16精度。
+
+**接口定义<a id="section42571622152515"></a>**
+
+template <typename TiledCopy, typename EngineD, typename LayoutD, typename EngineS, typename LayoutS>
+
+void copy(TiledCopy tiled_copy, Tensor<EngineD, LayoutD> &dst, Tensor<EngineS, LayoutS> src) KUPL_MMA_INOUT;
+
+**模板参数<a id="section3135164512513"></a>**
+
+**表 1**  模板参数定义
+
+|参数名|类型|描述|
+|--|--|--|
+|TiledCopy|typename|copy tile策略类型。|
+|EngineD, EngineS|typename|dst,src引擎类型，其中src为一维寄存器类型（VectorEngine），dst为内存类型（PtrEngine）。|
+|LayoutD, LayoutS|typename|dst,src布局类型。|
+
+
+**参数<a id="section34151935162517"></a>**
+
+**表 2**  参数定义
+
+|参数名|类型|描述|输入/输出|
+|--|--|--|--|
+|tiled_copy|TiledCopy|copy tile策略|输入|
+|dst|Tensor<EngineD, LayoutD>|目标内存张量|输出|
+|src|Tensor<EngineS, LayoutS>|源一维寄存器张量|输入|
+
+
+**返回值<a id="section830552192613"></a>**
+
+返回 void
+
+**示例<a id="section161681327132611"></a>**
+
+```cpp
+#include "stdlib.h"
+#include "kupl_mma.h"
+using namespace kupl::tensor;
+
+int main()
+{
+    const int N = 16;
+    float data_a[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    // 以非临时存储方式写回内存张量
+    copy(TiledCopy<Ops<KP36_VEC_STORE_NT>, Shape<Int<1>>>{}, c, a_vec);
+    return 0;
+}
+```
+
+>![](public_sys-resources/icon-note.gif) **说明：**<br>
+>上述示例演示了把float类型数据从内存张量加载至一维寄存器张量，再以非临时存储方式写回另一内存张量的过程。
+
 ##### exp2f<a id="ZH-CN_TOPIC_0000002738208418"></a>
 
 对张量对象的每个元素计算 2^x，当前只支持float类型的一维寄存器类型张量。
@@ -8152,6 +8307,258 @@ int main()
 
 >![](public_sys-resources/icon-note.gif) **说明：**<br>
 >上述示例演示了把float类型数据从内存张量拷贝至一维寄存器张量，然后进行exp2f计算，然后再拷贝回内存张量的过程。
+
+##### min<a id="ZH-CN_TOPIC_0000002738208428"></a>
+
+对一维寄存器张量对象逐元素取较小值，当前只支持float类型的一维寄存器类型张量。
+
+支持张量与张量、张量与标量两种形式。
+
+**接口定义<a id="section42571622152515"></a>**
+
+张量与张量形式：
+
+template <typename Engine, typename Layout>
+
+Tensor<Engine, Layout> min(Tensor<Engine, Layout> a, Tensor<Engine, Layout> b);
+
+张量与标量形式：
+
+template <typename Engine, typename Layout>
+
+Tensor<Engine, Layout> min(Tensor<Engine, Layout> a, typename Engine::element_type scalar);
+
+**模板参数<a id="section3135164512513"></a>**
+
+**表 1**  模板参数定义
+
+|参数名|类型|描述|
+|--|--|--|
+|Engine|typename|引擎类型，需为一维寄存器类型（VectorEngine）。|
+|Layout|typename|布局类型|
+
+
+**参数<a id="section34151935162517"></a>**
+
+**表 2**  参数定义
+
+|参数名|类型|描述|输入/输出|
+|--|--|--|--|
+|a|Tensor|参与逐元素取较小值的一维寄存器张量|输入|
+|b|Tensor|参与逐元素取较小值的一维寄存器张量|输入|
+|scalar|typename Engine::element_type|参与逐元素取较小值的标量元素|输入|
+
+
+**返回值<a id="section830552192613"></a>**
+
+返回逐元素取较小值后的Tensor<Engine, Layout>对象
+
+**示例<a id="section161681327132611"></a>**
+
+```cpp
+#include "stdlib.h"
+#include "kupl_mma.h"
+using namespace kupl::tensor;
+
+int main()
+{
+    const int N = 16;
+    float data_a[N];
+    float data_b[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(N - i);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto b = make_tensor(data_b, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // 张量与张量形式
+    a_vec = min(a_vec, b_vec);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+
+    // 张量与标量形式
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = min(a_vec, 8.0f);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    return 0;
+}
+```
+
+>![](public_sys-resources/icon-note.gif) **说明：**<br>
+>上述示例演示了分别以张量与张量、张量与标量两种形式对一维寄存器张量逐元素取较小值的流程。
+
+##### max<a id="ZH-CN_TOPIC_0000002738208438"></a>
+
+对一维寄存器张量对象逐元素取较大值，当前只支持float类型的一维寄存器类型张量。
+
+支持张量与张量、张量与标量两种形式。
+
+**接口定义<a id="section42571622152515"></a>**
+
+张量与张量形式：
+
+template <typename Engine, typename Layout>
+
+Tensor<Engine, Layout> max(Tensor<Engine, Layout> a, Tensor<Engine, Layout> b);
+
+张量与标量形式：
+
+template <typename Engine, typename Layout>
+
+Tensor<Engine, Layout> max(Tensor<Engine, Layout> a, typename Engine::element_type scalar);
+
+**模板参数<a id="section3135164512513"></a>**
+
+**表 1**  模板参数定义
+
+|参数名|类型|描述|
+|--|--|--|
+|Engine|typename|引擎类型，需为一维寄存器类型（VectorEngine）。|
+|Layout|typename|布局类型|
+
+
+**参数<a id="section34151935162517"></a>**
+
+**表 2**  参数定义
+
+|参数名|类型|描述|输入/输出|
+|--|--|--|--|
+|a|Tensor|参与逐元素取较大值的一维寄存器张量|输入|
+|b|Tensor|参与逐元素取较大值的一维寄存器张量|输入|
+|scalar|typename Engine::element_type|参与逐元素取较大值的标量元素|输入|
+
+
+**返回值<a id="section830552192613"></a>**
+
+返回逐元素取较大值后的Tensor<Engine, Layout>对象
+
+**示例<a id="section161681327132611"></a>**
+
+```cpp
+#include "stdlib.h"
+#include "kupl_mma.h"
+using namespace kupl::tensor;
+
+int main()
+{
+    const int N = 16;
+    float data_a[N];
+    float data_b[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(N - i);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto b = make_tensor(data_b, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // 张量与张量形式
+    a_vec = max(a_vec, b_vec);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+
+    // 张量与标量形式
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = max(a_vec, 8.0f);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    return 0;
+}
+```
+
+>![](public_sys-resources/icon-note.gif) **说明：**<br>
+>上述示例演示了分别以张量与张量、张量与标量两种形式对一维寄存器张量逐元素取较大值的流程。
+
+##### cvt<a id="ZH-CN_TOPIC_0000002738208448"></a>
+
+将两个float类型的一维寄存器张量转换为bfloat16类型的一维寄存器张量，即实现float32到bfloat16的精度转换。输入的两个float类型张量各包含16个元素，输出bfloat16类型张量包含32个元素。
+
+**接口定义<a id="section42571622152515"></a>**
+
+template <typename dtypeD, typename EngineS, typename LayoutS>
+
+auto cvt(Tensor<EngineS, LayoutS> src0, Tensor<EngineS, LayoutS> src1);
+
+**模板参数<a id="section3135164512513"></a>**
+
+**表 1**  模板参数定义
+
+|参数名|类型|描述|
+|--|--|--|
+|dtypeD|typename|目的精度类型，当前仅支持bfloat16_t。|
+|EngineS|typename|源引擎类型，需为一维寄存器类型（VectorEngine）。|
+|LayoutS|typename|源布局类型|
+
+
+**参数<a id="section34151935162517"></a>**
+
+**表 2**  参数定义
+
+|参数名|类型|描述|输入/输出|
+|--|--|--|--|
+|src0|Tensor|参与精度转换的第一个源一维寄存器张量（float）|输入|
+|src1|Tensor|参与精度转换的第二个源一维寄存器张量（float）|输入|
+
+
+**返回值<a id="section830552192613"></a>**
+
+返回精度转换后的bfloat16一维寄存器Tensor对象
+
+**示例<a id="section161681327132611"></a>**
+
+```cpp
+#include "stdlib.h"
+#include "arm_bf16.h"
+#include "kupl_mma.h"
+using namespace kupl::tensor;
+
+int main()
+{
+    const int N_f32 = 16;
+    const int N_bf16 = 32;
+    float data_a[N_f32];
+    float data_b[N_f32];
+    bfloat16_t data_c[N_bf16];
+    for (int i = 0; i < N_f32; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(i + 10);
+    }
+
+    auto layout_f32 = make_layout(make_shape(Int<N_f32>{}), make_stride(Int<1>{}));
+    auto layout_bf16 = make_layout(make_shape(Int<N_bf16>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout_f32);
+    auto b = make_tensor(data_b, layout_f32);
+    auto c = make_tensor(data_c, layout_bf16);
+
+    auto a_vec = make_tensor<float>(layout_f32);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout_f32);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // float32 -> bfloat16 精度转换
+    auto result = cvt<bfloat16_t>(a_vec, b_vec);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, result);
+    return 0;
+}
+```
+
+>![](public_sys-resources/icon-note.gif) **说明：**<br>
+>上述示例演示了把两个float类型的一维寄存器张量通过cvt函数转换为bfloat16类型一维寄存器张量并写回内存张量的过程。
 
 #### 公共函数<a id="ZH-CN_TOPIC_0000002045421225"></a>
 

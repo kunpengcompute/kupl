@@ -12,6 +12,7 @@
 
 #include <arm_bf16.h>
 #include <cstdint>
+#include <stdexcept>
 #include "gtest/gtest.h"
 #include "kupl_mma.h"
 using namespace kupl::tensor;
@@ -903,4 +904,48 @@ TEST(test_copy, KP36_VEC_COPY_HOR)
         }
     }
     ASSERT_TRUE(res);
+}
+
+// 负向测试： 转置时 N 维度不满足对齐（AtomShapeN=1，KP36_32x1_F64_TRANS_RM2CM 要求 N 为 8 的倍数），
+// 触发 TiledCopy::call 中的 throw std::invalid_argument 分支
+test_kupl_za
+void KP36_32x1_F64_TRANS_RM2CM_alignment_kernel(double *dst, double *src) test_kupl_streaming
+{
+    constexpr int M = 32;
+    constexpr int K = 512;
+    auto shape_d = make_shape(Int<M>{}, Int<K>{});
+    auto shape_s = make_shape(Int<M>{}, Int<K>{});
+
+    auto stride_d = make_stride(Int<1>{}, Int<32>{});
+    auto stride_s = make_stride(Int<K>{}, Int<1>{});
+
+    auto layout_d = make_layout(shape_d, stride_d);
+    auto layout_s = make_layout(shape_s, stride_s);
+
+    // AtomShapeN=1，使得 (N * AtomShapeN) % AlignmentN = 1 % 8 != 0，触发对齐检查 throw
+    auto atom_copy_shape = make_shape(Int<1>{}, Int<1>{});
+    auto tiled_copy = make_tiled_copy(Ops<KP36_32x1_F64_TRANS_RM2CM>{}, atom_copy_shape);
+
+    auto tensor_d = make_tensor(dst, layout_d);
+    auto tensor_s = make_tensor(src, layout_s);
+    copy(tiled_copy, tensor_d, tensor_s);
+}
+
+TEST(test_copy, KP36_32x1_F64_TRANS_RM2CM_alignment_throw)
+{
+    constexpr int M = 32;
+    constexpr int K = 512;
+    double *dst = static_cast<double *>(malloc(sizeof(double) * M * K));
+    double *src = static_cast<double *>(malloc(sizeof(double) * M * K));
+    for (int m = 0; m < M; m++) {
+        for (int k = 0; k < K; k++) {
+            dst[m * K + k] = 0.0;
+            src[m * K + k] = 1.0 * m * K + k;
+        }
+    }
+
+    EXPECT_THROW(KP36_32x1_F64_TRANS_RM2CM_alignment_kernel(dst, src), std::invalid_argument);
+
+    free(src);
+    free(dst);
 }

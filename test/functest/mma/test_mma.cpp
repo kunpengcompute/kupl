@@ -661,3 +661,204 @@ TEST(test_mma, KP36_32x32x2_BF16BF16F32)
     free(data_b);
     free(data_c);
 }
+
+// B 采用 K 主序 row-major 布局（stride=Stride<Int<576>,Int<1>>），命中 call_mma 的 2-arg 特化 #4
+test_kupl_za
+void KP36_32x32x2_BF16BF16F32_KMajB_kernel(bfloat16_t *pack_data_a, bfloat16_t *data_b, float *data_d,
+                                           int size_k) test_kupl_streaming
+{
+    auto shape_a = make_shape(Int<32>{}, make_shape(Int<2>{}, Int<1>{}));
+    auto shape_b = make_shape(Int<576>{}, Int<32>{});
+    auto shape_d = make_shape(make_shape(Int<16>{}, Int<2>{}), Int<32>{});
+
+    auto stride_a = make_stride(Int<2>{}, make_stride(Int<1>{}, Int<64>{}));
+    auto stride_b = make_stride(Int<576>{}, Int<1>{});
+    auto stride_d = make_stride(make_stride(Int<1>{}, Int<1024>{}), Int<16>{});
+
+    auto layout_a = make_layout(shape_a, stride_a);
+    auto layout_b = make_layout(shape_b, stride_b);
+    auto layout_d = make_layout(shape_d, stride_d);
+
+    auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<1>{});
+    auto tiled_mma = make_tiled_mma(Ops<KP36_32x32x2_BF16BF16F32>{}, atom_mma_shape);
+    auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
+    auto tiled_store = make_tiled_copy(Ops<KP36_32x32_F32_STORE>{}, atom_store_shape);
+
+    auto tensor_d = make_tensor(data_d, layout_d);
+
+    auto shape_za = make_shape(Int<32>{}, Int<32>{});
+    auto stride_za = make_stride(Int<32>{}, Int<1>{});
+    auto layout_za = make_layout(shape_za, stride_za);
+    auto za_d = make_tensor<decltype(tensor_d)::element_type>(layout_za);
+    clear(za_d);
+    for (int kt = 0; kt < size_k / 2; ++kt) {
+        auto tensor_a = make_tensor(pack_data_a + kt * 64, layout_a);
+        auto tensor_b = make_tensor(data_b + kt * 2 * 576, layout_b);
+        mma(tiled_mma, za_d, tensor_a, tensor_b);
+    }
+    copy(tiled_store, tensor_d, za_d);
+}
+
+TEST(test_mma, KP36_32x32x2_BF16BF16F32_KMajB)
+{
+    const int M = 32;
+    const int N = 32;
+    const int K = 576;
+    const int VER_STORE_LOWER_HALF = M / 2 * N;
+    bfloat16_t *data_a = (bfloat16_t *)malloc(sizeof(bfloat16_t) * M * K);
+    // 特化 #4 的 B 布局为 K 主序且跨 K 值步长为 K（data_b[k*K + n]），
+    // 需分配覆盖最大偏移 (K-1)*K + N 的缓冲区。
+    bfloat16_t *data_b = (bfloat16_t *)malloc(sizeof(bfloat16_t) * K * K);
+    float *data_c = (float *)malloc(sizeof(float) * (M * N + VER_STORE_LOWER_HALF));
+
+    bfloat16_t *pack_data_a = (bfloat16_t *)malloc(sizeof(bfloat16_t) * M * K);
+
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < K; j++) {
+            if (i == j) {
+                data_a[i * K + j] = float_to_bf16_arm_mma(1.0);
+            } else {
+                data_a[i * K + j] = float_to_bf16_arm_mma(0.0);
+            }
+        }
+    }
+    for (int i = 0; i < K; i++) {
+        for (int j = 0; j < K; j++) {
+            data_b[i * K + j] = float_to_bf16_arm_mma(1.0 * ((i * K + j) % 100));
+        }
+    }
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+            data_c[i * N + j] = 0.0;
+        }
+    }
+
+    for (int i = 0; i < K / 2; i++) {
+        for (int j = 0; j < M; j++) {
+            pack_data_a[i * M * 2 + j * 2] = data_a[j * K + 2 * i];
+            pack_data_a[i * M * 2 + j * 2 + 1] = data_a[j * K + 2 * i + 1];
+        }
+    }
+
+    KP36_32x32x2_BF16BF16F32_KMajB_kernel(pack_data_a, data_b, data_c, K);
+
+    bool res = true;
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+            int base = (i < 16 ? 0 : 1024) + (j < 16 ? 0 : 256);
+            int idx = base + (j % 16) * 16 + (i % 16);
+            if (data_c[idx] != (i * K + j) % 100) {
+                res = false;
+            }
+        }
+    }
+    ASSERT_TRUE(res);
+
+    free(pack_data_a);
+
+    free(data_a);
+    free(data_b);
+    free(data_c);
+}
+
+// store 目标使用 stride=Stride<Stride<Int<1>,Int<2048>>,Int<16>>，命中 call_copy 的 F32 STORE 2048 变体
+test_kupl_za
+void KP36_32x32x2_BF16BF16F32_Store2048_kernel(bfloat16_t *pack_data_a, bfloat16_t *pack_data_b, float *data_d,
+                                               int size_k) test_kupl_streaming
+{
+    auto shape_a = make_shape(Int<32>{}, make_shape(Int<2>{}, Int<1>{}));
+    auto shape_b = make_shape(make_shape(Int<2>{}, Int<1>{}), Int<32>{});
+    auto shape_d = make_shape(make_shape(Int<16>{}, Int<2>{}), Int<32>{});
+
+    auto stride_a = make_stride(Int<2>{}, make_stride(Int<1>{}, Int<64>{}));
+    auto stride_b = make_stride(make_stride(Int<1>{}, Int<64>{}), Int<2>{});
+    auto stride_d = make_stride(make_stride(Int<1>{}, Int<2048>{}), Int<16>{});
+
+    auto layout_a = make_layout(shape_a, stride_a);
+    auto layout_b = make_layout(shape_b, stride_b);
+    auto layout_d = make_layout(shape_d, stride_d);
+
+    auto atom_mma_shape = make_shape(Int<1>{}, Int<1>{}, Int<1>{});
+    auto tiled_mma = make_tiled_mma(Ops<KP36_32x32x2_BF16BF16F32>{}, atom_mma_shape);
+    auto atom_store_shape = make_shape(Int<1>{}, Int<1>{});
+    auto tiled_store = make_tiled_copy(Ops<KP36_32x32_F32_STORE>{}, atom_store_shape);
+
+    auto tensor_d = make_tensor(data_d, layout_d);
+
+    auto shape_za = make_shape(Int<32>{}, Int<32>{});
+    auto stride_za = make_stride(Int<32>{}, Int<1>{});
+    auto layout_za = make_layout(shape_za, stride_za);
+    auto za_d = make_tensor<decltype(tensor_d)::element_type>(layout_za);
+    clear(za_d);
+    for (int kt = 0; kt < size_k / 2; ++kt) {
+        auto tensor_a = make_tensor(pack_data_a + kt * 64, layout_a);
+        auto tensor_b = make_tensor(pack_data_b + kt * 64, layout_b);
+        mma(tiled_mma, za_d, tensor_a, tensor_b);
+    }
+    copy(tiled_store, tensor_d, za_d);
+}
+
+TEST(test_mma, KP36_32x32x2_BF16BF16F32_Store2048)
+{
+    const int M = 32;
+    const int N = 32;
+    const int K = 576;
+    bfloat16_t *data_a = (bfloat16_t *)malloc(sizeof(bfloat16_t) * M * K);
+    bfloat16_t *data_b = (bfloat16_t *)malloc(sizeof(bfloat16_t) * K * N);
+    float *data_c = (float *)malloc(sizeof(float) * (4 * M * N));
+
+    bfloat16_t *pack_data_a = (bfloat16_t *)malloc(sizeof(bfloat16_t) * M * K);
+    bfloat16_t *pack_data_b = (bfloat16_t *)malloc(sizeof(bfloat16_t) * K * N);
+
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < K; j++) {
+            if (i == j) {
+                data_a[i * K + j] = float_to_bf16_arm_mma(1.0);
+            } else {
+                data_a[i * K + j] = float_to_bf16_arm_mma(0.0);
+            }
+        }
+    }
+    for (int i = 0; i < K; i++) {
+        for (int j = 0; j < N; j++) {
+            data_b[i * N + j] = float_to_bf16_arm_mma(1.0 * ((i * N + j) % 100));
+        }
+    }
+    for (int i = 0; i < 4 * M * N; i++) {
+        data_c[i] = 0.0;
+    }
+
+    for (int i = 0; i < K / 2; i++) {
+        for (int j = 0; j < M; j++) {
+            pack_data_a[i * M * 2 + j * 2] = data_a[j * K + 2 * i];
+            pack_data_a[i * M * 2 + j * 2 + 1] = data_a[j * K + 2 * i + 1];
+        }
+    }
+    for (int i = 0; i < K / 2; i++) {
+        for (int j = 0; j < N; j++) {
+            pack_data_b[i * N * 2 + j * 2] = data_b[(i * 2) * N + j];
+            pack_data_b[i * N * 2 + j * 2 + 1] = data_b[(i * 2 + 1) * N + j];
+        }
+    }
+
+    KP36_32x32x2_BF16BF16F32_Store2048_kernel(pack_data_a, pack_data_b, data_c, K);
+
+    bool res = true;
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < N; j++) {
+            int base = (i < 16 ? 0 : 2048) + (j < 16 ? 0 : 256);
+            int idx = base + (j % 16) * 16 + (i % 16);
+            if (data_c[idx] != (i * N + j) % 100) {
+                res = false;
+            }
+        }
+    }
+    ASSERT_TRUE(res);
+
+    free(pack_data_a);
+    free(pack_data_b);
+
+    free(data_a);
+    free(data_b);
+    free(data_c);
+}

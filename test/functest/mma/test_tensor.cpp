@@ -12,6 +12,7 @@
 
 #include <arm_neon.h>
 #include <arm_bf16.h>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <stdexcept>
@@ -625,4 +626,34 @@ TEST(test_tensor, ptr_engine_valid_ptr_no_throw)
     float data[16] = {0};
     auto layout = make_layout(make_shape(Int<16>{}), make_stride(Int<1>{}));
     EXPECT_NO_THROW(make_tensor(data, layout));
+}
+
+TEST(test_tensor, vec_exp2f_overflow_underflow)
+{
+    const int N = 16;
+    float data_a[N];
+    float data_c[N] = {0};
+
+    for (int i = 0; i < N; i++) {
+        data_a[i] = 0.0f;
+    }
+    data_a[0] = 128.0f;   // 触发溢出 -> INFINITY
+    data_a[1] = -128.0f;  // 触发下溢 -> 0
+    data_a[2] = 2.0f;     // 正常值，验证 svsel 不影响
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = exp2f(a_vec);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+
+    EXPECT_FLOAT_EQ(data_c[0], INFINITY);
+    EXPECT_FLOAT_EQ(data_c[1], 0.0f);
+    EXPECT_NEAR(data_c[2], std::exp2(2.0f), std::abs(std::exp2(2.0f)) * 0.01f);
+    for (int i = 3; i < N; i++) {
+        EXPECT_NEAR(data_c[i], std::exp2(data_a[i]), std::abs(std::exp2(data_a[i])) * 0.01f);
+    }
 }

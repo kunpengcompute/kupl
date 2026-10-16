@@ -86,6 +86,7 @@ function build_test()
         -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}            \
         -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
         -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
+        -DKUPL_PROJ_PATH=${KUPL_PROJ_PATH}              \
         -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
         -DCMAKE_SUPPRESS_REGENERATION=ON
     cmake --build ${build_path} -j --target install
@@ -105,6 +106,7 @@ function build_cida()
         -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}            \
         -DCMAKE_BUILD_TYPE=Debug                        \
         -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
+        -DKUPL_PROJ_PATH=${KUPL_PROJ_PATH}              \
         -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
         -DCMAKE_SUPPRESS_REGENERATION=ON
     cmake --build ${build_path} -j --target install
