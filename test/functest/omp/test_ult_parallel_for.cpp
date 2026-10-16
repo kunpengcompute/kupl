@@ -1180,3 +1180,43 @@ TEST(test_ult_pf, kupl_parallel_for_reduce_static_1d)
 
     kupl_egroup_destroy(eg8);
 }
+
+static void task_barrier_wait(kupl_nd_range_t *nd_range, void *args, int tid, int tnum)
+{
+    (void)nd_range;
+    (void)args;
+    (void)tid;
+    (void)tnum;
+    kupl_egroup_barrier(nullptr);
+}
+
+TEST(test_ult_pf, kupl_parallel_for_egroup_barrier_concurrency_change)
+{
+    kupl_nd_range_t range;
+    KUPL_1D_RANGE_INIT(range, 0, 32);
+
+    int concurrency = kupl_get_num_executors();
+    if (concurrency > 8) {
+        concurrency = 8;
+    }
+
+    kupl_parallel_for_desc_t desc_single = {
+        .field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
+        .range = &range,
+        .egroup = nullptr,
+        .concurrency = 1,
+        .policy = KUPL_LOOP_POLICY_STATIC
+    };
+    int ret = kupl_parallel_for(&desc_single, task_barrier_wait, nullptr);
+    EXPECT_EQ(ret, KUPL_OK);
+
+    kupl_parallel_for_desc_t desc_multi = {
+        .field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
+        .range = &range,
+        .egroup = nullptr,
+        .concurrency = concurrency,
+        .policy = KUPL_LOOP_POLICY_STATIC
+    };
+    ret = kupl_parallel_for(&desc_multi, task_barrier_wait, nullptr);
+    EXPECT_EQ(ret, KUPL_OK);
+}
