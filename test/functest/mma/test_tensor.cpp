@@ -12,6 +12,7 @@
 
 #include <arm_neon.h>
 #include <arm_bf16.h>
+#include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <stdexcept>
@@ -209,6 +210,380 @@ TEST(test_tensor, vec_load_store_bf16)
     }
 }
 
+TEST(test_tensor, vec_storent_f32)
+{
+    const int N = 16;
+    float data_a[N];
+    float data_c[N];
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_c[i] = 0.0f;
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    copy(TiledCopy<Ops<KP36_VEC_STORE_NT>, Shape<Int<1>>>{}, c, a_vec);
+
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], data_a[i]);
+    }
+}
+
+TEST(test_tensor, vec_storent_bf16)
+{
+    const int N = 32;
+    bfloat16_t data_a[N];
+    bfloat16_t data_c[N];
+    for (int i = 0; i < N; i++) {
+        data_a[i] = vcvth_bf16_f32(static_cast<float>(i + 1));
+        data_c[i] = vcvth_bf16_f32(0.0f);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<bfloat16_t>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    copy(TiledCopy<Ops<KP36_VEC_STORE_NT>, Shape<Int<1>>>{}, c, a_vec);
+
+    for (int i = 0; i < N; i++) {
+        float in_val = vcvtah_f32_bf16(data_a[i]);
+        float out_val = vcvtah_f32_bf16(data_c[i]);
+        ASSERT_FLOAT_EQ(in_val, out_val);
+    }
+}
+
+// ===== Dup Tests =====
+
+TEST(test_tensor, vec_dup_f32)
+{
+    const int N = 16;
+    float data_c[N] = {0};
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    a_vec = 1.0f;
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], 1.0f);
+    }
+}
+
+TEST(test_tensor, vec_dup_bf16)
+{
+    const int N = 32;
+    bfloat16_t data_c[N];
+    for (int i = 0; i < N; i++) {
+        data_c[i] = vcvth_bf16_f32(0.0f);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<bfloat16_t>(layout);
+    a_vec = vcvth_bf16_f32(2.0f);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+
+    for (int i = 0; i < N; i++) {
+        float out_val = vcvtah_f32_bf16(data_c[i]);
+        ASSERT_FLOAT_EQ(out_val, 2.0f);
+    }
+}
+
+// ===== Add Tests =====
+
+TEST(test_tensor, vec_add_f32)
+{
+    const int N = 16;
+    float data_a[N];
+    float data_b[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(i * 2 + 1);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto b = make_tensor(data_b, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // operator: vec-vs-vec
+    a_vec = a_vec + b_vec;
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], data_a[i] + data_b[i]);
+    }
+
+    // operator: vec-vs-scalar
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = a_vec + 1.0f;
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], data_a[i] + 1.0f);
+    }
+}
+
+// ===== Sub Tests =====
+
+TEST(test_tensor, vec_sub_f32)
+{
+    const int N = 16;
+    float data_a[N];
+    float data_b[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(i * 2 + 1);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto b = make_tensor(data_b, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // operator: vec-vs-vec
+    a_vec = a_vec - b_vec;
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], data_a[i] - data_b[i]);
+    }
+
+    // operator: vec-vs-scalar
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = a_vec - 1.0f;
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], data_a[i] - 1.0f);
+    }
+}
+
+// ===== Mul Tests =====
+
+TEST(test_tensor, vec_mul_f32)
+{
+    const int N = 16;
+    float data_a[N];
+    float data_b[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(i * 2 + 1);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto b = make_tensor(data_b, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // operator: vec-vs-vec
+    a_vec = a_vec * b_vec;
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], data_a[i] * data_b[i]);
+    }
+
+    // operator: vec-vs-scalar
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = a_vec * 2.0f;
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], data_a[i] * 2.0f);
+    }
+}
+
+// ===== Div Tests =====
+
+TEST(test_tensor, vec_div_f32)
+{
+    const int N = 16;
+    float data_a[N];
+    float data_b[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(i * 2 + 1);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto b = make_tensor(data_b, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // operator: vec-vs-vec
+    a_vec = a_vec / b_vec;
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], data_a[i] / data_b[i]);
+    }
+
+    // operator: vec-vs-scalar
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = a_vec / 2.0f;
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        ASSERT_FLOAT_EQ(data_c[i], data_a[i] / 2.0f);
+    }
+}
+
+// ===== Min Tests =====
+
+TEST(test_tensor, vec_min_f32)
+{
+    const int N = 16;
+    float data_a[N];
+    float data_b[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(N - i);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto b = make_tensor(data_b, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // named function: vec-vs-vec
+    a_vec = min(a_vec, b_vec);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        float expected = data_a[i] < data_b[i] ? data_a[i] : data_b[i];
+        ASSERT_FLOAT_EQ(data_c[i], expected);
+    }
+
+    // named function: vec-vs-scalar
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = min(a_vec, 8.0f);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        float expected = data_a[i] < 8.0f ? data_a[i] : 8.0f;
+        ASSERT_FLOAT_EQ(data_c[i], expected);
+    }
+}
+
+// ===== Max Tests =====
+
+TEST(test_tensor, vec_max_f32)
+{
+    const int N = 16;
+    float data_a[N];
+    float data_b[N];
+    float data_c[N] = {0};
+    for (int i = 0; i < N; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(N - i);
+    }
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto b = make_tensor(data_b, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+
+    // named function: vec-vs-vec
+    a_vec = max(a_vec, b_vec);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        float expected = data_a[i] > data_b[i] ? data_a[i] : data_b[i];
+        ASSERT_FLOAT_EQ(data_c[i], expected);
+    }
+
+    // named function: vec-vs-scalar
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = max(a_vec, 8.0f);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+    for (int i = 0; i < N; i++) {
+        float expected = data_a[i] > 8.0f ? data_a[i] : 8.0f;
+        ASSERT_FLOAT_EQ(data_c[i], expected);
+    }
+}
+
+// ===== Cvt Tests =====
+
+TEST(test_tensor, vec_cvt_bf16_f32)
+{
+    const int N_f32 = 16;
+    const int N_bf16 = 32;
+    float data_a[N_f32];
+    float data_b[N_f32];
+    bfloat16_t data_c[N_bf16];
+    bfloat16_t data_ref[N_bf16];
+    for (int i = 0; i < N_f32; i++) {
+        data_a[i] = static_cast<float>(i + 1);
+        data_b[i] = static_cast<float>(i + 10);
+    }
+    for (int i = 0; i < N_bf16; i++) {
+        data_c[i] = vcvth_bf16_f32(0.0f);
+        data_ref[i] = vcvth_bf16_f32(0.0f);
+    }
+
+    auto layout_f32 = make_layout(make_shape(Int<N_f32>{}), make_stride(Int<1>{}));
+    auto layout_bf16 = make_layout(make_shape(Int<N_bf16>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout_f32);
+    auto b = make_tensor(data_b, layout_f32);
+    auto c = make_tensor(data_c, layout_bf16);
+    auto ref_tensor = make_tensor(data_ref, layout_bf16);
+
+    auto a_vec = make_tensor<float>(layout_f32);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    auto b_vec = make_tensor<float>(layout_f32);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, b_vec, b);
+    auto result = cvt<bfloat16_t>(a_vec, b_vec);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, result);
+
+    auto a_vec_ref = svld1_f32(svptrue_b32(), data_a);
+    auto b_vec_ref = svld1_f32(svptrue_b32(), data_b);
+    auto lower_ref = svcvt_bf16_f32_x(svptrue_b32(), a_vec_ref);
+    auto bf16_vec_ref = svcvtnt_bf16_f32_x(lower_ref, svptrue_b32(), b_vec_ref);
+    svst1_bf16(svptrue_b16(), data_ref, bf16_vec_ref);
+
+    for (int i = 0; i < N_bf16; i++) {
+        float kupl_val = vcvtah_f32_bf16(data_c[i]);
+        float ref_val = vcvtah_f32_bf16(data_ref[i]);
+        EXPECT_FLOAT_EQ(kupl_val, ref_val);
+    }
+}
+
+
+
 // ===== Exp2f Tests =====
 
 TEST(test_tensor, vec_exp2f_f32)
@@ -251,4 +626,34 @@ TEST(test_tensor, ptr_engine_valid_ptr_no_throw)
     float data[16] = {0};
     auto layout = make_layout(make_shape(Int<16>{}), make_stride(Int<1>{}));
     EXPECT_NO_THROW(make_tensor(data, layout));
+}
+
+TEST(test_tensor, vec_exp2f_overflow_underflow)
+{
+    const int N = 16;
+    float data_a[N];
+    float data_c[N] = {0};
+
+    for (int i = 0; i < N; i++) {
+        data_a[i] = 0.0f;
+    }
+    data_a[0] = 128.0f;   // 触发溢出 -> INFINITY
+    data_a[1] = -128.0f;  // 触发下溢 -> 0
+    data_a[2] = 2.0f;     // 正常值，验证 svsel 不影响
+
+    auto layout = make_layout(make_shape(Int<N>{}), make_stride(Int<1>{}));
+    auto a = make_tensor(data_a, layout);
+    auto c = make_tensor(data_c, layout);
+
+    auto a_vec = make_tensor<float>(layout);
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, a_vec, a);
+    a_vec = exp2f(a_vec);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, c, a_vec);
+
+    EXPECT_FLOAT_EQ(data_c[0], INFINITY);
+    EXPECT_FLOAT_EQ(data_c[1], 0.0f);
+    EXPECT_NEAR(data_c[2], std::exp2(2.0f), std::abs(std::exp2(2.0f)) * 0.01f);
+    for (int i = 3; i < N; i++) {
+        EXPECT_NEAR(data_c[i], std::exp2(data_a[i]), std::abs(std::exp2(data_a[i])) * 0.01f);
+    }
 }

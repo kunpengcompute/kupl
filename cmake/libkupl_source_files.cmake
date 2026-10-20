@@ -20,7 +20,7 @@ function(libkupl_source_files src_files)
 endfunction()
 
 function(libkupl_shm_xpmem_source_files shm_xpmem_src_files)
-    file(GLOB srcs ${srcs} memory/shm/xpmem/*.cpp)
+    file(GLOB srcs memory/shm/xpmem/*.cpp)
     set(${shm_xpmem_src_files} ${srcs} PARENT_SCOPE)
 endfunction()
 

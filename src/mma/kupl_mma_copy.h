@@ -285,6 +285,26 @@ private:
 };
 
 template <int AtomShape>
+class TiledCopy<Ops<KP36_VEC_STORE_NT>, Shape<Int<AtomShape>>> {
+public:
+    template <typename EngineD, typename LayoutD, typename EngineS, typename LayoutS>
+    friend void copy(TiledCopy<Ops<KP36_VEC_STORE_NT>, Shape<Int<AtomShape>>> tiled_copy, Tensor<EngineD, LayoutD> &dst,
+                     Tensor<EngineS, LayoutS> src)
+    {
+        tiled_copy.call(dst, src);
+    }
+
+private:
+    template <typename dtypeD, typename ShapeD, typename StrideD, typename dtypeS, typename ShapeS, typename StrideS>
+    kupl_always_inline void call(Tensor<PtrEngine<dtypeD>, Layout<ShapeD, StrideD>> dst,
+                                 const Tensor<VectorEngine<dtypeS>, Layout<ShapeS, StrideS>> &src)
+    {
+        static_assert(std::is_same_v<dtypeD, dtypeS>, "SVSTORENT requires same dtype for dst and src");
+        SvStoreNT::apply<dtypeD>(dst.data(), src.data());
+    }
+};
+
+template <int AtomShape>
 class TiledCopy<Ops<KP36_VEC_COPY_HOR>, Shape<Int<AtomShape>>> {
 public:
     template <typename EngineD, typename LayoutD, typename EngineS, typename LayoutS>

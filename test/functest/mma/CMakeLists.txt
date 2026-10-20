@@ -18,6 +18,9 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --rtlib=compiler-rt")
 endif()
 
+# 优先解析 src 下 mma 头文件，避免 gcov 记录 install 路径导致覆盖率被过滤
+include_directories(BEFORE ${KUPL_PROJ_PATH}/src)
+
 file(GLOB_RECURSE TEST_MMA_FILES *.cpp)
 
 add_executable(test_mma_main ${TEST_MMA_FILES})

@@ -36,6 +36,9 @@ export ENABLE_KUPL_MMA="ON"
 export KUPL_BUILD_KIND="src"
 export KUPL_INSTALL_PATH="$KUPL_PROJ_PATH/install"
 export KUPL_GENERATOR="Unix Makefiles"
+if command -v ninja >/dev/null 2>&1; then
+    KUPL_GENERATOR="Ninja"
+fi
 
 function check_glibc()
 {
@@ -63,7 +66,8 @@ function build_src()
         -DENABLE_KUPL_TRACE=${ENABLE_KUPL_TRACE}        \
         -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
         -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
-        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}
+        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
+        -DCMAKE_SUPPRESS_REGENERATION=ON
     cmake --build ${build_path} -j --target install
     check_glibc
 }
@@ -82,7 +86,9 @@ function build_test()
         -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}            \
         -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
         -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
-        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}
+        -DKUPL_PROJ_PATH=${KUPL_PROJ_PATH}              \
+        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
+        -DCMAKE_SUPPRESS_REGENERATION=ON
     cmake --build ${build_path} -j --target install
 }
 
@@ -100,7 +106,9 @@ function build_cida()
         -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}            \
         -DCMAKE_BUILD_TYPE=Debug                        \
         -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
-        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}
+        -DKUPL_PROJ_PATH=${KUPL_PROJ_PATH}              \
+        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
+        -DCMAKE_SUPPRESS_REGENERATION=ON
     cmake --build ${build_path} -j --target install
 }
 
@@ -116,7 +124,8 @@ function build_fuzz()
         -DCMAKE_C_COMPILER=$(which mpicc)               \
         -DCMAKE_CXX_COMPILER=$(which mpicxx)            \
         -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
-        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}
+        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
+        -DCMAKE_SUPPRESS_REGENERATION=ON
     cmake --build ${build_path} -j --target install
 }
 
@@ -210,9 +219,11 @@ function parse_args()
                 fi
                 ;;
             --build_ninja=*)
-                if [[ "${i#*=}" == "on" ]]; then
-                    KUPL_GENERATOR="Ninja"
-                fi
+                case "${i#*=}" in
+                    on)  KUPL_GENERATOR="Ninja" ;;
+                    off) KUPL_GENERATOR="Unix Makefiles" ;;
+                    *)   echo "invalid build_ninja: ${i#*=}"; exit 1 ;;
+                esac
                 ;;
             --enable_prof=*)
                 if [[ "${i#*=}" == "on" ]]; then

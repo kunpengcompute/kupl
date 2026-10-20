@@ -12,6 +12,8 @@ cmake_minimum_required(VERSION 3.14)
 
 project(kupl_fuzz VERSION 1.0.0)
 
+option(KUPL_BUILD_ASAN "Enable AddressSanitizer for fuzz targets" OFF)
+
 set(KUPL_INSTALL_BIN_PATH ${CMAKE_INSTALL_PREFIX}/bin)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 include_directories(${CMAKE_INSTALL_PREFIX}/include ${CMAKE_CURRENT_SOURCE_DIR})
@@ -29,7 +31,7 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp \
     -fprofile-arcs -ftest-coverage -Wall -fsanitize-coverage=trace-pc -Wno-unused-value")
 
-if(${KUPL_BUILD_ASAN} MATCHES "ON")
+if(KUPL_BUILD_ASAN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
         -Lasan -fsanitize=address -fsanitize-recover=address -fno-omit-frame-pointer")
 endif()
