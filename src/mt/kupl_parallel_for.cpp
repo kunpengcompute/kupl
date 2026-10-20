@@ -27,12 +27,28 @@
 
 thread_local int active_levels = 0;
 static int g_concurrency_default = 0;
-static kupl_egroup_h g_egroup = nullptr;
+static kupl_egroup_h *g_egroups = nullptr;
 static kupl_pf_t *g_pf = nullptr;
 static kupl_ult_t *g_ult = nullptr;
 static int max_active_levels;
 static int pf_num_thread;
 constexpr int KUPL_RD_NUM_MAX = 128;
+
+static kupl_egroup_h kupl_get_global_egroup(int num_threads)
+{
+    if (num_threads < 1 || num_threads > pf_num_thread) {
+        return nullptr;
+    }
+    if (g_egroups[num_threads] != nullptr) {
+        return g_egroups[num_threads];
+    }
+    static int executor[KUPL_EXECUTOR_ID_MAX];
+    for (int i = 0; i < num_threads; i++) {
+        executor[i] = i;
+    }
+    g_egroups[num_threads] = kupl_egroup_create(executor, num_threads);
+    return g_egroups[num_threads];
+}
 
 static kupl_always_inline kupl_graph_h kupl_pf_graph_get()
 {
@@ -655,17 +671,9 @@ static kupl_always_inline int kupl_parallel_for_check(kupl_parallel_for_desc_t *
         }
     }
 
-    // set egroup if egroup is null
-    if (desc->egroup == nullptr) {
-        auto current_egroup = kupl_get_current_egroup();
-        if (current_egroup == nullptr) {
-            desc->egroup = g_egroup;
-        } else {
-            desc->egroup = current_egroup;
-        }
-    } else {
-        auto egroup = desc->egroup;
-        uint32_t egroup_size = egroup->cur.size;
+    // egroup is resolved by kupl_parallel_for_resolve later; just validate an explicit egroup here
+    if (desc->egroup != nullptr) {
+        uint32_t egroup_size = desc->egroup->cur.size;
         if (egroup_size == 0) {
             return kupl_log_error_return(ERROR, "Invalid egroup size: %u", egroup_size);
         }
@@ -703,10 +711,30 @@ static kupl_always_inline int kupl_parallel_for_num_threads(kupl_parallel_for_de
         }
         num_threads = (int)kupl_min((int64_t)num_threads, total_chunks);
     }
-    num_threads = kupl_min(num_threads, (int)kupl_egroup_get_cur_size(egroup));
+    if (egroup != nullptr) {
+        num_threads = kupl_min(num_threads, (int)kupl_egroup_get_cur_size(egroup));
+    }
     num_threads = kupl_min(num_threads, kupl_get_kernel_concurrency_inner());
     KUPL_PTRACE_END(KUPL_PTRACE_PARALLEL_FOR_NUM_THREADS);
     return num_threads;
+}
+
+static kupl_always_inline int kupl_parallel_for_resolve(kupl_parallel_for_desc_t *desc, kupl_egroup_h &egroup,
+                                                        int &num_threads)
+{
+    // explicit egroup, or inherit the egroup of the enclosing region (read-only, desc is not modified)
+    egroup = (desc->egroup != nullptr) ? desc->egroup : kupl_get_current_egroup();
+    if (egroup != nullptr) {
+        num_threads = kupl_parallel_for_num_threads(desc, egroup);
+        return KUPL_OK;
+    }
+    // default egroup: num_threads is decided first, then the egroup matching it is used
+    num_threads = kupl_parallel_for_num_threads(desc, nullptr);
+    egroup = kupl_get_global_egroup(num_threads);
+    if (kupl_unlikely(egroup == nullptr)) {
+        return kupl_log_error_return(ERROR, "get global egroup failed: num_threads=%d", num_threads);
+    }
+    return KUPL_OK;
 }
 
 int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void *args)
@@ -717,8 +745,11 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
     if (kupl_unlikely(kupl_parallel_for_check(desc, (void *)func) == KUPL_ERROR)) {
         return KUPL_ERROR;
     }
-    auto egroup = desc->egroup;
-    int num_threads = kupl_parallel_for_num_threads(desc, egroup);
+    kupl_egroup_h egroup;
+    int num_threads;
+    if (kupl_unlikely(kupl_parallel_for_resolve(desc, egroup, num_threads) == KUPL_ERROR)) {
+        return KUPL_ERROR;
+    }
     if (kupl_unlikely(active_levels >= max_active_levels || num_threads == 1 || kupl_is_expand_executor())) {
         int master_eid = kupl_get_executor_num();
         kupl_pf_t &pf = g_pf[active_levels * pf_num_thread + master_eid];
@@ -836,8 +867,11 @@ int kupl_parallel_for_reduce(kupl_parallel_for_desc_t *desc, kupl_pf_reduce_func
     if (kupl_unlikely(kupl_reduce_check(desc, (void *)func, rd_args) == KUPL_ERROR)) {
         return KUPL_ERROR;
     }
-    auto egroup = desc->egroup;
-    int num_threads = kupl_parallel_for_num_threads(desc, egroup);
+    kupl_egroup_h egroup;
+    int num_threads;
+    if (kupl_unlikely(kupl_parallel_for_resolve(desc, egroup, num_threads) == KUPL_ERROR)) {
+        return KUPL_ERROR;
+    }
     static thread_local int geid = kupl_get_executor_num();
 
     // quick path
@@ -944,13 +978,9 @@ int kupl_get_kernel_concurrency()
 
 static int kupl_global_egroup_create(int num_threads)
 {
-    // create global egroup
-    static int executor[KUPL_EXECUTOR_ID_MAX];
-    for (int i = 0; i < num_threads; i++) {
-        executor[i] = i;
-    }
-    g_egroup = kupl_egroup_create(executor, num_threads);
-    if (kupl_unlikely(g_egroup == nullptr)) {
+    // only allocate the egroup table here, each entry is created lazily by kupl_get_global_egroup
+    g_egroups = (kupl_egroup_h *)kupl_calloc((size_t)num_threads + 1, sizeof(kupl_egroup_h));
+    if (kupl_unlikely(g_egroups == nullptr)) {
         return kupl_log_error_return(ERROR, "parallel for egroup create failed");
     }
     return KUPL_OK;
@@ -958,8 +988,16 @@ static int kupl_global_egroup_create(int num_threads)
 
 static void kupl_global_egroup_destroy()
 {
-    kupl_egroup_destroy(g_egroup);
-    g_egroup = nullptr;
+    if (g_egroups == nullptr) {
+        return;
+    }
+    for (int i = 1; i <= pf_num_thread; i++) {
+        if (g_egroups[i] != nullptr) {
+            kupl_egroup_destroy(g_egroups[i]);
+        }
+    }
+    kupl_free_inner(g_egroups);
+    g_egroups = nullptr;
 }
 
 static void kupl_global_ult_fini()
