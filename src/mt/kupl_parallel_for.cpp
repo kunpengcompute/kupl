@@ -750,8 +750,15 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
     if (kupl_unlikely(kupl_parallel_for_resolve(desc, egroup, num_threads) == KUPL_ERROR)) {
         return KUPL_ERROR;
     }
-    if (kupl_unlikely(active_levels >= max_active_levels || num_threads == 1 || kupl_is_expand_executor())) {
-        int master_eid = kupl_get_executor_num();
+    static thread_local int geid = kupl_get_executor_num();
+    int master_eid;
+    if (CPU_ISSET(geid, &egroup->cur.eid_set)) {
+        master_eid = geid;
+    } else {
+        master_eid = (int)egroup->cur.min_eid;
+    }
+    if (kupl_unlikely(active_levels >= max_active_levels || kupl_is_expand_executor() ||
+                      (num_threads == 1 && master_eid == geid))) {
         kupl_pf_t &pf = g_pf[active_levels * pf_num_thread + master_eid];
         pf.num_threads = 1;
         pf.master_eid = master_eid;
@@ -762,13 +769,6 @@ int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void 
         ult->tb.egroup = nullptr;
         active_levels--;
         return KUPL_OK;
-    }
-    static thread_local int geid = kupl_get_executor_num();
-    int master_eid;
-    if (CPU_ISSET(geid, &egroup->cur.eid_set)) {
-        master_eid = geid;
-    } else {
-        master_eid = (int)egroup->cur.min_eid;
     }
     kupl_pf_t &pf = g_pf[active_levels * pf_num_thread + master_eid];
     // 1. set pf value
@@ -873,9 +873,15 @@ int kupl_parallel_for_reduce(kupl_parallel_for_desc_t *desc, kupl_pf_reduce_func
         return KUPL_ERROR;
     }
     static thread_local int geid = kupl_get_executor_num();
+    int master_eid;
+    if (CPU_ISSET(geid, &egroup->cur.eid_set)) {
+        master_eid = geid;
+    } else {
+        master_eid = (int)egroup->cur.min_eid;
+    }
 
     // quick path
-    if (kupl_unlikely(active_levels >= 1 || num_threads == 1)) {
+    if (kupl_unlikely(active_levels >= 1 || (num_threads == 1 && master_eid == geid))) {
         // prepare
         auto private_args = kupl_reduce_args_dup(rd_args);
         if (kupl_unlikely(private_args == nullptr)) {
@@ -888,12 +894,6 @@ int kupl_parallel_for_reduce(kupl_parallel_for_desc_t *desc, kupl_pf_reduce_func
         return KUPL_OK;
     }
 
-    int master_eid;
-    if (CPU_ISSET(geid, &egroup->cur.eid_set)) {
-        master_eid = geid;
-    } else {
-        master_eid = (int)egroup->cur.min_eid;
-    }
     kupl_pf_t &pf = g_pf[master_eid];
     // 1. set pf value
     pf.rd_func = func;

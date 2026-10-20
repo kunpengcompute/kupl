@@ -1383,3 +1383,87 @@ TEST(test_ult_pf, kupl_parallel_for_egroup_barrier_concurrency_change)
     ret = kupl_parallel_for(&desc_multi, task_barrier_wait, nullptr);
     EXPECT_EQ(ret, KUPL_OK);
 }
+
+static inline void task_record_executor(kupl_nd_range_t *nd_range, void *args, int tid, int tnum)
+{
+    std::atomic<int> *exec_eid = (std::atomic<int> *)args;
+    exec_eid->store(kupl_get_executor_num());
+}
+
+static inline void task_record_executor_reduce(kupl_nd_range_t *nd_range, void *args, int tid, int tnum,
+                                               kupl_reduce_args_t *rd_args)
+{
+    std::atomic<int> *exec_eid = (std::atomic<int> *)args;
+    exec_eid->store(kupl_get_executor_num());
+    *(int *)rd_args->items[0].buffer += 1;
+}
+
+TEST(test_ult_pf, kupl_parallel_for_concurrency_1_offload_to_egroup)
+{
+    int num_executors = kupl_get_num_executors();
+    if (num_executors < 6) {
+        GTEST_SKIP() << "need at least 6 executors, got " << num_executors;
+    }
+    kupl_nd_range_t range;
+    KUPL_1D_RANGE_INIT(range, 0, 100);
+    int executors[] = {2, 3, 4, 5};
+    kupl_egroup_h eg = kupl_egroup_create(executors, sizeof(executors) / sizeof(int));
+    kupl_parallel_for_desc_t desc = {
+        .field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
+        .range = &range,
+        .egroup = eg,
+        .concurrency = 1,
+        .policy = KUPL_LOOP_POLICY_STATIC
+    };
+    std::atomic<int> exec_eid(-1);
+    int ret = kupl_parallel_for(&desc, task_record_executor, &exec_eid);
+    EXPECT_EQ(ret, KUPL_OK);
+    EXPECT_EQ(exec_eid.load(), 2);
+    kupl_egroup_destroy(eg);
+}
+
+TEST(test_ult_pf, kupl_parallel_for_reduce_concurrency_1_offload_to_egroup)
+{
+    int num_executors = kupl_get_num_executors();
+    if (num_executors < 6) {
+        GTEST_SKIP() << "need at least 6 executors, got " << num_executors;
+    }
+    kupl_nd_range_t range;
+    KUPL_1D_RANGE_INIT(range, 0, 10);
+    int executors[] = {2, 3, 4, 5};
+    kupl_egroup_h eg = kupl_egroup_create(executors, sizeof(executors) / sizeof(int));
+    kupl_parallel_for_desc_t desc = {
+        .field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
+        .range = &range,
+        .egroup = eg,
+        .concurrency = 1,
+        .policy = KUPL_LOOP_POLICY_STATIC
+    };
+    std::atomic<int> exec_eid(-1);
+    int sum = 0;
+    kupl_reduce_item_t param[1] = {{.buffer = &sum, .type = KUPL_DATATYPE_INT, .op = KUPL_RD_ADD}};
+    kupl_reduce_args_t rd_args = {.num = 1, .items = param};
+    int ret = kupl_parallel_for_reduce(&desc, task_record_executor_reduce, &exec_eid, &rd_args);
+    EXPECT_EQ(ret, KUPL_OK);
+    EXPECT_EQ(exec_eid.load(), 2);
+    EXPECT_EQ(sum, 1);
+    kupl_egroup_destroy(eg);
+}
+
+TEST(test_ult_pf, kupl_parallel_for_concurrency_1_default_egroup_local)
+{
+    int master_eid = kupl_get_executor_num();
+    kupl_nd_range_t range;
+    KUPL_1D_RANGE_INIT(range, 0, 100);
+    kupl_parallel_for_desc_t desc = {
+        .field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
+        .range = &range,
+        .egroup = nullptr,
+        .concurrency = 1,
+        .policy = KUPL_LOOP_POLICY_STATIC
+    };
+    std::atomic<int> exec_eid(-1);
+    int ret = kupl_parallel_for(&desc, task_record_executor, &exec_eid);
+    EXPECT_EQ(ret, KUPL_OK);
+    EXPECT_EQ(exec_eid.load(), master_eid);
+}
