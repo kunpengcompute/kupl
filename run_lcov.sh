@@ -183,6 +183,7 @@ fi
 # 3. remove files that don't need to be tracked
 if [[ "${BUILD_KIND}" == "test" ]]; then
   lcov --rc lcov_branch_coverage=1 -r total.kupl.info "*install*" -o total.kupl.info -q
+  lcov --rc lcov_branch_coverage=1 -r total.kupl.info "/usr/include/*" -o total.kupl.info -q
   if [ 0 != $? ];then
     echo "Failed to remove install from coverage info"
     exit 1
