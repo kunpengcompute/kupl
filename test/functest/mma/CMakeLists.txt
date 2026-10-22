@@ -25,7 +25,7 @@ file(GLOB_RECURSE TEST_MMA_FILES *.cpp)
 
 add_executable(test_mma_main ${TEST_MMA_FILES})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_link_options(test_mma_main PRIVATE --unwindlib=libunwind)
+    target_link_options(test_mma_main PRIVATE -lgcc_s)
 endif()
 target_link_libraries(test_mma_main
     -Wl,--start-group

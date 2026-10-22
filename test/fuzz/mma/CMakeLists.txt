@@ -22,7 +22,7 @@ file(GLOB_RECURSE FUZZ_FILES *.cpp)
 
 add_executable(${FUZZ_BIN} ${FUZZ_FILES})
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_link_options(fuzz_mma_main PRIVATE --unwindlib=libunwind)
+    target_link_options(${FUZZ_BIN} PRIVATE -lgcc_s)
 endif()
 target_link_libraries(${FUZZ_BIN}
     -Wl,--start-group
