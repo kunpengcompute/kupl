@@ -168,3 +168,60 @@ TEST(test_mem, kupl_mem_copyout_finalize_sync)
     hbw = kupl_mem_query(&a);
     ASSERT_TRUE(hbw == nullptr);
 }
+
+static char range_buf[64];
+static int b;
+static int c;
+static int d;
+
+TEST(test_mem, kupl_mem_copyin_size_zero)
+{
+    int ret = kupl_mem_copyin(&a, 0, KUPL_MEM_IN, nullptr);
+    ASSERT_TRUE(ret == KUPL_ERROR);
+}
+
+TEST(test_mem, kupl_mem_is_present_null)
+{
+    bool present = kupl_mem_is_present(nullptr);
+    ASSERT_TRUE(present == false);
+}
+
+TEST(test_mem, kupl_mem_query_sub_range)
+{
+    auto queue = kupl_queue_acquire(KUPL_ASYNC_SYNC);
+    int ret = kupl_mem_copyin(range_buf, sizeof(range_buf), KUPL_MEM_CREATE, queue);
+    ASSERT_TRUE(ret == KUPL_OK);
+    void *hbw = kupl_mem_query(range_buf + 16);
+    ASSERT_TRUE(hbw != nullptr);
+    ASSERT_TRUE(hbw == (char *)kupl_mem_query(range_buf) + 16);
+    ASSERT_TRUE(kupl_mem_query(range_buf + sizeof(range_buf)) == nullptr);
+    ASSERT_TRUE(kupl_mem_query(range_buf - 1) == nullptr);
+    ret = kupl_mem_copyout(range_buf, sizeof(range_buf), KUPL_MEM_DELETE, queue);
+    ASSERT_TRUE(ret == KUPL_OK);
+}
+
+TEST(test_mem, kupl_mem_invalid_flag_reuse)
+{
+    int ret = kupl_mem_copyin(&b, sizeof(b), (kupl_mem_copyin_flag_t)99, nullptr);
+    ASSERT_TRUE(ret == KUPL_ERROR);
+    ret = kupl_mem_copyin(&b, sizeof(b), KUPL_MEM_IN, nullptr);
+    ASSERT_TRUE(ret == KUPL_OK);
+    ret = kupl_mem_copyout(&b, sizeof(b), KUPL_MEM_DELETE_FINALIZE, nullptr);
+    ASSERT_TRUE(ret == KUPL_OK);
+}
+
+TEST(test_mem, kupl_mem_detach_default_flag)
+{
+    int ret = kupl_mem_copyin(&c, sizeof(c), KUPL_MEM_CREATE, nullptr);
+    ASSERT_TRUE(ret == KUPL_OK);
+    ret = kupl_mem_copyout(&c, sizeof(c), (kupl_mem_copyout_flag_t)99, nullptr);
+    ASSERT_TRUE(ret == KUPL_ERROR);
+    ret = kupl_mem_copyout(&c, sizeof(c), KUPL_MEM_DELETE, nullptr);
+    ASSERT_TRUE(ret == KUPL_OK);
+}
+
+TEST(test_mem, kupl_mem_copyout_unmapped)
+{
+    int ret = kupl_mem_copyout(&d, sizeof(d), KUPL_MEM_DELETE, nullptr);
+    ASSERT_TRUE(ret == KUPL_ERROR);
+}
