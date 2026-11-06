@@ -54,9 +54,7 @@ err:
 
 kupl_event_h kupl_event_create(void)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
     return kupl_event_create_with_udata(0);
 }
 

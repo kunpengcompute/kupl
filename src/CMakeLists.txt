@@ -30,7 +30,6 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
     set(ENABLE_KUPL_DEBUG ON)
     set(ENABLE_KUPL_ASSERT ON)
     add_compile_options(-O0 -g -gdwarf-4)
-    add_definitions(-DENABLE_KUPL_DEBUG)
     message("-- Caution : using debug mode, performance is bad, just for develop")
 elseif(CMAKE_BUILD_TYPE MATCHES "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra -Wfloat-equal -fno-common -Weffc++")
@@ -50,6 +49,15 @@ elseif(CMAKE_BUILD_TYPE MATCHES "Release")
         endif()
     endif()
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -s -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack")
+endif()
+
+# Propagate the switches to the compiler so that the preprocessor sees them
+if(ENABLE_KUPL_DEBUG)
+    add_definitions(-DENABLE_KUPL_DEBUG)
+endif()
+
+if(ENABLE_KUPL_ASSERT)
+    add_definitions(-DENABLE_KUPL_ASSERT)
 endif()
 
 if(KUPL_BUILD_KIND MATCHES "src")

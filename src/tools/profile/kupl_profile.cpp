@@ -123,7 +123,7 @@ int profile_get_threadid()
 int profile_register_id(const char *name)
 {
     auto id = g_profile_id_seq++;
-    kupl_assertv(id >= MAX_PROFILE_ID, "The profile id %d is too big, please change macro MAX_PROFILE_ID which is %d",
+    kupl_assertv(id < MAX_PROFILE_ID, "The profile id %d is too big, please change macro MAX_PROFILE_ID which is %d",
                  id, MAX_PROFILE_ID);
     if (id >= MAX_PROFILE_ID) {
         return PROFILE_ID_INIT;

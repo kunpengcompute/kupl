@@ -72,9 +72,7 @@ uint64_t kupl_now_ns()
 
 double kupl_get_wtime()
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return 0;
-    }
+    KUPL_ENSURE_INITED(0.0);
     return (double)kupl_arm_now_ns() / S2N_FACTOR;
 }
 

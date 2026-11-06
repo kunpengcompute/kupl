@@ -25,9 +25,7 @@
 
 kupl_graph_h kupl_graph_create(kupl_egroup_h egroup)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
 
     kupl_sched_t *sched;
     if (kupl_is_expand_executor()) {

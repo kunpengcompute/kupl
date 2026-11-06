@@ -17,6 +17,7 @@
 #include "utils/arch/kupl_atomic.h"
 #include "utils/arch/kupl_cache.h"
 #include "utils/lock/kupl_lock.h"
+#include "utils/sys/kupl_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +33,17 @@ int kupl_get_local_executor_num(int eid);
 
 extern kupl_lock_t *g_executor_lock;
 extern int g_real_executor_count;
+
+/**
+ * @brief Get the executor count without triggering the lazy initialization.
+ *
+ * Only for code which already runs inside kupl::Init::DoInit(), the public API must use
+ * kupl_get_num_executors() instead.
+ */
+static kupl_always_inline int kupl_get_num_executors_inner(void)
+{
+    return g_real_executor_count;
+}
 
 typedef struct kupl_executor_base {
     int executor_id;

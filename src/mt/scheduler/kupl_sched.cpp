@@ -35,6 +35,15 @@ static int g_sched_use_yield, g_sched_init_yield_count;
 
 int kupl_sched_init()
 {
+    /*
+     * A second init must not create another scheduler, overwrite g_sched and leak the first one, nor run
+     * the plugin load/unload pair again. Init and fini are serialized by kupl::Init, so a plain flag is
+     * enough here. The flag is cleared in kupl_sched_fini() so a later init after fini still works.
+     */
+    if (g_sched_inited) {
+        return KUPL_OK;
+    }
+
     if (kupl_unlikely(kupl_sched_plugin_load() != KUPL_OK)) {
         return kupl_log_error_return(ERROR, "Load sched plugin failed");
     }
@@ -92,6 +101,7 @@ void kupl_sched_fini()
     kupl_sched_cleanup(g_sched_expand);
     g_sched_expand = nullptr;
     kupl_sched_plugin_unload();
+    g_sched_inited = false;
     return;
 }
 
