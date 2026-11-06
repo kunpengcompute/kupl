@@ -386,9 +386,7 @@ int kupl_memcpy_check(void *dst, const void *src, size_t count)
 
 int kupl_memcpy(void *dst, const void *src, size_t count)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (kupl_unlikely(kupl_memcpy_check(dst, src, count) == KUPL_ERROR)) {
         return KUPL_ERROR;
     }
@@ -519,9 +517,7 @@ error:
 
 int kupl_memcpy_async(void *dst, const void *src, size_t count, kupl_queue_h queue, kupl_event_h event)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (kupl_unlikely(kupl_memcpy_check(dst, src, count) == KUPL_ERROR || event == nullptr)) {
         return KUPL_ERROR;
     }
@@ -667,9 +663,7 @@ int kupl_memcpy2d_check(void *dst, size_t dpitch, const void *src, size_t spitch
 
 int kupl_memcpy2d(void *dst, size_t dpitch, const void *src, size_t spitch, size_t width, size_t height)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (kupl_unlikely(kupl_memcpy2d_check(dst, dpitch, src, spitch, width, height) == KUPL_ERROR)) {
         return KUPL_ERROR;
     }
@@ -736,9 +730,7 @@ int kupl_submit_memcpy2d_task(void *dst, size_t dpitch, const void *src, size_t 
 int kupl_memcpy2d_async(void *dst, size_t dpitch, const void *src, size_t spitch, size_t width, size_t height,
                         kupl_queue_h queue, kupl_event_h event)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (kupl_unlikely(kupl_memcpy2d_check(dst, dpitch, src, spitch, width, height) == KUPL_ERROR || event == nullptr)) {
         return KUPL_ERROR;
     }

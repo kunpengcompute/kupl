@@ -108,17 +108,13 @@ int kupl_hbw_get_closest_numa_id(int numa_id)
 
 int kupl_hbw_check_available(void)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     return hbw_available;
 }
 
 int kupl_hbw_verify(void *addr, size_t size, int flags)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     return kupl_hbw_verify_inner(addr, size, flags);
 }
 
@@ -199,9 +195,7 @@ kupl_hbw_policy_t kupl_hbw_get_policy(void)
 
 int kupl_hbw_set_policy(kupl_hbw_policy_t policy)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (policy != KUPL_HBW_POLICY_BIND) {
         return KUPL_ERROR;
     }
@@ -225,9 +219,7 @@ void *kupl_hbw_malloc_bind(size_t size)
 
 void *kupl_hbw_malloc(size_t size)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
     if (size == 0) {
         kupl_error("Unable to alloc a 0 size memory in HBW");
         return nullptr;

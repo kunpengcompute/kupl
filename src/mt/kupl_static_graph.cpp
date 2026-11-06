@@ -20,9 +20,7 @@
 
 kupl_sgraph_h kupl_sgraph_create()
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
     int geid = kupl_get_executor_num();
     auto sgraph = (kupl_sgraph_h)kupl_memory_alloc(sizeof(kupl_sgraph_t), geid);
     if (kupl_unlikely(sgraph == nullptr)) {

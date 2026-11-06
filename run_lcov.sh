@@ -71,6 +71,14 @@ if [[ "${BUILD_KIND}" == "test" ]]; then
   KUPL_ENABLE_HUGEPAGES=1 KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=mq numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=*kupl_malloc*
   KUPL_MAX_ACTIVE_LEVELS=2 KUPL_EXECUTOR_BACKEND=pthread numactl -N 0 $INSTALL_PATH/bin/test_pthread_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_pthread_detail.xml --gtest_filter=test_ult_pf.kupl_pf_in_parallel
 
+  if [ -f "$INSTALL_PATH/bin/test_init_main" ]; then
+    KUPL_EXECUTOR_BACKEND=pthread KUPL_SCHED_POLICY=static_mq timeout 180 numactl -N 0 $INSTALL_PATH/bin/test_init_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_init_detail.xml
+  fi
+
+  if [ -f "$INSTALL_PATH/bin/test_init_fail_main" ]; then
+    timeout 120 $INSTALL_PATH/bin/test_init_fail_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_init_fail_detail.xml
+  fi
+
   if [ $hbw_detected -eq 1 ]; then
     KUPL_EXECUTOR_BACKEND=omp KUPL_SCHED_POLICY=static_mq numactl -N 0 $INSTALL_PATH/bin/test_omp_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_detail.xml
     KUPL_EXECUTOR_BACKEND=omp KUPL_SCHED_POLICY=static_mq numactl -N 0 --membind=16 $INSTALL_PATH/bin/test_omp_main --gtest_output=xml:$PROJ_PATH/lcov/report/test_detail.xml --gtest_filter=*kupl_malloc*

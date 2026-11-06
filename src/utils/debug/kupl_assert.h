@@ -12,6 +12,8 @@
 #ifndef KUPL_ASSERT_H
 #define KUPL_ASSERT_H
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "kupl_log.h"
 #include "utils/sys/kupl_compiler.h"
 
@@ -21,25 +23,29 @@ extern "C" {
 
 #ifdef ENABLE_KUPL_ASSERT
 
-#define kupl_assert(_cond)                        \
-    do {                                          \
-        if (kupl_unlikely(!(_cond))) {            \
-            kupl_fatal("assert failed! " #_cond); \
-            exit(0);                              \
-        }                                         \
+#define kupl_assertv(_cond, args...)   \
+    do {                               \
+        if (kupl_unlikely(!(_cond))) { \
+            kupl_fatal(args);          \
+            fflush(stdout);            \
+            abort();                   \
+        }                              \
     } while (0)
 
-#define kupl_assertv(_cond, args...) \
-    do {                             \
-        if (kupl_unlikely(_cond)) {  \
-            kupl_fatal(args);        \
-        }                            \
-    } while (0)
+#define kupl_assert(_cond) kupl_assertv(_cond, "assert failed! " #_cond)
 
 #else
 
+/* Hot-path assertions stay free in release builds. */
 #define kupl_assert(_cond)
-#define kupl_assertv(_cond, args...)
+
+/* Cold-path assertions keep the diagnostic but never terminate in release builds. */
+#define kupl_assertv(_cond, args...)   \
+    do {                               \
+        if (kupl_unlikely(!(_cond))) { \
+            kupl_fatal(args);          \
+        }                              \
+    } while (0)
 
 #endif
 

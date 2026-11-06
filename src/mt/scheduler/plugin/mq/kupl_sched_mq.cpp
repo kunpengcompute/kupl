@@ -21,6 +21,7 @@
 #include "utils/arch/kupl_atomic.h"
 #include "utils/config/kupl_config.h"
 #include "utils/lock/kupl_lock.h"
+#include "utils/debug/kupl_assert.h"
 #include "tools/struct/kupl_vector.h"
 #include "tools/struct/kupl_list.h"
 
@@ -217,7 +218,7 @@ static kupl_always_inline bool parse_place(char *_str, cpu_set_t *eid_set)
         parse_place_single(str, eid_set);
     }
 
-    int num_executors = kupl_get_num_executors();
+    int num_executors = kupl_get_num_executors_inner();
     cpu_set_t sys_eid_set;
     CPU_ZERO(&sys_eid_set);
     for (int eid = 0; eid < num_executors; eid++) {
@@ -369,7 +370,7 @@ static void *kupl_sched_mq_create()
     if (kupl_unlikely(sched == nullptr)) {
         return nullptr;
     }
-    auto num_executors = kupl_get_num_executors();
+    auto num_executors = kupl_get_num_executors_inner();
     sched->num_executors = num_executors;
     sched->queue_size = kupl_config_get_value(KUPL_SCHED_QUEUE_LENGTH);
 
@@ -517,7 +518,7 @@ static kupl_taskbase_t *kupl_sched_mq_get_tb(void *_sched, kupl_compute_place_t 
     (void)cp;
     int executor_id = kupl_get_executor_num();
     if (kupl_unlikely(executor_id == KUPL_EXECUTOR_DEFAULT)) {
-        kupl_error("invoke KUPL functions on threads not managed by KUPL");
+        kupl_assertv(false, "invoke KUPL functions on threads not managed by KUPL");
         return nullptr;
     }
 

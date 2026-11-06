@@ -14,6 +14,7 @@
 #include "executor/backend/kupl_executor_backend.h"
 #include "executor/kupl_executor.h"
 #include "utils/lock/kupl_lock.h"
+#include "utils/debug/kupl_assert.h"
 #include "tools/struct/kupl_vector.h"
 
 using queue_t = struct {
@@ -114,7 +115,7 @@ static void kupl_sched_static_mq_fini() {}
 static void kupl_sched_static_mq_cleanup(void *_sched);
 static void *kupl_sched_static_mq_create()
 {
-    int num_executors = kupl_get_num_executors();
+    int num_executors = kupl_get_num_executors_inner();
 
     kupl_sched_static_mq_t *sched = (kupl_sched_static_mq_t *)kupl_calloc(1, sizeof(kupl_sched_static_mq_t));
     if (kupl_unlikely(sched == nullptr)) {
@@ -181,7 +182,7 @@ static kupl_taskbase_t *kupl_sched_static_mq_get_tb(void *_sched, kupl_compute_p
     (void)cp;
     int eid = kupl_get_executor_num();
     if (kupl_unlikely(eid == KUPL_EIDCID_INIT)) {
-        kupl_error("invoke KUPL functions on threads not managed by KUPL");
+        kupl_assertv(false, "invoke KUPL functions on threads not managed by KUPL");
         return nullptr;
     }
 

@@ -35,4 +35,5 @@ void kupl_tools_fini()
 {
     kupl_ptrace_fini();
     profile_module_fini();
+    g_tools_inited = false;
 }

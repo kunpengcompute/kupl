@@ -32,9 +32,7 @@ constexpr auto BITS_IN_UINT32 = sizeof(uint32_t) * CHAR_BIT;
 
 int kupl_get_queue_priority_range(int *least_priority, int *greatest_priority)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (kupl_unlikely(least_priority == nullptr || greatest_priority == nullptr)) {
         return KUPL_ERROR;
     }
@@ -45,9 +43,7 @@ int kupl_get_queue_priority_range(int *least_priority, int *greatest_priority)
 
 kupl_queue_t *kupl_queue_create_with_priority(int priority)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
     if (kupl_unlikely(priority < KUPL_LEAST_PRIORITY || priority > KUPL_GREATEST_PRIORITY)) {
         kupl_warn("priority out of range");
         return nullptr;
@@ -64,9 +60,7 @@ kupl_queue_t *kupl_queue_create_with_priority(int priority)
 
 kupl_queue_t *kupl_queue_create(void)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
     kupl_queue_t *queue = (kupl_queue_t *)kupl_calloc(1, sizeof(kupl_queue_t));
     if (kupl_unlikely(queue == nullptr)) {
         kupl_warn("kupl out of memory");
@@ -474,9 +468,7 @@ int queue_submit(kupl_queue_h queue, kupl_queue_item_desc_t *desc, const std::fu
 
 kupl_queue_h kupl_queue_acquire(int index)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
     std::lock_guard<std::mutex> lock(*g_queue_table_mutex);
     if (g_queue_table->find(index) != g_queue_table->end()) {
         return (*g_queue_table)[index];

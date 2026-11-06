@@ -22,9 +22,7 @@
 
 kupl_egroup_h kupl_egroup_create(int *executors, int executors_num)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
     int num_executors = kupl_get_num_executors();
     if (kupl_unlikely((executors_num > KUPL_EXECUTOR_ID_MAX) || (executors_num > num_executors) ||
                       (executors_num < 0))) {
@@ -216,9 +214,7 @@ kupl_egroup_h kupl_get_current_egroup()
 
 void kupl_egroup_barrier(kupl_egroup_h egroup)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return;
-    }
+    KUPL_ENSURE_INITED_VOID();
     if (egroup == nullptr) {
         egroup = kupl_get_current_egroup();
     }
@@ -243,9 +239,7 @@ void kupl_egroup_barrier(kupl_egroup_h egroup)
 
 void kupl_egroup_fork_barrier(kupl_egroup_h egroup)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return;
-    }
+    KUPL_ENSURE_INITED_VOID();
     if (egroup == nullptr) {
         egroup = kupl_get_current_egroup();
     }
@@ -265,9 +259,7 @@ void kupl_egroup_fork_barrier(kupl_egroup_h egroup)
 
 void kupl_egroup_join_barrier(kupl_egroup_h egroup)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return;
-    }
+    KUPL_ENSURE_INITED_VOID();
     if (egroup == nullptr) {
         egroup = kupl_get_current_egroup();
     }

@@ -127,9 +127,7 @@ static kupl_mem_t *mem_query(void *ddr, ptrdiff_t &offset)
 
 bool kupl_mem_is_present(void *ddr)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return false;
-    }
+    KUPL_ENSURE_INITED(false);
     if (kupl_unlikely(ddr == nullptr)) {
         kupl_error("kupl_mem_is_present invalid params ddr: %p", ddr);
         return false;
@@ -145,9 +143,7 @@ bool kupl_mem_is_present(void *ddr)
 
 void *kupl_mem_query(void *ddr)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
     if (kupl_unlikely(ddr == nullptr)) {
         kupl_warn("kupl_mem_query invalid params ddr: %p", ddr);
         return nullptr;
@@ -290,9 +286,7 @@ static void copyin_task(void *args)
 
 int kupl_mem_copyin(void *ddr, size_t size, kupl_mem_copyin_flag_t flag, kupl_queue_h queue)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (kupl_unlikely(ddr == nullptr || size == 0)) {
         kupl_warn("kupl_mem_copyin invalid params ddr: %p, size: %lu, queue: %p", ddr, size, queue);
         return KUPL_ERROR;
@@ -399,9 +393,7 @@ static void copyout_task(void *args)
 
 int kupl_mem_copyout(void *ddr, size_t size, kupl_mem_copyout_flag_t flag, kupl_queue_h queue)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (kupl_unlikely(ddr == nullptr)) {
         kupl_warn("kupl_mem_copyout invalid params ddr: %p, size: %lu, queue: %p", ddr, size, queue);
         return KUPL_ERROR;

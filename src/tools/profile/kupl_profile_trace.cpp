@@ -21,6 +21,7 @@
 #include "utils/config/kupl_config.h"
 #include "utils/debug/kupl_log.h"
 #include "tools/struct/kupl_vla.h"
+#include "executor/kupl_executor.h"
 
 #define MAX_LENGTH_FILENAME 200
 #define FLUSH_BUF_SIZE 1048576 // 1M
@@ -263,7 +264,7 @@ int kupl_ptrace_init()
     ptrace_executor_buffersize = kupl_config_get_value(KUPL_PTRACE_THREAD_BUFFER_SIZE);
     kupl_debug("kupl profile trace init");
     g_ptrace_ts = kupl_now_ns();
-    ptrace_executor_count = kupl_get_num_executors();
+    ptrace_executor_count = kupl_get_num_executors_inner();
     if (ptrace_executor_count == 0) {
         return kupl_log_error_return(ERROR, "ptrace executor count is 0");
     }

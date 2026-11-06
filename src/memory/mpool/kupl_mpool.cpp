@@ -209,6 +209,7 @@ static bool sdma_mpool_func_init = false;
 #define KUPL_BUFF_DESC(_buf) (reinterpret_cast<kupl_buffer_desc_t *>((char *)(_buf) - sizeof(kupl_buffer_desc_t)))
 
 static void kupl_normal_free(kupl_memory_t *mem, void *ptr, bool is_hbw_free);
+static void kupl_normal_release(kupl_memory_t *mem, kupl_buffer_desc_t *desc);
 
 static kupl_always_inline int kupl_get_bin_index(size_t size, const size_t *bins, size_t bin_count)
 {
@@ -309,7 +310,7 @@ static kupl_always_inline void kupl_normal_sync_list_enqueue(uint16_t eid, void 
     }
 }
 
-static kupl_always_inline void kupl_normal_sync_list_dequeue(kupl_memory_t *mem, bool is_hbw_dequeue = false)
+static kupl_always_inline void kupl_normal_sync_list_dequeue(kupl_memory_t *mem)
 {
     auto sync = (std::atomic<void *> *)(&mem->mem_sync_list);
     auto old = KUPL_ATOMIC_LD_RLX(sync);
@@ -321,7 +322,8 @@ static kupl_always_inline void kupl_normal_sync_list_dequeue(kupl_memory_t *mem,
         void *buf = old;
         old = *(void **)old; /* move to next */
 
-        kupl_normal_free(mem, buf, is_hbw_dequeue); /* free this buffer */
+        /* The ref count was already dropped by the freeing thread, only return the buffer here. */
+        kupl_normal_release(mem, KUPL_BUFF_DESC(buf));
     }
 }
 
@@ -414,9 +416,11 @@ static kupl_always_inline void *kupl_memory_mmap(size_t size, bool is_hbw_mmap =
     return ptr;
 }
 
+static int kupl_mlock_inner(void *buffer, size_t count);
+
 void *kupl_normal_alloc(kupl_memory_t *mem, size_t size, bool is_hbw_alloc = false, bool is_win_alloc_hugepage = false)
 {
-    kupl_normal_sync_list_dequeue(mem, is_hbw_alloc);
+    kupl_normal_sync_list_dequeue(mem);
 
     static size_t align_length = (size_t)g_kupl_user_align_config;
     if (is_win_alloc_hugepage) {
@@ -433,7 +437,7 @@ void *kupl_normal_alloc(kupl_memory_t *mem, size_t size, bool is_hbw_alloc = fal
         }
 
         if (sdma_mpool_func_init) {
-            kupl_mlock(desc, actual);
+            kupl_mlock_inner(desc, actual);
         }
 
         desc->eid = mem->eid;
@@ -478,37 +482,15 @@ search_bins:
     next_desc->total_size = -1; /* dummy buffer's size must be less then 0, means it is always in using */
 
     if (sdma_mpool_func_init) {
-        kupl_mlock(desc, MEM_CHUNK_GROW_SIZE);
+        kupl_mlock_inner(desc, MEM_CHUNK_GROW_SIZE);
     }
 
     kupl_normal_insert_into_freelist(mem, desc);
     goto search_bins;
 }
 
-static kupl_always_inline void kupl_normal_free(kupl_memory_t *mem, void *ptr, bool is_hbw_free = false)
+static kupl_always_inline void kupl_normal_release(kupl_memory_t *mem, kupl_buffer_desc_t *desc)
 {
-    auto desc = KUPL_BUFF_DESC(ptr);
-    kupl_assert(desc->ref > 0);
-    if (--desc->ref > 0) { /* other still use this buffer */
-        return;
-    }
-
-    /* This is direct malloc, so just free it */
-    if (desc->mem_bin_index < 0) {
-        if (sdma_mpool_func_init) {
-            kupl_munlock(desc, (size_t)desc->total_size);
-        }
-        munmap(desc, (size_t)desc->total_size);
-        return;
-    }
-    MEM_STATIS(mem->stats_mem_free_count++);
-
-    /* This buffer is other executor thread */
-    if (desc->eid != mem->eid) {
-        kupl_normal_sync_list_enqueue(desc->eid, ptr, is_hbw_free);
-        return;
-    }
-
     kupl_assert(desc->total_size < 0);    /* negative size means this buffer is in using */
     desc->total_size = -desc->total_size; /* set the real size */
 
@@ -555,6 +537,40 @@ static kupl_always_inline void kupl_normal_free(kupl_memory_t *mem, void *ptr, b
     return;
 }
 
+static kupl_always_inline void kupl_normal_free(kupl_memory_t *mem, void *ptr, bool is_hbw_free = false)
+{
+    auto desc = KUPL_BUFF_DESC(ptr);
+
+    uint16_t ref = desc->ref;
+    if (kupl_unlikely(ref == 0)) {
+        kupl_assertv(false, "kupl_normal_free: ref underflow, ptr=%p", ptr);
+        return;
+    }
+    desc->ref = --ref;
+    if (ref > 0) { /* other still use this buffer */
+        return;
+    }
+
+    /* This is direct malloc, so just free it */
+    if (desc->mem_bin_index < 0) {
+        if (sdma_mpool_func_init) {
+            kupl_munlock(desc, (size_t)desc->total_size);
+        }
+        munmap(desc, (size_t)desc->total_size);
+        return;
+    }
+    MEM_STATIS(mem->stats_mem_free_count++);
+
+    /* This buffer is other executor thread, the ref count is already dropped above, so the owner side
+     * must not drop it again. */
+    if (desc->eid != mem->eid) {
+        kupl_normal_sync_list_enqueue(desc->eid, ptr, is_hbw_free);
+        return;
+    }
+
+    kupl_normal_release(mem, desc);
+}
+
 static kupl_always_inline void kupl_normal_init(kupl_memory_t *mem)
 {
     mem->alloc_chunks = 0;
@@ -565,9 +581,9 @@ static kupl_always_inline void kupl_normal_init(kupl_memory_t *mem)
     }
 }
 
-static kupl_always_inline void kupl_normal_cleanup(kupl_memory_t *mem, bool is_hbw_cleanup = false)
+static kupl_always_inline void kupl_normal_cleanup(kupl_memory_t *mem)
 {
-    kupl_normal_sync_list_dequeue(mem, is_hbw_cleanup);
+    kupl_normal_sync_list_dequeue(mem);
 
     for (unsigned i = 0; i < MEM_BINS_COUNT; ++i) {
         auto head = &mem->mem_bins[i];
@@ -824,27 +840,28 @@ static kupl_always_inline void kupl_memory_warmup()
 
 static kupl_always_inline void kupl_memory_pool_free()
 {
-    for (int i = 0; i < g_kupl_memory_pool_size; ++i) {
-        if (KUPL_MEM(i) != nullptr) {
+    /*
+     * Every failure branch of kupl_memory_init() ends up here, including the one where the pool arrays were
+     * never allocated, so the loops must tolerate a null array (free(nullptr) is a no-op). The counter is
+     * reset as well, otherwise a later kupl_memory_fini() would walk a released array.
+     */
+    if (g_kupl_memory_pool != nullptr) {
+        for (int i = 0; i < g_kupl_memory_pool_size; ++i) {
             free(KUPL_MEM(i));
-            KUPL_MEM(i) = nullptr;
         }
-    }
-    free(g_kupl_memory_pool);
-    g_kupl_memory_pool = nullptr;
-
-    if (g_kupl_hbw_memory_pool == nullptr) {
-        return;
+        free(g_kupl_memory_pool);
+        g_kupl_memory_pool = nullptr;
     }
 
-    for (int i = 0; i < g_kupl_memory_pool_size; ++i) {
-        if (KUPL_HBW_MEM(i) != nullptr) {
+    if (g_kupl_hbw_memory_pool != nullptr) {
+        for (int i = 0; i < g_kupl_memory_pool_size; ++i) {
             free(KUPL_HBW_MEM(i));
-            KUPL_HBW_MEM(i) = nullptr;
         }
+        free(g_kupl_hbw_memory_pool);
+        g_kupl_hbw_memory_pool = nullptr;
     }
-    free(g_kupl_hbw_memory_pool);
-    g_kupl_hbw_memory_pool = nullptr;
+
+    g_kupl_memory_pool_size = 0;
 }
 
 bool check_numa_has_hugepages(int nodeId)
@@ -948,7 +965,7 @@ void kupl_memory_expand_fini()
         kupl_fast_cleanup(hbw_mem, true);
         MEM_STATIS(printf("[Eid %d] fast self:%lu sync:%lu other:%lu\n", g_kupl_memory_pool_size - 1,
                           hbw_mem->stats_fast_self, hbw_mem->stats_fast_sync, hbw_mem->stats_fast_other););
-        kupl_normal_cleanup(hbw_mem, true);
+        kupl_normal_cleanup(hbw_mem);
         MEM_STATIS(printf("[Eid:%d] normal list-travel:%lu bin-travel:%lu alloc:%lu free:%lu\n",
                           g_kupl_memory_pool_size - 1, hbw_mem->stats_mem_link_travel, hbw_mem->stats_mem_bin_travel,
                           hbw_mem->stats_mem_alloc_count, hbw_mem->stats_mem_free_count););
@@ -965,6 +982,7 @@ static kupl_always_inline int kupl_memory_init()
     g_kupl_memory_pool_size = info->avail_pu_cnt;
     g_kupl_memory_pool = (kupl_memory_t **)calloc(1, sizeof(kupl_memory_t *) * (size_t)g_kupl_max_memory_pool_size);
     if (kupl_unlikely(g_kupl_memory_pool == nullptr)) {
+        kupl_memory_pool_free();
         return kupl_log_error_return(ERROR, "There is no memory for kupl memory pool meta");
     }
 
@@ -1014,6 +1032,12 @@ static kupl_always_inline int kupl_memory_init()
 
 static kupl_always_inline void kupl_memory_fini()
 {
+    /* Nothing to release when the init never populated the pool: kupl_memory_init() already cleaned up. */
+    if (kupl_unlikely(g_kupl_memory_pool == nullptr || g_kupl_hbw_memory_pool == nullptr)) {
+        g_kupl_memory_pool_size = 0;
+        return;
+    }
+
     /* free fast memory to normal pool */
     for (int i = 0; i < g_kupl_memory_pool_size; ++i) {
         auto mem = KUPL_MEM(i);
@@ -1049,7 +1073,7 @@ static kupl_always_inline void kupl_memory_fini()
     for (int i = 0; i < g_kupl_memory_pool_size; ++i) {
         auto mem = KUPL_HBW_MEM(i);
         if (mem != nullptr) {
-            kupl_normal_cleanup(mem, true);
+            kupl_normal_cleanup(mem);
             MEM_STATIS(printf("[Eid:%d] normal list-travel:%lu bin-travel:%lu alloc:%lu free:%lu\n", i,
                               mem->stats_mem_link_travel, mem->stats_mem_bin_travel, mem->stats_mem_alloc_count,
                               mem->stats_mem_free_count););
@@ -1257,10 +1281,11 @@ int kupl_mpool_init()
     }
 
     sdma_mpool_func_init = kupl_sdma_mpool_func_init();
-    if (kupl_unlikely(kupl_memory_init() == KUPL_ERROR)) {
-        kupl_error("Initialize memory pool failed");
-        goto err_memory_init;
-    }
+
+    /*
+     * The pin map must be ready before kupl_memory_init(), because growing the pool calls
+     * kupl_normal_alloc() which pins its chunks through kupl_mlock_inner().
+     */
     if (sdma_mpool_func_init) {
         g_pin_map = new (std::nothrow) std::map<void *, kupl_memory_info_t *>;
         if (g_pin_map == nullptr) {
@@ -1271,17 +1296,26 @@ int kupl_mpool_init()
             goto err_map_lock_init;
         }
     }
+
+    if (kupl_unlikely(kupl_memory_init() == KUPL_ERROR)) {
+        kupl_error("Initialize memory pool failed");
+        goto err_memory_init;
+    }
     (void)kupl_memory_warmup;
     g_mpool_inited = true;
 
     return KUPL_OK;
 
+err_memory_init:
+    kupl_memory_fini();
 err_map_lock_init:
+    if (g_pin_map_lock != nullptr) {
+        kupl_lock_cleanup(g_pin_map_lock);
+        g_pin_map_lock = nullptr;
+    }
+err_map_init:
     delete g_pin_map;
     g_pin_map = nullptr;
-err_map_init:
-    kupl_memory_fini();
-err_memory_init:
     kupl_sdma_mpool_func_fini();
 err_hbw_init:
     return KUPL_ERROR;
@@ -1331,9 +1365,7 @@ int kupl_memory_is_pinned(void *addr, size_t count)
 
 void *kupl_malloc(kupl_mem_kind_t kind, size_t size)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return nullptr;
-    }
+    KUPL_ENSURE_INITED(nullptr);
     if (kupl_unlikely(size > KUPL_MAX_MALLOC_SIZE)) {
         kupl_error("Unable to malloc memory larger than 128GB.");
         return nullptr;
@@ -1384,11 +1416,8 @@ void kupl_free(kupl_mem_kind_t kind, void *ptr)
     }
 }
 
-int kupl_mlock(void *buffer, size_t count)
+static int kupl_mlock_inner(void *buffer, size_t count)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
     if (kupl_unlikely(!sdma_mpool_func_init || count == 0 || buffer == nullptr)) {
         return KUPL_ERROR;
     }
@@ -1434,6 +1463,12 @@ int kupl_mlock(void *buffer, size_t count)
 out:
     g_pin_map_lock->unlock(g_pin_map_lock);
     return res;
+}
+
+int kupl_mlock(void *buffer, size_t count)
+{
+    KUPL_ENSURE_INITED(KUPL_ERROR);
+    return kupl_mlock_inner(buffer, count);
 }
 
 int kupl_munlock(void *buffer, size_t count)

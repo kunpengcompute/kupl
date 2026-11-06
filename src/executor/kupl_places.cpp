@@ -644,9 +644,7 @@ static inline void task_set_executor_affinity(kupl_nd_range_t *nd_range, void *a
 
 void kupl_push_proc_bind(kupl_proc_bind_t proc_bind)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return;
-    }
+    KUPL_ENSURE_INITED_VOID();
 
     if (g_proc_bind == KUPL_PLACES_PROC_BIND_FALSE) {
         return;

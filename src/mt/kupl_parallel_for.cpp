@@ -739,9 +739,7 @@ static kupl_always_inline int kupl_parallel_for_resolve(kupl_parallel_for_desc_t
 
 int kupl_parallel_for(kupl_parallel_for_desc_t *desc, kupl_pf_func_t func, void *args)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (kupl_unlikely(kupl_parallel_for_check(desc, (void *)func) == KUPL_ERROR)) {
         return KUPL_ERROR;
     }
@@ -861,9 +859,7 @@ static kupl_always_inline int kupl_reduce_check(kupl_parallel_for_desc_t *desc, 
 int kupl_parallel_for_reduce(kupl_parallel_for_desc_t *desc, kupl_pf_reduce_func_t func, void *args,
                              kupl_reduce_args_t *rd_args)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (kupl_unlikely(kupl_reduce_check(desc, (void *)func, rd_args) == KUPL_ERROR)) {
         return KUPL_ERROR;
     }
@@ -936,17 +932,13 @@ int kupl_parallel_for_reduce(kupl_parallel_for_desc_t *desc, kupl_pf_reduce_func
 
 bool kupl_in_parallel()
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return false;
-    }
+    KUPL_ENSURE_INITED(false);
     return active_levels != 0;
 }
 
 int kupl_get_thread_num()
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return 0;
-    }
+    KUPL_ENSURE_INITED(0);
     if (active_levels != 0) {
         int geid = kupl_get_executor_num();
         int master_eid = g_pf[(active_levels - 1) * pf_num_thread + geid].master_eid;
@@ -963,9 +955,7 @@ int kupl_get_thread_num()
 
 int kupl_get_kernel_concurrency()
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return 1;
-    }
+    KUPL_ENSURE_INITED(1);
     if (active_levels != 0) {
         static thread_local int geid = kupl_get_executor_num();
         int master_eid = g_pf[(active_levels - 1) * pf_num_thread + geid].master_eid;
@@ -1053,7 +1043,7 @@ err:
 
 int kupl_pf_init()
 {
-    pf_num_thread = kupl_get_num_executors();
+    pf_num_thread = kupl_get_num_executors_inner();
     g_concurrency_default = pf_num_thread;
     max_active_levels = kupl_config_get_value(KUPL_MAX_ACTIVE_LEVELS);
     if (max_active_levels <= 0 || max_active_levels > KUPL_PARALLEL_MAX_ACTIVE_LEVEL) {

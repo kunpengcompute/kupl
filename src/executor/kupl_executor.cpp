@@ -129,10 +129,8 @@ int kupl_executor_get_place_id(int geid)
 
 int kupl_get_num_executors()
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
-    return g_real_executor_count;
+    KUPL_ENSURE_INITED(KUPL_ERROR);
+    return kupl_get_num_executors_inner();
 }
 
 int kupl_executor_expand()
@@ -161,33 +159,37 @@ int kupl_executor_expand()
 
 int kupl_get_executor_num()
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    /* Threads which are already bound to an executor can answer without touching the initialization state. */
     int eid = kupl_get_global_executor_id();
-    if (kupl_unlikely(eid == KUPL_EXECUTOR_DEFAULT)) {
-        g_executor_lock->lock(g_executor_lock);
-        int ret = kupl_sched_expand();
-        if (ret == KUPL_ERROR) {
-            goto out;
+    if (kupl_likely(eid != KUPL_EXECUTOR_DEFAULT)) {
+        if (kupl_unlikely(eid >= g_executor_count)) {
+            return KUPL_EXECUTOR_DEFAULT;
         }
-        ret = kupl_memory_expand();
-        if (ret == KUPL_ERROR) {
-            goto mem_err;
-        }
-        ret = kupl_executor_expand();
-        if (ret == KUPL_ERROR) {
-            goto exec_err;
-        }
-        goto out;
-    exec_err:
-        kupl_memory_expand_fini();
-    mem_err:
-        kupl_sched_expand_fini();
-    out:
-        g_executor_lock->unlock(g_executor_lock);
-        eid = kupl_get_global_executor_id();
+        return eid;
     }
+
+    KUPL_ENSURE_INITED(KUPL_ERROR);
+    g_executor_lock->lock(g_executor_lock);
+    int ret = kupl_sched_expand();
+    if (ret == KUPL_ERROR) {
+        goto out;
+    }
+    ret = kupl_memory_expand();
+    if (ret == KUPL_ERROR) {
+        goto mem_err;
+    }
+    ret = kupl_executor_expand();
+    if (ret == KUPL_ERROR) {
+        goto exec_err;
+    }
+    goto out;
+exec_err:
+    kupl_memory_expand_fini();
+mem_err:
+    kupl_sched_expand_fini();
+out:
+    g_executor_lock->unlock(g_executor_lock);
+    eid = kupl_get_global_executor_id();
     if (kupl_unlikely(eid == KUPL_EXECUTOR_DEFAULT || eid >= g_executor_count)) {
         return KUPL_EXECUTOR_DEFAULT;
     }
@@ -339,6 +341,14 @@ int kupl_executor_start()
 
 void kupl_executor_stop()
 {
+    /*
+     * When the initialization is failing, the executor threads may be blocked in kupl::Init::Ensure() waiting for
+     * the initializing thread. Release them before joining, otherwise kupl_executor_stop() deadlocks.
+     */
+    if (!kupl::Init::IsReady()) {
+        kupl::Init::Cancel();
+    }
+
     for (int i = 0; i < g_executor_count; ++i) {
         kupl_executor_base_t *executor = &g_executors[i].exe;
         if (executor->thread_id != 0) {
@@ -370,9 +380,7 @@ void kupl_executor_disable(int executor_id)
 
 void kupl_set_kernel_concurrency(int num)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return;
-    }
+    KUPL_ENSURE_INITED_VOID();
     if (num < 1 || num > kupl_get_num_executors()) {
         kupl_warn("number of threads out of the 1..kupl_get_num_executors() range,"
                   " so set the number to kupl_get_num_executors().");
@@ -384,9 +392,7 @@ void kupl_set_kernel_concurrency(int num)
 
 int kupl_get_kernel_concurrency_inner(void)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (g_kernel_concurrency_local != -1) {
         return g_kernel_concurrency_local;
     }
@@ -398,7 +404,7 @@ int kupl_get_kernel_concurrency_inner(void)
 
 int kupl_get_max_concurrency(void)
 {
-    if (!g_core_inited) {
+    if (!kupl::Init::IsReady()) {
         kupl_config_load();
         int config_count = kupl_config_get_value(KUPL_EXECUTOR_COUNT);
         int pu_conf = static_cast<int>(sysconf(_SC_NPROCESSORS_CONF));
@@ -428,9 +434,7 @@ int kupl_get_max_concurrency(void)
 
 void kupl_set_kernel_concurrency_local(int num)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return;
-    }
+    KUPL_ENSURE_INITED_VOID();
     if (num < 1 || num > kupl_get_num_executors()) {
         kupl_warn("number of threads out of the 1..kupl_get_num_executors() range,"
                   " so set the number to kupl_get_num_executors().");
@@ -442,9 +446,7 @@ void kupl_set_kernel_concurrency_local(int num)
 
 int kupl_get_kernel_concurrency_local(void)
 {
-    if (!g_core_inited && kupl_init() == KUPL_ERROR) {
-        return KUPL_ERROR;
-    }
+    KUPL_ENSURE_INITED(KUPL_ERROR);
     if (g_kernel_concurrency_local != -1) {
         return g_kernel_concurrency_local;
     }
