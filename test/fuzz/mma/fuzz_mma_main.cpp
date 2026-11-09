@@ -17,6 +17,8 @@
 fuzz_cmd_t g_cmdtable[] = {
     {"mma_base", mma_base_example},
     {"copy_base", copy_base_example},
+    {"mma_32x32x2", mma_32x32x2_example},
+    {"tensor_base", tensor_base_example},
 };
 
 int main(int argc, const char *argv[])

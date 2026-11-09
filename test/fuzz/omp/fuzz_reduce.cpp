@@ -34,10 +34,10 @@ static const int rdOpCount = 4;
 static int rdTypeTable[] = {0, 1, 2, 3, 4};
 static const int rdTypeInit = 0;
 static const int rdTypeCount = 5;
-static char *lower_names[] = {"lower_0", "lower_1", "lower_2"};
-static char *upper_names[] = {"upper_0", "upper_1", "upper_2"};
-static char *step_names[] = {"step_0", "step_1", "step_2"};
-static char *block_names[] = {"block_0", "block_1", "block_2"};
+static const char *lower_names[] = {"lower_0", "lower_1", "lower_2"};
+static const char *upper_names[] = {"upper_0", "upper_1", "upper_2"};
+static const char *step_names[] = {"step_0", "step_1", "step_2"};
+static const char *block_names[] = {"block_0", "block_1", "block_2"};
 
 
 static inline void reduce_func(kupl_nd_range_t *nd_range, void *args, int tid, int tnum, kupl_reduce_args *rd_args)
@@ -54,10 +54,10 @@ void reduce_omp(int test_count)
         kupl_nd_range_t range;
         range.dim = 1;
         for (int i = 0; i < range.dim; i++) {
-            range.nd_range[i].lower = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_LOWER_DFT, -64, 64, lower_names[i]));
-            range.nd_range[i].upper = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_UPPER_DFT, -64, 64, upper_names[i]));
-            range.nd_range[i].step = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_STEP_DFT, -16, 16, step_names[i]));
-            range.nd_range[i].blocksize = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_BLOCK_DFT, -16, 16, block_names[i]));
+            range.nd_range[i].lower = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_LOWER_DFT, -64, 64, const_cast<char *>(lower_names[i])));
+            range.nd_range[i].upper = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_UPPER_DFT, -64, 64, const_cast<char *>(upper_names[i])));
+            range.nd_range[i].step = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_STEP_DFT, -16, 16, const_cast<char *>(step_names[i])));
+            range.nd_range[i].blocksize = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_BLOCK_DFT, -16, 16, const_cast<char *>(block_names[i])));
         }
         int concurrency = *(int*)DT_SetGetNumberRange(&g_Element[cnt++], NUM_THREADS_DFT, NUM_THREADS_MIN, NUM_THREADS_MAX, (char *)"concurrency");
         int policy = *(int*)DT_SetGetNumberEnum(&g_Element[cnt++], policyInit, policyTable, policyCount, (char *)"policy");
@@ -67,7 +67,7 @@ void reduce_omp(int test_count)
         kupl_reduce_item_t rd_items[1] = {{ .buffer = buffer, .type = (kupl_datatype_t)rd_type, .op = (kupl_reduce_op_t)rd_op }};
         kupl_reduce_args_t rd_args = { .num = 1, .items = rd_items };
 
-        printf("dim: %d, %d %d %d %d\n", range.dim, range.nd_range[0].lower, range.nd_range[0].upper, range.nd_range[0].step, range.nd_range[0].blocksize);
+        printf("dim: %d, %ld %ld %ld %ld\n", range.dim, range.nd_range[0].lower, range.nd_range[0].upper, range.nd_range[0].step, range.nd_range[0].blocksize);
         printf("concurrency: %d\n", concurrency);
         kupl_parallel_for_desc_t desc = {
             .field_mask = KUPL_PARALLEL_FOR_DESC_FIELD_DEFAULT,
@@ -130,10 +130,10 @@ void reduce_pthread(int test_count)
         kupl_nd_range_t range;
         range.dim = *(int*)DT_SetGetNumberEnum(&g_Element[cnt++], dimInit, dimTable, dimCount, (char *)"dim");
         for (int i = 0; i < range.dim; i++) {
-            range.nd_range[i].lower = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_LOWER_DFT, -64, 64, lower_names[i]));
-            range.nd_range[i].upper = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_UPPER_DFT, -64, 64, upper_names[i]));
-            range.nd_range[i].step = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_STEP_DFT, -16, 16, step_names[i]));
-            range.nd_range[i].blocksize = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_BLOCK_DFT, -16, 16, block_names[i]));
+            range.nd_range[i].lower = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_LOWER_DFT, -64, 64, const_cast<char *>(lower_names[i])));
+            range.nd_range[i].upper = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_UPPER_DFT, -64, 64, const_cast<char *>(upper_names[i])));
+            range.nd_range[i].step = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_STEP_DFT, -16, 16, const_cast<char *>(step_names[i])));
+            range.nd_range[i].blocksize = (*(int64_t*)DT_SetGetNumberRangeS64(&g_Element[cnt++], RANGE_BLOCK_DFT, -16, 16, const_cast<char *>(block_names[i])));
         }
         int concurrency = *(int*)DT_SetGetNumberRange(&g_Element[cnt++], NUM_THREADS_DFT, NUM_THREADS_MIN, NUM_THREADS_MAX, (char *)"concurrency");
         int policy = *(int*)DT_SetGetNumberEnum(&g_Element[cnt++], policyInit, policyTable, policyCount, (char *)"policy");

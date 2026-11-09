@@ -343,6 +343,178 @@ void KP36_4x32_INT8_TRANS_CM2NN_coverage()
     free(dst);
 }
 
+test_kupl_za
+void KP36_32x2_BF16_TRANS_RM2ZZ_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
+{
+    constexpr int M = 32;
+    constexpr int K = 576;
+    auto shape_d = make_shape(Int<M>{}, make_shape(Int<2>{}, Int<K / 2>{}));
+    auto shape_s = make_shape(Int<M>{}, Int<K>{});
+
+    auto stride_d = make_stride(Int<2>{}, make_stride(Int<1>{}, Int<64>{}));
+    auto stride_s = make_stride(Int<K>{}, Int<1>{});
+
+    auto layout_d = make_layout(shape_d, stride_d);
+    auto layout_s = make_layout(shape_s, stride_s);
+
+    auto atom_copy_shape = make_shape(Int<1>{}, Int<K / 2>{});
+    auto tiled_copy = make_tiled_copy(Ops<KP36_32x2_BF16_TRANS_RM2ZZ>{}, atom_copy_shape);
+
+    auto tensor_d = make_tensor(dst, layout_d);
+    auto tensor_s = make_tensor(src, layout_s);
+    copy(tiled_copy, tensor_d, tensor_s);
+}
+
+void KP36_32x2_BF16_TRANS_RM2ZZ_coverage()
+{
+    constexpr int M = 32;
+    constexpr int K = 576;
+    bfloat16_t *dst = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * K));
+    bfloat16_t *src = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * M * K));
+
+    KP36_32x2_BF16_TRANS_RM2ZZ_kernel(dst, src);
+
+    free(src);
+    free(dst);
+}
+
+test_kupl_za
+void KP36_2x32_BF16_TRANS_CM2NN_kernel(bfloat16_t *dst, bfloat16_t *src) test_kupl_streaming
+{
+    constexpr int K = 576;
+    constexpr int N = 32;
+    auto shape_d = make_shape(make_shape(Int<2>{}, Int<K / 2>{}), Int<N>{});
+    auto shape_s = make_shape(Int<K>{}, Int<N>{});
+
+    auto stride_d = make_stride(make_stride(Int<1>{}, Int<64>{}), Int<2>{});
+    auto stride_s = make_stride(Int<1>{}, Int<K>{});
+
+    auto layout_d = make_layout(shape_d, stride_d);
+    auto layout_s = make_layout(shape_s, stride_s);
+
+    auto atom_copy_shape = make_shape(Int<K / 2>{}, Int<1>{});
+    auto tiled_copy = make_tiled_copy(Ops<KP36_2x32_BF16_TRANS_CM2NN>{}, atom_copy_shape);
+
+    auto tensor_d = make_tensor(dst, layout_d);
+    auto tensor_s = make_tensor(src, layout_s);
+    copy(tiled_copy, tensor_d, tensor_s);
+}
+
+void KP36_2x32_BF16_TRANS_CM2NN_coverage()
+{
+    constexpr int K = 576;
+    constexpr int N = 32;
+    bfloat16_t *dst = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * K * N));
+    bfloat16_t *src = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * K * N));
+
+    KP36_2x32_BF16_TRANS_CM2NN_kernel(dst, src);
+
+    free(src);
+    free(dst);
+}
+
+void prefetch_coverage()
+{
+    auto atom_prefetch_shape = make_shape(Int<1>{});
+    auto tiled_l1strm = make_tiled_copy(Ops<KP36_PREFETCH_L1STRM>{}, atom_prefetch_shape);
+    auto tiled_l1keep = make_tiled_copy(Ops<KP36_PREFETCH_L1KEEP>{}, atom_prefetch_shape);
+    auto tiled_l2strm = make_tiled_copy(Ops<KP36_PREFETCH_L2STRM>{}, atom_prefetch_shape);
+    auto tiled_l2keep = make_tiled_copy(Ops<KP36_PREFETCH_L2KEEP>{}, atom_prefetch_shape);
+
+    double buf_ds[8] = {0};
+    float buf_fs[16] = {0};
+    auto buf_bs = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * 32));
+    int8_t buf_is[64] = {0};
+
+    auto layout_ds = make_layout(make_shape(Int<8>{}), make_stride(Int<1>{}));
+    auto layout_fs = make_layout(make_shape(Int<16>{}), make_stride(Int<1>{}));
+    auto layout_bs = make_layout(make_shape(Int<32>{}), make_stride(Int<1>{}));
+    auto layout_is = make_layout(make_shape(Int<64>{}), make_stride(Int<1>{}));
+
+    auto tensor_ds = make_tensor(buf_ds, layout_ds);
+    auto tensor_fs = make_tensor(buf_fs, layout_fs);
+    auto tensor_bs = make_tensor(buf_bs, layout_bs);
+    auto tensor_is = make_tensor(buf_is, layout_is);
+
+    copy(tiled_l1strm, tensor_ds);
+    copy(tiled_l1keep, tensor_fs);
+    copy(tiled_l2strm, tensor_bs);
+    copy(tiled_l2keep, tensor_is);
+
+    free(buf_bs);
+}
+
+void vec_load_store_coverage()
+{
+    const int Nf = 16;
+    const int Nb = 32;
+    auto layout_f = make_layout(make_shape(Int<Nf>{}), make_stride(Int<1>{}));
+    auto layout_b = make_layout(make_shape(Int<Nb>{}), make_stride(Int<1>{}));
+
+    float buf_f[Nf] = {0};
+    auto buf_b = static_cast<bfloat16_t *>(malloc(sizeof(bfloat16_t) * Nb));
+    auto tensor_f = make_tensor(buf_f, layout_f);
+    auto tensor_b = make_tensor(buf_b, layout_b);
+
+    auto vec_f = make_tensor<float>(layout_f);
+    auto vec_b = make_tensor<bfloat16_t>(layout_b);
+
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, vec_f, tensor_f);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, tensor_f, vec_f);
+    copy(TiledCopy<Ops<KP36_VEC_STORE_NT>, Shape<Int<1>>>{}, tensor_f, vec_f);
+
+    copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, vec_b, tensor_b);
+    copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, tensor_b, vec_b);
+    copy(TiledCopy<Ops<KP36_VEC_STORE_NT>, Shape<Int<1>>>{}, tensor_b, vec_b);
+
+    free(buf_b);
+}
+
+test_kupl_za
+void KP36_VEC_COPY_HOR_kernel(float *out) test_kupl_streaming
+{
+    svbool_t pg = svptrue_b32();
+    auto sve_layout = make_layout(make_shape(Int<16>{}), make_stride(Int<1>{}));
+    auto vec = make_tensor<float>(sve_layout);
+
+    auto c_layout = make_layout(make_shape(Int<16>{}, Int<64>{}), make_stride(Int<64>{}, Int<1>{}));
+    auto za = make_tensor<float>(c_layout);
+    auto za_tile = za.tile(Int<0>{});
+    for (uint32_t row = 0; row < 16; ++row) {
+        float seed[16];
+        for (int i = 0; i < 16; ++i) {
+            seed[i] = static_cast<float>(row * 16 + i);
+        }
+        auto src_mem = make_tensor(seed, sve_layout);
+        copy(TiledCopy<Ops<KP36_VEC_LOAD>, Shape<Int<1>>>{}, vec, src_mem);
+        auto dst_tile = za_tile(make_coord(static_cast<int>(row), Underscore{}));
+        copy(TiledCopy<Ops<KP36_VEC_COPY_HOR>, Shape<Int<1>>>{}, dst_tile, vec);
+        svfloat32_t v = svread_hor_za32_m(vec.data(), pg, 0, row);
+        svst1_f32(pg, out + row * 16, v);
+    }
+    for (uint32_t row = 0; row < 16; ++row) {
+        float seed[16];
+        for (int i = 0; i < 16; ++i) {
+            seed[i] = static_cast<float>(row * 16 + i);
+        }
+        svfloat32_t v = svld1_f32(pg, seed);
+        svwrite_hor_za32_m(0, row, pg, v);
+        copy(TiledCopy<Ops<KP36_VEC_COPY_HOR>, Shape<Int<1>>>{}, vec,
+             za_tile(make_coord(static_cast<int>(row), Underscore{})));
+        auto dst_mem = make_tensor(out + 16 * 16 + row * 16, sve_layout);
+        copy(TiledCopy<Ops<KP36_VEC_STORE>, Shape<Int<1>>>{}, dst_mem, vec);
+    }
+}
+
+void KP36_VEC_COPY_HOR_coverage()
+{
+    float *out = static_cast<float *>(malloc(sizeof(float) * (2 * 16 * 16)));
+
+    KP36_VEC_COPY_HOR_kernel(out);
+
+    free(out);
+}
+
 void copy_coverage()
 {
     KP36_1x16_F64_TRANS_CM2RM_coverage();
@@ -354,6 +526,11 @@ void copy_coverage()
     KP36_4x64_INT8_TRANS_CM2NN_coverage();
     KP36_32x4_INT8_TRANS_RM2ZZ_coverage();
     KP36_4x32_INT8_TRANS_CM2NN_coverage();
+    KP36_32x2_BF16_TRANS_RM2ZZ_coverage();
+    KP36_2x32_BF16_TRANS_CM2NN_coverage();
+    prefetch_coverage();
+    vec_load_store_coverage();
+    KP36_VEC_COPY_HOR_coverage();
 }
 
 test_kupl_za

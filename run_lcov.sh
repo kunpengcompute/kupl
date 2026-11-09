@@ -281,7 +281,7 @@ elif [[ "${BUILD_KIND}" == "fuzz" ]]; then
                                                               '*/shm/allreduce/*.cpp' \
                                                               '*/shm/alltoall/*.cpp' \
                                                               '*/shm/bcast/*.cpp' \
-                                                              '*/mma/kupl_mma.cpp' \
+                                                              '*/mma/*.h' \
                                                               -o total.kupl.info -q
   if [ 0 != $? ];then
     echo "Failed to extract exactly from coverage info"
