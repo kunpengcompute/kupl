@@ -13,6 +13,7 @@
 #include <sys/resource.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <dlfcn.h>
 #include <cstdio>
 #include <cstdlib>
 #include "gtest/gtest.h"
@@ -27,12 +28,42 @@ constexpr double KUPL_INIT_FAIL_HEADROOM = 1.05;
 constexpr unsigned int KUPL_INIT_FAIL_CHILD_TIMEOUT_SEC = 60;
 
 /*
+ * Initialize the OpenMP runtime while the address space is still unlimited.
+ *
+ * kupl_host_info_init() queries the runtime during the first api call (omp_get_max_threads(), and the
+ * places based discovery uses omp_get_num_places()), and libomp allocates a fair amount of memory for
+ * that lazy initialization. If the first OpenMP call happened after RLIMIT_AS was shrunk below that
+ * requirement, libomp would crash instead of letting kupl report KUPL_ERROR, which is exactly what this
+ * test wants to observe.
+ *
+ * The symbols are resolved at runtime on purpose: linking this binary against OpenMP would pull in a
+ * second OpenMP runtime next to the one libkupl already depends on.
+ */
+void kupl_init_fail_warmup_omp()
+{
+    auto get_max_threads = reinterpret_cast<int (*)(void)>(dlsym(RTLD_DEFAULT, "omp_get_max_threads"));
+    if (get_max_threads != nullptr) {
+        (void)get_max_threads();
+    }
+    auto get_num_places = reinterpret_cast<int (*)(void)>(dlsym(RTLD_DEFAULT, "omp_get_num_places"));
+    if (get_num_places != nullptr) {
+        (void)get_num_places();
+    }
+}
+
+/*
  * Runs in the forked child, so it must not touch gtest. The child shrinks RLIMIT_AS right below the size of
  * the init path allocations: whatever fails, the runtime has to report KUPL_ERROR instead of crashing or
  * walking a released memory pool.
  */
 void kupl_init_under_memory_pressure()
 {
+    /* Cover the whole child, including the OpenMP warm up and the setup below, with the hang timeout. */
+    (void)alarm(KUPL_INIT_FAIL_CHILD_TIMEOUT_SEC);
+
+    /* Warm up first so the baseline below includes everything the OpenMP runtime reserves. */
+    kupl_init_fail_warmup_omp();
+
     struct rlimit limit;
     if (getrlimit(RLIMIT_AS, &limit) != 0) {
         _exit(KUPL_INIT_FAIL_SETUP_ERROR);
@@ -60,7 +91,6 @@ void kupl_init_under_memory_pressure()
         /* Without the limit the child would initialize normally and the test would prove nothing. */
         _exit(KUPL_INIT_FAIL_SETUP_ERROR);
     }
-    (void)alarm(KUPL_INIT_FAIL_CHILD_TIMEOUT_SEC);
 
     /* kupl_get_wtime() returns 0.0 when the initialization failed, which is the expected clean failure. */
     double now = kupl_get_wtime();
