@@ -682,7 +682,12 @@ static kupl_always_inline int kupl_parallel_for_check(kupl_parallel_for_desc_t *
         desc->concurrency = g_concurrency_default;
     } else {
         int num_threads = desc->concurrency;
-        if (num_threads <= 0 || num_threads > kupl_get_num_executors()) {
+        int num_executors = kupl_get_num_executors();
+        if (num_threads > num_executors) {
+            kupl_warn("concurrency %d exceeds number of executors %d, will be limited to the number of executors.",
+                      num_threads, num_executors);
+        }
+        if (num_threads <= 0) {
             return kupl_log_error_return(ERROR, "Invalid num_threads: %d", num_threads);
         }
     }

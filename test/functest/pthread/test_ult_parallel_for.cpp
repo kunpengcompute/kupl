@@ -1129,7 +1129,7 @@ TEST(test_ult_pf, kupl_parallel_for_err)
 
     desc4.concurrency = 10000;
     ret = kupl_parallel_for(&desc4, task_int_loop_1D, &count);
-    EXPECT_EQ(ret, KUPL_ERROR);
+    EXPECT_EQ(ret, KUPL_OK);
     desc4.concurrency = 4;
 
     range4.nd_range[DIM_0].lower = range4.nd_range[DIM_0].upper + 1;
