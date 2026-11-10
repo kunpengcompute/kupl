@@ -62,12 +62,12 @@ function build_src()
         -S ${source_path} -B ${build_path}              \
         -DCMAKE_C_COMPILER=${KUPL_C_COMPILER}           \
         -DCMAKE_CXX_COMPILER=${KUPL_CXX_COMPILER}       \
+        -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
+        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
+        -DCMAKE_SUPPRESS_REGENERATION=ON                \
         -DENABLE_KUPL_PROFILE=${ENABLE_KUPL_PROFILE}    \
         -DENABLE_KUPL_TRACE=${ENABLE_KUPL_TRACE}        \
-        -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
-        -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
-        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
-        -DCMAKE_SUPPRESS_REGENERATION=ON
+        -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}
     cmake --build ${build_path} -j --target install
     check_glibc
 }
@@ -83,12 +83,12 @@ function build_test()
         -S ${source_path} -B ${build_path}              \
         -DCMAKE_C_COMPILER=$(which mpicc)               \
         -DCMAKE_CXX_COMPILER=$(which mpicxx)            \
-        -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}            \
         -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
+        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
+        -DCMAKE_SUPPRESS_REGENERATION=ON                \
         -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
         -DKUPL_PROJ_PATH=${KUPL_PROJ_PATH}              \
-        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
-        -DCMAKE_SUPPRESS_REGENERATION=ON
+        -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}
     cmake --build ${build_path} -j --target install
 }
 
@@ -103,12 +103,12 @@ function build_cida()
         -S ${source_path} -B ${build_path}              \
         -DCMAKE_C_COMPILER=$(which mpicc)               \
         -DCMAKE_CXX_COMPILER=$(which mpicxx)            \
-        -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}            \
         -DCMAKE_BUILD_TYPE=Debug                        \
+        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
+        -DCMAKE_SUPPRESS_REGENERATION=ON                \
         -DKUPL_BUILD_KIND=${KUPL_BUILD_KIND}            \
         -DKUPL_PROJ_PATH=${KUPL_PROJ_PATH}              \
-        -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
-        -DCMAKE_SUPPRESS_REGENERATION=ON
+        -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}
     cmake --build ${build_path} -j --target install
 }
 
@@ -125,7 +125,8 @@ function build_fuzz()
         -DCMAKE_CXX_COMPILER=$(which mpicxx)            \
         -DCMAKE_BUILD_TYPE=${KUPL_BUILD_TYPE}           \
         -DCMAKE_INSTALL_PREFIX=${KUPL_INSTALL_PATH}     \
-        -DCMAKE_SUPPRESS_REGENERATION=ON
+        -DCMAKE_SUPPRESS_REGENERATION=ON                \
+        -DENABLE_KUPL_MMA=${ENABLE_KUPL_MMA}
     cmake --build ${build_path} -j --target install
 }
 
